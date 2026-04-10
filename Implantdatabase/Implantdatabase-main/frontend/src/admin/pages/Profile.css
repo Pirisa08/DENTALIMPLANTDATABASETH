@@ -1,0 +1,242 @@
+.pfWrap{ max-width: 1200px; margin: 0 auto; padding: 20px 30px 0 30px; font-size: 14px; }
+
+.pageTitle{
+  margin:20px 0 16px 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pfCard{
+  position: relative;
+  background:#f8f9fa;
+  border-radius:16px;
+  padding: 20px 16px;
+  box-shadow: var(--shadow);
+  border: 2px solid #d4e0e8;
+  min-height: 350px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-size: 14px;
+}
+
+.pfEdit{
+  position:absolute;
+  right: 16px;
+  top: 14px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#222;
+  font-weight:900;
+}
+
+.pfAvatar{ margin-top: 12px; }
+
+.pfImageUpload{
+  display:block;
+  cursor:pointer;
+}
+
+.pfImageDisabled{
+  cursor:default;
+}
+
+.pfCircle{
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: #e0ede1;
+  display:grid;
+  place-items:center;
+  font-size: 28px;
+  transition: all 0.3s;
+}
+
+.pfCircle:hover{
+  background: #aac6ac;
+  transform: scale(1.05);
+}
+
+.pfImg{
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
+  border: 2px solid #d0ddd0;
+}
+
+.pfLabel{
+  margin-top: 10px;
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 800;
+}
+.pfName{
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.pfGroup{
+  margin-top: 22px;
+  text-align:center;
+}
+.pfSmallLabel{
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.pfValue{
+  font-size: 15px;
+  font-weight: 1000;
+}
+
+.pfEditRow{
+  width: 100%;
+  max-width: 700px;
+  margin-top: 28px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.pfField{ width:100%; font-size: 14px; }
+
+.pfSelect{
+  width:100%;
+  height: 38px;
+  border-radius: 10px;
+  border:1.5px solid #d4e0e8;
+  background:#f3f6ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat;
+  background-position: right 12px center;
+  padding: 0 12px 0 12px;
+  padding-right: 36px;
+  outline:none;
+  font-weight: 800;
+  color:#111;
+  font-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.pfSelect option{
+  color:#111;
+  background:#fff;
+  font-weight:700;
+  padding: 10px;
+}
+
+.pfSelect option:hover{
+  background:#bcd0ee;
+  color:#111;
+}
+
+.pfSelect option:checked{
+  background:#bcd0ee;
+  color:#111;
+}
+
+.pfSelect:focus{
+  border-color:#6b7a99;
+  background-color:#fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.pfSave{
+  margin-top: 28px;
+  width: 520px;
+  max-width: 100%;
+  height: 58px;
+  border:none;
+  border-radius: 16px;
+  background: #84cb86;
+  color:#fff;
+  font-weight: 1000;
+  font-size: 22px;
+  cursor:pointer;
+  box-shadow: var(--shadow);
+}
+
+.pfSave:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* ✅ Responsive Design */
+@media (max-width: 1200px){
+  .pfWrap{ padding: 20px 25px 0 25px; font-size: 13px; }
+  .pageTitle{ font-size: 1.4rem; margin: 18px 0 14px 0; }
+  .pfCard{ padding: 18px 14px; font-size: 13px; min-height: 320px; }
+  .pfCircle{ width: 58px; height: 58px; font-size: 26px; }
+  .pfImg{ width: 58px; height: 58px; }
+  .pfLabel{ font-size: 14px; margin-top: 9px; }
+  .pfName{ font-size: 16px; }
+  .pfSmallLabel{ font-size: 11px; }
+  .pfValue{ font-size: 14px; }
+  .pfField{ font-size: 13px; }
+  .pfSelect{ height: 36px; font-size: 13px; }
+  .pfSave{ height: 52px; width: 460px; font-size: 20px; margin-top: 24px; }
+}
+
+@media (max-width: 1024px){
+  .pfWrap{ padding: 18px 22px 0 22px; font-size: 12px; }
+  .pageTitle{ font-size: 1.2rem; margin: 16px 0 12px 0; }
+  .pfCard{ padding: 16px 12px; font-size: 12px; min-height: 300px; }
+  .pfCircle{ width: 54px; height: 54px; font-size: 24px; }
+  .pfImg{ width: 54px; height: 54px; }
+  .pfLabel{ font-size: 13px; margin-top: 8px; }
+  .pfName{ font-size: 15px; }
+  .pfGroup{ margin-top: 18px; }
+  .pfSmallLabel{ font-size: 10px; margin-bottom: 6px; }
+  .pfValue{ font-size: 13px; }
+  .pfEditRow{ margin-top: 24px; gap: 18px; }
+  .pfField{ font-size: 12px; }
+  .pfSelect{ height: 34px; font-size: 12px; }
+  .pfSave{ height: 48px; width: 420px; font-size: 18px; margin-top: 22px; }
+}
+
+@media (max-width: 820px){
+  .pfEditRow{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px){
+  .pfWrap{ padding: 15px 18px 0 18px; font-size: 11px; }
+  .pageTitle{ font-size: 1.1rem; margin: 14px 0 10px 0; }
+  .pfCard{ padding: 14px 10px; font-size: 11px; min-height: 280px; }
+  .pfCircle{ width: 50px; height: 50px; font-size: 22px; }
+  .pfImg{ width: 50px; height: 50px; }
+  .pfLabel{ font-size: 12px; margin-top: 7px; }
+  .pfName{ font-size: 14px; }
+  .pfGroup{ margin-top: 16px; }
+  .pfSmallLabel{ font-size: 10px; margin-bottom: 5px; }
+  .pfValue{ font-size: 12px; }
+  .pfEditRow{ margin-top: 20px; gap: 16px; }
+  .pfField{ font-size: 11px; }
+  .pfSelect{ height: 32px; font-size: 11px; padding: 0 10px; }
+  .pfSave{ height: 44px; width: 360px; font-size: 16px; margin-top: 20px; }
+}
+
+@media (max-width: 480px){
+  .pfWrap{ padding: 12px 15px 0 15px; font-size: 10px; }
+  .pageTitle{ font-size: 1rem; margin: 12px 0 8px 0; }
+  .pfCard{ padding: 12px 8px; font-size: 10px; min-height: 260px; }
+  .pfCircle{ width: 46px; height: 46px; font-size: 20px; }
+  .pfImg{ width: 46px; height: 46px; }
+  .pfLabel{ font-size: 11px; margin-top: 6px; }
+  .pfName{ font-size: 13px; }
+  .pfGroup{ margin-top: 14px; }
+  .pfSmallLabel{ font-size: 9px; margin-bottom: 4px; }
+  .pfValue{ font-size: 11px; }
+  .pfEditRow{ margin-top: 18px; gap: 14px; }
+  .pfField{ font-size: 10px; }
+  .pfSelect{ height: 30px; font-size: 10px; padding: 0 9px; }
+  .pfSave{ height: 40px; width: 300px; font-size: 14px; margin-top: 18px; }
+}
