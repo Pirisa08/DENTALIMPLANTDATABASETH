@@ -3,19 +3,40 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./NewImplant.css";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
-import { implantsAPI, masterDataAPI } from "../../services/api.js";
+import {
+  implantsAPI,
+  masterDataAPI,
+  brandAPI,
+  resolveImageUrl,
+} from "../../services/api.js";
 import { loadMaster, saveMaster } from "./masterDataStore.js";
 
 const IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
+const MASTER_DATA_UPDATED_EVENT = "master-data:updated";
 
 export default function NewImplant() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
+  const isMasterEdit = String(id || "").startsWith("master-");
 
-  const [masterData, setMasterData] = useState({ companies: [], levels: [], countries: [] });
-  const [masterLocal, setMasterLocal] = useState(loadMaster());
+  const [masterData, setMasterData] = useState({
+    companies: [],
+    brands: [],
+    levels: [],
+    countries: [],
+    connectionTypes: [],
+    connectionShapes: [],
+    screwdriverShapes: [],
+    headShapes: [],
+    bodyShapes: [],
+    apexShapes: [],
+    officialDistributors: [],
+  });
+
+  const [, setMasterLocal] = useState(loadMaster());
+
   const [form, setForm] = useState({
     name: "",
     brand: "",
@@ -33,192 +54,244 @@ export default function NewImplant() {
     bodyShape: "",
     apexShape: "",
     officialDistributor: "",
+    status: "Active",
+  });
+
+  const [imageFiles, setImageFiles] = useState({
+    image1: null,
+    image2: null,
+    image3: null,
+  });
+
+  const [imagePreviews, setImagePreviews] = useState({
     image1: "",
     image2: "",
     image3: "",
-    status: "Active",
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
   const fileInputs = useRef({});
 
+  const syncMasterLocal = (nextPartial) => {
+    const current = loadMaster();
+    const nextMaster = {
+      ...current,
+      ...nextPartial,
+    };
+    saveMaster(nextMaster);
+    setMasterLocal(nextMaster);
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event(MASTER_DATA_UPDATED_EVENT));
+    return nextMaster;
+  };
+
+  const sanitizeFkList = (arr) =>
+    Array.isArray(arr)
+      ? arr.filter(
+          (item) => item && item.id && item.name && item.status !== "Inactive"
+        )
+      : [];
+
+  const sanitizeBrandList = (arr) =>
+    Array.isArray(arr)
+      ? arr
+          .map((item) => ({
+            id: item.id ?? item.idbrand,
+            name: item.name ?? item.brand_name ?? "",
+            companyId: item.companyId ?? item.manufacturer_id ?? null,
+            companyName: item.companyName || "",
+            website: item.website || "",
+            status: item.status || "Active",
+          }))
+          .filter(
+            (item) =>
+              item && item.id && item.name && item.status !== "Inactive"
+          )
+      : [];
+
+  const sanitizeTextList = (arr) =>
+    Array.isArray(arr)
+      ? arr.filter(
+          (item) => item && item.name && item.status !== "Inactive"
+        )
+      : [];
+
+  const loadAllMasterData = async () => {
+    const [
+      apiCompanies,
+      apiBrands,
+      apiLevels,
+      apiCountries,
+      apiConnectionTypes,
+      apiConnectionShapes,
+      apiScrewdriverShapes,
+      apiHeadShapes,
+      apiBodyShapes,
+      apiApexShapes,
+      apiOfficialDistributors,
+    ] = await Promise.all([
+      masterDataAPI.getCompanies().catch(() => []),
+      brandAPI.getAll().catch(() => []),
+      masterDataAPI.getLevels().catch(() => []),
+      masterDataAPI.getCountries().catch(() => []),
+      masterDataAPI.getConnectionTypes().catch(() => []),
+      masterDataAPI.getConnectionShapes().catch(() => []),
+      masterDataAPI.getScrewdriverShapes().catch(() => []),
+      masterDataAPI.getHeadShapes().catch(() => []),
+      masterDataAPI.getBodyShapes().catch(() => []),
+      masterDataAPI.getApexShapes().catch(() => []),
+      masterDataAPI.getDistributors().catch(() => []),
+    ]);
+
+    const mergedMasterData = {
+      companies: sanitizeFkList(apiCompanies),
+      brands: sanitizeBrandList(apiBrands),
+      levels: sanitizeFkList(apiLevels),
+      countries: sanitizeFkList(apiCountries),
+      connectionTypes: sanitizeTextList(apiConnectionTypes),
+      connectionShapes: sanitizeTextList(apiConnectionShapes),
+      screwdriverShapes: sanitizeTextList(apiScrewdriverShapes),
+      headShapes: sanitizeTextList(apiHeadShapes),
+      bodyShapes: sanitizeTextList(apiBodyShapes),
+      apexShapes: sanitizeTextList(apiApexShapes),
+      officialDistributors: sanitizeTextList(apiOfficialDistributors),
+    };
+
+    setMasterData(mergedMasterData);
+
+    syncMasterLocal({
+      company: mergedMasterData.companies,
+      brand: mergedMasterData.brands,
+      level: mergedMasterData.levels,
+      country: mergedMasterData.countries,
+      connectionType: mergedMasterData.connectionTypes,
+      connectionShape: mergedMasterData.connectionShapes,
+      screwdriverShape: mergedMasterData.screwdriverShapes,
+      headShape: mergedMasterData.headShapes,
+      bodyShape: mergedMasterData.bodyShapes,
+      apexShape: mergedMasterData.apexShapes,
+      officialDistributor: mergedMasterData.officialDistributors,
+    });
+
+    return mergedMasterData;
+  };
+
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
-        
-        // โหลดข้อมูลจาก localStorage ก่อน
-        const localMaster = loadMaster();
-        const localCompanies = Array.isArray(localMaster.company) ? localMaster.company : [];
-        const localLevels = Array.isArray(localMaster.level) ? localMaster.level : [];
-        const localCountries = Array.isArray(localMaster.country) ? localMaster.country : [];
-        
-        console.log("📦 Local Master Data:", {
-          companies: localCompanies.length,
-          levels: localLevels.length,
-          countries: localCountries.length
-        });
-        
-        // โหลดข้อมูลจาก API (ทำให้ fail ก็ไม่เป็นไร เพราะจะใช้ localStorage แทน)
-        let apiCompanies = [];
-        let apiLevels = [];
-        let apiCountries = [];
-        
-        try {
-          [apiCompanies, apiLevels, apiCountries] = await Promise.all([
-            masterDataAPI.getCompanies(),
-            masterDataAPI.getLevels(),
-            masterDataAPI.getCountries(),
-          ]);
-        } catch (apiErr) {
-          console.warn("⚠️ API call failed, will try fallback: ", apiErr.message);
-          apiCompanies = [];
-          apiLevels = [];
-          apiCountries = [];
-        }
-        
-        // กรองค่าที่ไม่ต้องการ (เช่น hatyai) และผสมข้อมูลจาก API+local
-        const sanitize = (arr) => Array.isArray(arr)
-          ? arr.filter(item => item && item.name && item.name.toLowerCase() !== 'hatyai')
-          : [];
+        setError("");
 
-        const mergeData = (apiData, localData, filterByStatus = true) => {
-          const map = new Map();
-          
-          apiData.forEach(item => {
-            if (item && item.name) {
-              map.set(item.name.toLowerCase(), item);
-            }
-          });
-          
-          localData.forEach(item => {
-            if (item && item.name && !map.has(item.name.toLowerCase())) {
-              map.set(item.name.toLowerCase(), item);
-            }
-          });
-          
-          let result = Array.from(map.values());
-          result = sanitize(result);
-          
-          console.log("🔸 Before filter:", { count: result.length, items: result.map(r => ({ name: r.name, status: r.status })) });
-          
-          // ถ้า filterByStatus = true ให้แสดงแค่ Active, ถ้า false ให้แสดงทั้งหมด
-          if (filterByStatus) {
-            // result = result.filter(item => item.status === "Active"); // DEBUG: disabled
-          }
-          
-          console.log("🔹 After filter:", { count: result.length, filterByStatus });
-          
-          return result;
-        };
-        
-        // Company: แสดงเฉพาะ Active (status = 'Active')
-        // Level: แสดงเฉพาะ Active (status = 'Active')
-        // Country: แสดงทั้งหมด (Active และ Inactive)
-        const mergedCompanies = mergeData(apiCompanies, localCompanies, true);
-        const mergedLevels = mergeData(apiLevels, localLevels, true);
-        const mergedCountries = mergeData(apiCountries, localCountries, false); // แสดงทั้งหมด
-        
-        console.log("✅ Merged Master Data:", {
-          companies: mergedCompanies.map(c => c.name),
-          levels: mergedLevels.map(l => l.name),
-          countries: mergedCountries.length
-        });
-        
-        setMasterData({ 
-          companies: mergedCompanies, 
-          levels: mergedLevels, 
-          countries: mergedCountries 
-        });
-        
-        setMasterLocal(localMaster);
+        await loadAllMasterData();
 
         if (isEdit) {
-          // Load from localStorage first
-          const localRaw = localStorage.getItem(IMPLANTS_KEY);
-          let implants = [];
-          try {
-            implants = localRaw ? JSON.parse(localRaw) : [];
-          } catch {}
-          
-          const localData = implants.find(imp => String(imp.id) === String(id));
-          
-          if (localData) {
+          const apiImplant = await implantsAPI.getById(id);
+
+          if (apiImplant) {
             setForm({
-              name: localData.name || "",
-              brand: localData.brand || "",
-              slug: localData.slug || "",
-              companyId: localData.companyId || null,
-              levelId: localData.levelId || null,
-              countryId: localData.countryId || null,
-              countryText: localData.countryText || "",
-              website: localData.website || "",
-              brandDescription: localData.brandDescription || "",
-              connectionType: localData.connectionType || "",
-              connectionShape: localData.connectionShape || "",
-              screwdriverShape: localData.screwdriverShape || "",
-              headShape: localData.headShape || "",
-              bodyShape: localData.bodyShape || "",
-              apexShape: localData.apexShape || "",
-              officialDistributor: localData.officialDistributor || "",
-              image1: localData.image1 || "",
-              image2: localData.image2 || "",
-              image3: localData.image3 || "",
-              status: localData.status || "Active",
+              name: apiImplant.name || "",
+              brand: apiImplant.brand || "",
+              slug: apiImplant.slug || "",
+              companyId: apiImplant.companyId || null,
+              levelId: apiImplant.levelId || null,
+              countryId: apiImplant.countryId || null,
+              countryText: apiImplant.countryText || "",
+              website: apiImplant.website || "",
+              brandDescription: apiImplant.brandDescription || "",
+              connectionType: apiImplant.connectionType || "",
+              connectionShape: apiImplant.connectionShape || "",
+              screwdriverShape: apiImplant.screwdriverShape || "",
+              headShape: apiImplant.headShape || "",
+              bodyShape: apiImplant.bodyShape || "",
+              apexShape: apiImplant.apexShape || "",
+              officialDistributor: apiImplant.officialDistributor || "",
+              status: apiImplant.status || "Active",
+            });
+
+            setImagePreviews({
+              image1: resolveImageUrl(apiImplant.image1),
+              image2: resolveImageUrl(apiImplant.image2),
+              image3: resolveImageUrl(apiImplant.image3),
             });
           }
         }
       } catch (err) {
+        console.error(err);
         setError(err.message || "Failed to load form");
       } finally {
         setLoading(false);
       }
     }
+
     load();
-    
-    // ฟังการเปลี่ยนแปลงของ Master Data (เช่น เมื่อลบจากหน้า Master Data)
-    const handleStorageChange = () => {
-      load();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
-    };
   }, [id, isEdit]);
 
   const setField = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
   const canSave = useMemo(() => {
-    return form.name.trim() && form.companyId && form.levelId && (form.countryId || form.countryText);
+    return (
+      form.name.trim() &&
+      Number(form.companyId) > 0 &&
+      Number(form.levelId) > 0 &&
+      (Number(form.countryId) > 0 || form.countryText.trim())
+    );
   }, [form]);
 
-  // 🚀 Cache filtered brands to prevent lag on every keystroke
   const filteredBrands = useMemo(() => {
-    if (!form.companyId || !masterLocal.brand) return [];
-    return masterLocal.brand.filter(b => b.companyId === form.companyId);
-  }, [form.companyId, masterLocal.brand]);
+    if (!form.companyId || !masterData.brands) return [];
+    return masterData.brands.filter(
+      (b) =>
+        Number(b.companyId) === Number(form.companyId) &&
+        b.status !== "Inactive"
+    );
+  }, [form.companyId, masterData.brands]);
 
-  // 🚀 Cache master data arrays for dropdown rendering
-  const connectionTypes = useMemo(() => masterLocal.connectionType || [], [masterLocal.connectionType]);
-  const connectionShapes = useMemo(() => masterLocal.connectionShape || [], [masterLocal.connectionShape]);
-  const screwdriverShapes = useMemo(() => masterLocal.screwdriverShape || [], [masterLocal.screwdriverShape]);
-  const headShapes = useMemo(() => masterLocal.headShape || [], [masterLocal.headShape]);
-  const bodyShapes = useMemo(() => masterLocal.bodyShape || [], [masterLocal.bodyShape]);
-  const apexShapes = useMemo(() => masterLocal.apexShape || [], [masterLocal.apexShape]);
-  const officialDistributors = useMemo(() => masterLocal.officialDistributor || [], [masterLocal.officialDistributor]);
+  const connectionTypes = useMemo(
+    () => masterData.connectionTypes || [],
+    [masterData.connectionTypes]
+  );
+  const connectionShapes = useMemo(
+    () => masterData.connectionShapes || [],
+    [masterData.connectionShapes]
+  );
+  const screwdriverShapes = useMemo(
+    () => masterData.screwdriverShapes || [],
+    [masterData.screwdriverShapes]
+  );
+  const headShapes = useMemo(
+    () => masterData.headShapes || [],
+    [masterData.headShapes]
+  );
+  const bodyShapes = useMemo(
+    () => masterData.bodyShapes || [],
+    [masterData.bodyShapes]
+  );
+  const apexShapes = useMemo(
+    () => masterData.apexShapes || [],
+    [masterData.apexShapes]
+  );
+  const officialDistributors = useMemo(
+    () => masterData.officialDistributors || [],
+    [masterData.officialDistributors]
+  );
 
   const onPickImage = (key, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setField(key, String(reader.result || ""));
-    reader.readAsDataURL(file);
+
+    setImageFiles((prev) => ({
+      ...prev,
+      [key]: file,
+    }));
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviews((prev) => ({
+      ...prev,
+      [key]: previewUrl,
+    }));
   };
 
   const openPicker = (key) => {
@@ -226,247 +299,310 @@ export default function NewImplant() {
     if (el) el.click();
   };
 
-  const addOption = async (type) => {
-    const labelMap = { levels: "Level", companies: "Company", countries: "Country" };
-    const fieldMap = { levels: "levelId", companies: "companyId", countries: "countryId" };
-    const masterKeyMap = { levels: "level", companies: "company", countries: "country" };
+  const removeImage = (key) => {
+    setImageFiles((prev) => ({
+      ...prev,
+      [key]: null,
+    }));
+
+    setImagePreviews((prev) => ({
+      ...prev,
+      [key]: "",
+    }));
+
+    const input = fileInputs.current[key];
+    if (input) input.value = "";
+  };
+
+  const addFkOption = async (type) => {
+    const labelMap = {
+      levels: "Level",
+      companies: "Company",
+      countries: "Country",
+    };
+
+    const fieldMap = {
+      levels: "levelId",
+      companies: "companyId",
+      countries: "countryId",
+    };
+
     const apiMap = {
       levels: masterDataAPI.createLevel,
       companies: masterDataAPI.createCompany,
       countries: masterDataAPI.createCountry,
     };
 
-    const value = prompt(`เพิ่ม ${labelMap[type]} ใหม่:`);
+    const value = window.prompt(`Enter new ${labelMap[type]} name:`);
     if (!value || !value.trim()) return;
 
     try {
-      let newItem = { id: Date.now(), name: value.trim(), status: "Active" };
-      
-      // พยายามสร้างใน backend ก่อน
-      try {
-        const created = await apiMap[type]({ name: value.trim(), status: "Active" });
-        if (created && created.id) {
-          newItem = created;
-        }
-      } catch (apiErr) {
-        console.warn(`API ไม่ตอบสนอง จะบันทึกแบบ local:`, apiErr);
+      const created = await apiMap[type]({
+        name: value.trim(),
+        status: "Active",
+      });
+
+      if (!created?.id) {
+        throw new Error(`Create ${labelMap[type]} failed`);
       }
-      
-      // บันทึกลง Master Data Storage (localStorage)
-      const currentMaster = loadMaster();
-      const masterKey = masterKeyMap[type];
-      const existingItems = Array.isArray(currentMaster[masterKey]) ? currentMaster[masterKey] : [];
-      
-      // เช็คว่ามีชื่อซ้ำหรือไม่
-      const isDuplicate = existingItems.some(item => 
-        item.name.toLowerCase().trim() === value.trim().toLowerCase()
-      );
-      
-      if (isDuplicate) {
-        alert(`มี ${labelMap[type]} ชื่อ "${value.trim()}" อยู่แล้ว!`);
-        return;
-      }
-      
-      // เพิ่มข้อมูลใหม่เข้าไป
-      const updatedMaster = {
-        ...currentMaster,
-        [masterKey]: [newItem, ...existingItems]
-      };
-      
-      saveMaster(updatedMaster);
-      
-      // ⭐ Trigger storage event เพื่อบอกหน้าอื่นๆ (เช่น Master Data) ให้รีเฟรช
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'admin_masterdata_v1',
-        newValue: JSON.stringify(updatedMaster),
-        storageArea: localStorage
-      }));
-      
-      // อัพเดท state ในหน้านี้
+
       setMasterData((prev) => ({
         ...prev,
-        [type]: [newItem, ...(prev[type] || [])],
+        [type]: [created, ...(prev[type] || [])],
       }));
-      
-      // เลือกรายการที่เพิ่มใหม่ทันที
-      setField(fieldMap[type], newItem.id);
-      alert(`เพิ่ม ${labelMap[type]} "${value.trim()}" สำเร็จ!`);
-      
+
+      syncMasterLocal({
+        [type === "levels"
+          ? "level"
+          : type === "companies"
+          ? "company"
+          : "country"]: [
+          created,
+          ...((loadMaster()?.[
+            type === "levels"
+              ? "level"
+              : type === "companies"
+              ? "company"
+              : "country"
+          ]) || []),
+        ],
+      });
+
+      setField(fieldMap[type], Number(created.id));
+      alert(`Added ${labelMap[type]} successfully`);
     } catch (err) {
-      console.error(`Error adding ${labelMap[type]}:`, err);
-      alert(`เกิดข้อผิดพลาด: ${err.message}`);
+      alert(`Failed to add ${labelMap[type]}: ${err.message}`);
     }
   };
 
   const addBrand = async () => {
     if (!form.companyId) {
-      alert("กรุณาเลือก Company ก่อน");
+      alert("Please select Company first");
       return;
     }
 
-    const brandName = prompt("เพิ่ม Brand ใหม่:");
+    const brandName = window.prompt("Enter new Brand name:");
     if (!brandName || !brandName.trim()) return;
 
+    const website = window.prompt("Enter website (optional):", "") || "";
+
     try {
-      let newBrand = { id: Date.now(), name: brandName.trim(), status: "Active", companyId: form.companyId };
-      
-      // บันทึกลง Master Data Storage
-      const currentMaster = loadMaster();
-      const existingBrands = Array.isArray(currentMaster.brand) ? currentMaster.brand : [];
-      
-      // เช็คว่ามี Brand ชื่อเดียวกันในบริษัทนี้หรือไม่
-      const isDuplicate = existingBrands.some(b => 
-        b.name.toLowerCase().trim() === brandName.trim().toLowerCase() && 
-        b.companyId === form.companyId
-      );
-      
-      if (isDuplicate) {
-        alert(`Brand "${brandName.trim()}" มีอยู่แล้วในบริษัทนี้!`);
-        return;
-      }
-      
-      // เพิ่ม Brand ใหม่
-      const updatedMaster = {
-        ...currentMaster,
-        brand: [newBrand, ...existingBrands]
+      const created = await brandAPI.create({
+        name: brandName.trim(),
+        companyId: Number(form.companyId),
+        website,
+        status: "Active",
+      });
+
+      const brandItem = {
+        id: created?.id ?? created?.idbrand,
+        name: created?.name ?? created?.brand_name ?? brandName.trim(),
+        companyId:
+          created?.companyId ??
+          created?.manufacturer_id ??
+          Number(form.companyId),
+        companyName: created?.companyName || "",
+        website: created?.website || website,
+        status: created?.status || "Active",
       };
-      
-      saveMaster(updatedMaster);
-      
-      // Trigger storage event
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'admin_masterdata_v1',
-        newValue: JSON.stringify(updatedMaster),
-        storageArea: localStorage
+
+      setMasterData((prev) => ({
+        ...prev,
+        brands: [brandItem, ...(prev.brands || [])],
       }));
-      
-      // อัพเดท state
-      setMasterLocal(updatedMaster);
-      setField("brand", newBrand.name);
-      alert(`เพิ่ม Brand "${brandName.trim()}" สำเร็จ!`);
-      
+
+      syncMasterLocal({
+        brand: [brandItem, ...((loadMaster()?.brand) || [])],
+      });
+
+      setField("brand", brandItem.name);
+      alert(`Added Brand "${brandItem.name}" successfully`);
     } catch (err) {
-      console.error("Error adding brand:", err);
-      alert(`เกิดข้อผิดพลาด: ${err.message}`);
+      alert(`Failed to add Brand: ${err.message}`);
     }
   };
 
+  const addTextMasterOption = async ({
+    label,
+    stateKey,
+    localKey,
+    fieldName,
+    createApi,
+  }) => {
+    const value = window.prompt(`Enter new ${label} name:`);
+    if (!value || !value.trim()) return;
+
+    try {
+      const created = await createApi({
+        name: value.trim(),
+        status: "Active",
+      });
+
+      if (!created?.id && !created?.name) {
+        throw new Error(`Create ${label} failed`);
+      }
+
+      const item = {
+        id: created.id,
+        name: created.name,
+        status: created.status || "Active",
+      };
+
+      setMasterData((prev) => ({
+        ...prev,
+        [stateKey]: [item, ...(prev[stateKey] || [])],
+      }));
+
+      syncMasterLocal({
+        [localKey]: [item, ...((loadMaster()?.[localKey]) || [])],
+      });
+
+      setField(fieldName, item.name);
+      alert(`Added ${label} successfully`);
+    } catch (err) {
+      alert(`Failed to add ${label}: ${err.message}`);
+    }
+  };
+
+  const addConnectionType = () =>
+    addTextMasterOption({
+      label: "Connection Type",
+      stateKey: "connectionTypes",
+      localKey: "connectionType",
+      fieldName: "connectionType",
+      createApi: masterDataAPI.createConnectionType,
+    });
+
+  const addConnectionShape = () =>
+    addTextMasterOption({
+      label: "Connection Shape",
+      stateKey: "connectionShapes",
+      localKey: "connectionShape",
+      fieldName: "connectionShape",
+      createApi: masterDataAPI.createConnectionShape,
+    });
+
+  const addScrewdriverShape = () =>
+    addTextMasterOption({
+      label: "Screwdriver Shape",
+      stateKey: "screwdriverShapes",
+      localKey: "screwdriverShape",
+      fieldName: "screwdriverShape",
+      createApi: masterDataAPI.createScrewdriverShape,
+    });
+
+  const addHeadShape = () =>
+    addTextMasterOption({
+      label: "Head Shape",
+      stateKey: "headShapes",
+      localKey: "headShape",
+      fieldName: "headShape",
+      createApi: masterDataAPI.createHeadShape,
+    });
+
+  const addBodyShape = () =>
+    addTextMasterOption({
+      label: "Body Shape",
+      stateKey: "bodyShapes",
+      localKey: "bodyShape",
+      fieldName: "bodyShape",
+      createApi: masterDataAPI.createBodyShape,
+    });
+
+  const addApexShape = () =>
+    addTextMasterOption({
+      label: "Apex Shape",
+      stateKey: "apexShapes",
+      localKey: "apexShape",
+      fieldName: "apexShape",
+      createApi: masterDataAPI.createApexShape,
+    });
+
+  const addOfficialDistributor = () =>
+    addTextMasterOption({
+      label: "Official Distributor",
+      stateKey: "officialDistributors",
+      localKey: "officialDistributor",
+      fieldName: "officialDistributor",
+      createApi: masterDataAPI.createDistributor,
+    });
+
   const save = async () => {
-    if (!canSave) {
-      console.warn("Missing required fields: Name, Company, Level, Country");
+    if (isMasterEdit) {
+      setSaveError("Master implant edit is still locked in this form");
       return;
     }
+
+    if (!canSave) {
+      setSaveError("Please fill all required fields");
+      return;
+    }
+
+    const validCompany = masterData.companies.some(
+      (c) => Number(c.id) === Number(form.companyId)
+    );
+    const validLevel = masterData.levels.some(
+      (l) => Number(l.id) === Number(form.levelId)
+    );
+    const validCountry =
+      !form.countryId ||
+      masterData.countries.some((c) => Number(c.id) === Number(form.countryId));
+
+    if (!validCompany) {
+      setSaveError("Selected Company does not exist in companies table");
+      return;
+    }
+
+    if (!validLevel) {
+      setSaveError("Selected Level does not exist in levels table");
+      return;
+    }
+
+    if (!validCountry) {
+      setSaveError("Selected Country does not exist in countries table");
+      return;
+    }
+
     try {
       setSaving(true);
       setSaveError("");
-      
-      // 🖼️ Log images before save
-      console.log("📸 Images to save:", {
-        image1: form.image1 ? `data URL (${String(form.image1).length} chars)` : "(empty)",
-        image2: form.image2 ? `data URL (${String(form.image2).length} chars)` : "(empty)",
-        image3: form.image3 ? `data URL (${String(form.image3).length} chars)` : "(empty)",
-      });
-      console.log("📋 Full form object:", {
-        name: form.name,
-        brand: form.brand,
-        companyId: form.companyId,
-        levelId: form.levelId,
-        image1_present: !!form.image1,
-        image2_present: !!form.image2,
-        image3_present: !!form.image3,
-      });
-      
-      // Read all implants from localStorage
+
+      const payload = {
+        ...form,
+        companyId: Number(form.companyId),
+        levelId: Number(form.levelId),
+        countryId: form.countryId ? Number(form.countryId) : null,
+        image1: imageFiles.image1,
+        image2: imageFiles.image2,
+        image3: imageFiles.image3,
+      };
+
+      const apiResult = isEdit
+        ? await implantsAPI.update(id, payload)
+        : await implantsAPI.create(payload);
+
       const localRaw = localStorage.getItem(IMPLANTS_KEY);
       let implants = [];
+
       try {
         implants = localRaw ? JSON.parse(localRaw) : [];
         if (!Array.isArray(implants)) implants = [];
       } catch {
         implants = [];
       }
-      
-      if (isEdit) {
-        // Try to update in API first (primary storage)
-        let apiResult = null;
-        let apiError = null;
-        try {
-          apiError = apiErr;
-          console.error("API update failed:", apiErr);
-        } catch (apiErr) {
-          apiError = apiErr;
-          console.error("API update failed:", apiErr);
-        }
-        
-        if (apiResult) {
-          // API success - store in localStorage too
-          const updated = implants.map((imp) =>
+
+      const updated = isEdit
+        ? implants.map((imp) =>
             String(imp.id) === String(id) ? apiResult : imp
-          );
-          localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-          // Notify other tabs/components to refresh
-          window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
-          window.dispatchEvent(new Event('storage'));
-          console.log('✅ Updated successfully');
-        } else {
-          // API failed - silently save to localStorage
-          console.warn('⚠️ API update failed');
-          const updated = implants.map((imp) =>
-            String(imp.id) === String(id) ? { ...imp, ...form, id: imp.id } : imp
-          );
-          localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-          window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
-          window.dispatchEvent(new Event('storage'));
-          if (apiError) {
-            setSaveError("บันทึกข้อมูลลงเซิร์ฟเวอร์ไม่สำเร็จ ระบบบันทึกชั่วคราวไว้ในเครื่องแล้ว กรุณาตรวจสอบการเชื่อมต่อฐานข้อมูล");
-          }
-        }
-      } else {
-        // Try to create in API first (primary storage)
-        let apiResult = null;
-        let apiError = null;
-        try {
-          apiResult = await implantsAPI.create(form);
-        } catch (apiErr) {
-          apiError = apiErr;
-          console.error("API create failed:", apiErr);
-        }
-        
-        if (apiResult) {
-          // API success - store in localStorage too
-          const updated = [apiResult, ...implants];
-          localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-          // Notify other tabs/components to refresh
-          window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
-          window.dispatchEvent(new Event('storage'));
-          console.log('✅ Created successfully');
-        } else {
-          // API failed - silently save to localStorage
-          console.warn('⚠️ API create failed');
-          // Create only in localStorage as fallback
-          const newImplant = { id: Date.now(), ...form };
-          console.log("💾 Saving to localStorage:", {
-            id: newImplant.id,
-            name: newImplant.name,
-            image1: newImplant.image1 ? `${String(newImplant.image1).substring(0, 50)}...` : "(empty)",
-            image2: newImplant.image2 ? `${String(newImplant.image2).substring(0, 50)}...` : "(empty)",
-            image3: newImplant.image3 ? `${String(newImplant.image3).substring(0, 50)}...` : "(empty)",
-          });
-          const updated = [newImplant, ...implants];
-          localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-          window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
-          window.dispatchEvent(new Event('storage'));
-          if (apiError) {
-            setSaveError("สร้างข้อมูลบนเซิร์ฟเวอร์ไม่สำเร็จ ระบบบันทึกชั่วคราวไว้ในเครื่องแล้ว กรุณาตรวจสอบการเชื่อมต่อฐานข้อมูล");
-          }
-        }
-      }
-      
+          )
+        : [apiResult, ...implants];
+
+      localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
       navigate("/admin/implants");
     } catch (err) {
-      console.error("Save failed:", err.message);
+      console.error("Save failed:", err);
+      setSaveError(err.message || "Save failed");
     } finally {
       setSaving(false);
     }
@@ -485,7 +621,11 @@ export default function NewImplant() {
           { label: isEdit ? "Edit Implant" : "New Implant" },
         ]}
       />
-      <h2 className="pageTitle">{isEdit ? "Edit" : "New"} Implant</h2>
+
+      <h2 className="pageTitle">
+        {isEdit ? "Edit" : "New"} Implant
+        {isMasterEdit ? " (Master locked)" : ""}
+      </h2>
 
       {saveError && (
         <div className="saveWarning" role="alert">
@@ -496,12 +636,21 @@ export default function NewImplant() {
       <div className="newGrid">
         <div className="imgCard">
           {["image1", "image2", "image3"].map((key, idx) => {
-            const current = form[key];
+            const current = imagePreviews[key];
+
             return (
               <div className="imgField" key={key}>
-                <div className="imgBox" onClick={() => openPicker(key)} style={{ cursor: "pointer", position: "relative" }}>
+                <div
+                  className="imgBox"
+                  onClick={() => openPicker(key)}
+                  style={{ cursor: "pointer", position: "relative" }}
+                >
                   {current ? (
-                    <img className="preview" src={current} alt={`preview ${idx + 1}`} />
+                    <img
+                      className="preview"
+                      src={current}
+                      alt={`preview ${idx + 1}`}
+                    />
                   ) : (
                     <div className="placeholder">
                       <div className="phIcon">🖼️</div>
@@ -510,12 +659,32 @@ export default function NewImplant() {
                   )}
 
                   <div className="imgActions">
-                    <button type="button" className="imgBtn" onClick={(e) => { e.stopPropagation(); openPicker(key); }}>Change</button>
+                    <button
+                      type="button"
+                      className="imgBtn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPicker(key);
+                      }}
+                    >
+                      Change
+                    </button>
+
                     {current && (
-                      <button type="button" className="imgBtn danger" onClick={(e) => { e.stopPropagation(); setField(key, ""); }}>Remove</button>
+                      <button
+                        type="button"
+                        className="imgBtn danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage(key);
+                        }}
+                      >
+                        Remove
+                      </button>
                     )}
                   </div>
                 </div>
+
                 <input
                   ref={(el) => (fileInputs.current[key] = el)}
                   type="file"
@@ -531,7 +700,12 @@ export default function NewImplant() {
         <div className="formCard">
           <div className="twoCol">
             <Field label="Name">
-              <input className="input" value={form.name} onChange={(e) => setField("name", e.target.value)} placeholder="Name" />
+              <input
+                className="input"
+                value={form.name}
+                onChange={(e) => setField("name", e.target.value)}
+                placeholder="Name"
+              />
             </Field>
 
             <Field label="Brand">
@@ -549,7 +723,11 @@ export default function NewImplant() {
                       </option>
                     ))}
                   </select>
-                  <button type="button" className="btnAddOption" onClick={() => addBrand()} title="เพิ่ม Brand ใหม่">
+                  <button
+                    type="button"
+                    className="btnAddOption"
+                    onClick={addBrand}
+                  >
                     + Add
                   </button>
                 </div>
@@ -559,7 +737,12 @@ export default function NewImplant() {
             </Field>
 
             <Field label="Slug">
-              <input className="input" value={form.slug} onChange={(e) => setField("slug", e.target.value)} placeholder="Slug" />
+              <input
+                className="input"
+                value={form.slug}
+                onChange={(e) => setField("slug", e.target.value)}
+                placeholder="Slug"
+              />
             </Field>
 
             <Field label="Level">
@@ -567,16 +750,25 @@ export default function NewImplant() {
                 <select
                   className="input"
                   value={form.levelId || ""}
-                  onChange={(e) => setField("levelId", e.target.value ? Number(e.target.value) : null)}
+                  onChange={(e) =>
+                    setField(
+                      "levelId",
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
                 >
                   <option value="">Choose Level</option>
-                  {masterData.levels.map((l, idx) => (
-                    <option key={`level-${l.id}-${idx}`} value={l.id}>
+                  {masterData.levels.map((l) => (
+                    <option key={l.id} value={l.id}>
                       {l.name}
                     </option>
                   ))}
                 </select>
-                <button type="button" className="btnAddOption" onClick={() => addOption("levels")} title="เพิ่ม Level ใหม่">
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={() => addFkOption("levels")}
+                >
                   + Add
                 </button>
               </div>
@@ -587,16 +779,25 @@ export default function NewImplant() {
                 <select
                   className="input"
                   value={form.companyId || ""}
-                  onChange={(e) => setField("companyId", e.target.value ? Number(e.target.value) : null)}
+                  onChange={(e) =>
+                    setField(
+                      "companyId",
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
                 >
                   <option value="">Choose Company</option>
-                  {masterData.companies.map((c, idx) => (
-                    <option key={`company-${c.id}-${idx}`} value={c.id}>
+                  {masterData.companies.map((c) => (
+                    <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
                 </select>
-                <button type="button" className="btnAddOption" onClick={() => addOption("companies")} title="เพิ่ม Company ใหม่">
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={() => addFkOption("companies")}
+                >
                   + Add
                 </button>
               </div>
@@ -607,147 +808,233 @@ export default function NewImplant() {
                 <select
                   className="input"
                   value={form.countryId || ""}
-                  onChange={(e) => setField("countryId", e.target.value ? Number(e.target.value) : null)}
+                  onChange={(e) =>
+                    setField(
+                      "countryId",
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
                 >
                   <option value="">Choose Country</option>
-                  {masterData.countries.map((c, idx) => (
-                    <option key={`country-${c.id}-${idx}`} value={c.id}>
+                  {masterData.countries.map((c) => (
+                    <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
                 </select>
-                <button type="button" className="btnAddOption" onClick={() => addOption("countries")} title="เพิ่ม Country ใหม่">
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={() => addFkOption("countries")}
+                >
                   + Add
                 </button>
               </div>
             </Field>
 
             <Field label="Country (text, optional)">
-              <input className="input" value={form.countryText} onChange={(e) => setField("countryText", e.target.value)} placeholder="Headquarters / Manufacturer" />
+              <input
+                className="input"
+                value={form.countryText}
+                onChange={(e) => setField("countryText", e.target.value)}
+                placeholder="Headquarters / Manufacturer"
+              />
             </Field>
 
             <Field label="Website">
-              <input className="input" value={form.website} onChange={(e) => setField("website", e.target.value)} placeholder="https://" />
+              <input
+                className="input"
+                value={form.website}
+                onChange={(e) => setField("website", e.target.value)}
+                placeholder="https://"
+              />
             </Field>
 
             <Field label="Brand Description">
-              <textarea className="input" value={form.brandDescription} onChange={(e) => setField("brandDescription", e.target.value)} placeholder="Brand description" />
+              <textarea
+                className="input"
+                value={form.brandDescription}
+                onChange={(e) => setField("brandDescription", e.target.value)}
+                placeholder="Brand description"
+              />
             </Field>
 
             <Field label="Connection Type">
-              <select
-                className="input"
-                value={form.connectionType || ""}
-                onChange={(e) => setField("connectionType", e.target.value)}
-              >
-                <option value="">Choose Connection Type</option>
-                {connectionTypes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.connectionType && !connectionTypes.some((o) => o.name === form.connectionType) && (
-                  <option value={form.connectionType}>Current: {form.connectionType}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.connectionType || ""}
+                  onChange={(e) => setField("connectionType", e.target.value)}
+                >
+                  <option value="">Choose Connection Type</option>
+                  {connectionTypes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addConnectionType}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Connection Shape">
-              <select
-                className="input"
-                value={form.connectionShape || ""}
-                onChange={(e) => setField("connectionShape", e.target.value)}
-              >
-                <option value="">Choose Connection Shape</option>
-                {connectionShapes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.connectionShape && !connectionShapes.some((o) => o.name === form.connectionShape) && (
-                  <option value={form.connectionShape}>Current: {form.connectionShape}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.connectionShape || ""}
+                  onChange={(e) => setField("connectionShape", e.target.value)}
+                >
+                  <option value="">Choose Connection Shape</option>
+                  {connectionShapes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addConnectionShape}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Screwdriver Shape">
-              <select
-                className="input"
-                value={form.screwdriverShape || ""}
-                onChange={(e) => setField("screwdriverShape", e.target.value)}
-              >
-                <option value="">Choose Screwdriver Shape</option>
-                {screwdriverShapes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.screwdriverShape && !screwdriverShapes.some((o) => o.name === form.screwdriverShape) && (
-                  <option value={form.screwdriverShape}>Current: {form.screwdriverShape}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.screwdriverShape || ""}
+                  onChange={(e) => setField("screwdriverShape", e.target.value)}
+                >
+                  <option value="">Choose Screwdriver Shape</option>
+                  {screwdriverShapes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addScrewdriverShape}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Head Shape">
-              <select
-                className="input"
-                value={form.headShape || ""}
-                onChange={(e) => setField("headShape", e.target.value)}
-              >
-                <option value="">Choose Head Shape</option>
-                {headShapes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.headShape && !headShapes.some((o) => o.name === form.headShape) && (
-                  <option value={form.headShape}>Current: {form.headShape}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.headShape || ""}
+                  onChange={(e) => setField("headShape", e.target.value)}
+                >
+                  <option value="">Choose Head Shape</option>
+                  {headShapes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addHeadShape}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Body Shape">
-              <select
-                className="input"
-                value={form.bodyShape || ""}
-                onChange={(e) => setField("bodyShape", e.target.value)}
-              >
-                <option value="">Choose Body Shape</option>
-                {bodyShapes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.bodyShape && !bodyShapes.some((o) => o.name === form.bodyShape) && (
-                  <option value={form.bodyShape}>Current: {form.bodyShape}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.bodyShape || ""}
+                  onChange={(e) => setField("bodyShape", e.target.value)}
+                >
+                  <option value="">Choose Body Shape</option>
+                  {bodyShapes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addBodyShape}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Apex Shape">
-              <select
-                className="input"
-                value={form.apexShape || ""}
-                onChange={(e) => setField("apexShape", e.target.value)}
-              >
-                <option value="">Choose Apex Shape</option>
-                {apexShapes.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.apexShape && !apexShapes.some((o) => o.name === form.apexShape) && (
-                  <option value={form.apexShape}>Current: {form.apexShape}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.apexShape || ""}
+                  onChange={(e) => setField("apexShape", e.target.value)}
+                >
+                  <option value="">Choose Apex Shape</option>
+                  {apexShapes.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addApexShape}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Official Distributor">
-              <select
-                className="input"
-                value={form.officialDistributor || ""}
-                onChange={(e) => setField("officialDistributor", e.target.value)}
-              >
-                <option value="">Choose Distributor</option>
-                {officialDistributors.map((opt) => (
-                  <option key={opt.id} value={opt.name}>{opt.name}</option>
-                ))}
-                {form.officialDistributor && !officialDistributors.some((o) => o.name === form.officialDistributor) && (
-                  <option value={form.officialDistributor}>Current: {form.officialDistributor}</option>
-                )}
-              </select>
+              <div className="selectRow">
+                <select
+                  className="input"
+                  value={form.officialDistributor || ""}
+                  onChange={(e) =>
+                    setField("officialDistributor", e.target.value)
+                  }
+                >
+                  <option value="">Choose Distributor</option>
+                  {officialDistributors.map((opt) => (
+                    <option key={opt.id} value={opt.name}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btnAddOption"
+                  onClick={addOfficialDistributor}
+                >
+                  + Add
+                </button>
+              </div>
             </Field>
 
             <Field label="Status">
-              <select className="input" value={form.status} onChange={(e) => setField("status", e.target.value)}>
+              <select
+                className="input"
+                value={form.status}
+                onChange={(e) => setField("status", e.target.value)}
+              >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -755,10 +1042,17 @@ export default function NewImplant() {
           </div>
 
           <div className="formActions">
-            <button className="btnSave" onClick={save} disabled={!canSave || saving}>
+            <button
+              className="btnSave"
+              onClick={save}
+              disabled={!canSave || saving}
+            >
               {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Implant"}
             </button>
-            <button className="btnCancel" onClick={() => navigate("/admin/implants")}>
+            <button
+              className="btnCancel"
+              onClick={() => navigate("/admin/implants")}
+            >
               Cancel
             </button>
           </div>
@@ -776,4 +1070,3 @@ function Field({ label, children }) {
     </div>
   );
 }
-

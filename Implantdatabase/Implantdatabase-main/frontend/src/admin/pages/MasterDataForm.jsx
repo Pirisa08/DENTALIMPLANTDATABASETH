@@ -1,79 +1,140 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./MasterData.css";
-import { getTypeLabel, loadMaster, saveMaster } from "./masterDataStore.js";
+import { getTypeLabel } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { masterDataAPI, brandAPI } from "../../services/api.js";
 
 export default function MasterDataForm({ mode }) {
   const navigate = useNavigate();
   const { type, id } = useParams();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || `/admin/master/${type}`;
-  const brandId = searchParams.get("brandId");
   const label = getTypeLabel(type);
 
-  const master = loadMaster();
-  const list = Array.isArray(master[type]) ? master[type] : [];
-  const editing = mode === "edit" ? list.find((x) => String(x.id) === String(id)) : null;
-
-  const [name, setName] = useState(editing?.name || "");
-  const [status, setStatus] = useState(editing?.status || "Active");
-  const [modelCount, setModelCount] = useState(editing?.modelCount || 0);
-  const [q, setQ] = useState("");
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState("Active");
+  const [loading, setLoading] = useState(false);
 
   const canSave = useMemo(() => name.trim().length > 0, [name]);
 
-  const save = () => {
-    if (!canSave) return;
+  // ✅ โหลดข้อมูลตอน edit
+  useEffect(() => {
+    if (mode !== "edit" || !id) return;
 
-    if (mode === "edit") {
-      if (!editing) {
-        alert("Item not found");
-        navigate(`/admin/master/${type}`);
-        return;
+    async function load() {
+      try {
+        setLoading(true);
+
+        let data = null;
+
+        if (type === "company") data = await masterDataAPI.getCompanies();
+        if (type === "country") data = await masterDataAPI.getCountries();
+        if (type === "level") data = await masterDataAPI.getLevels();
+        if (type === "connectionType") data = await masterDataAPI.getConnectionTypes();
+        if (type === "connectionShape") data = await masterDataAPI.getConnectionShapes();
+        if (type === "headShape") data = await masterDataAPI.getHeadShapes();
+        if (type === "bodyShape") data = await masterDataAPI.getBodyShapes();
+        if (type === "apexShape") data = await masterDataAPI.getApexShapes();
+        if (type === "screwdriverShape") data = await masterDataAPI.getScrewdriverShapes();
+        if (type === "officialDistributor") data = await masterDataAPI.getDistributors();
+
+        if (type === "brand") data = await brandAPI.getAll();
+
+        const item = data?.find((x) => String(x.id) === String(id));
+
+        if (item) {
+          setName(item.name || "");
+          setStatus(item.status || "Active");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      const next = list.map((x) => 
-        String(x.id) === String(id) 
-          ? { 
-              ...x, 
-              name: name.trim(), 
-              status, 
-              ...(type === 'brand' && { modelCount: parseInt(modelCount) || 0 }),
-              ...(type === 'model' && brandId && { brandId: parseInt(brandId) })
-            }
-          : x
-      );
-      const nextMaster = { ...master, [type]: next };
-      saveMaster(nextMaster);
-      navigate(returnTo);
-      return;
     }
 
-    const newItem = { 
-      id: Date.now(), 
-      name: name.trim(), 
-      status, 
-      ...(type === 'brand' && { modelCount: parseInt(modelCount) || 0 }),
-      ...(type === 'model' && brandId && { brandId: parseInt(brandId) })
-    };
-    const nextMaster = { ...master, [type]: [newItem, ...list] };
-    saveMaster(nextMaster);
-    
-    // ✅ รีโหลดหน้า เพื่อให้เห็นข้อมูลใหม่ทันที
-    setTimeout(() => {
-      window.location.href = returnTo;
-    }, 300);
+    load();
+  }, [mode, id, type]);
+
+  // ✅ map API
+  const apiMap = {
+    company: {
+      create: masterDataAPI.createCompany,
+      update: masterDataAPI.updateCompany,
+    },
+    country: {
+      create: masterDataAPI.createCountry,
+      update: masterDataAPI.updateCountry,
+    },
+    level: {
+      create: masterDataAPI.createLevel,
+      update: masterDataAPI.updateLevel,
+    },
+    connectionType: {
+      create: masterDataAPI.createConnectionType,
+      update: masterDataAPI.updateConnectionType,
+    },
+    connectionShape: {
+      create: masterDataAPI.createConnectionShape,
+      update: masterDataAPI.updateConnectionShape,
+    },
+    screwdriverShape: {
+      create: masterDataAPI.createScrewdriverShape,
+      update: masterDataAPI.updateScrewdriverShape,
+    },
+    headShape: {
+      create: masterDataAPI.createHeadShape,
+      update: masterDataAPI.updateHeadShape,
+    },
+    bodyShape: {
+      create: masterDataAPI.createBodyShape,
+      update: masterDataAPI.updateBodyShape,
+    },
+    apexShape: {
+      create: masterDataAPI.createApexShape,
+      update: masterDataAPI.updateApexShape,
+    },
+    officialDistributor: {
+      create: masterDataAPI.createDistributor,
+      update: masterDataAPI.updateDistributor,
+    },
+    brand: {
+      create: brandAPI.create,
+      update: brandAPI.update,
+    },
+  };
+
+  const save = async () => {
+    if (!canSave) return;
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        name: name.trim(),
+        status,
+      };
+
+      if (mode === "edit") {
+        await apiMap[type].update(id, payload);
+      } else {
+        await apiMap[type].create(payload);
+      }
+
+      // ✅ กลับหน้า + refresh
+      navigate(returnTo);
+    } catch (err) {
+      alert("Save failed: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="mdWrap">
-      <AdminSearchBar
-        placeholder="Search master data…"
-        value={q}
-        onChangeQ={setQ}
-        onSearch={setQ}
-      />
+      <AdminSearchBar />
 
       <Breadcrumb
         items={[
@@ -84,59 +145,46 @@ export default function MasterDataForm({ mode }) {
         ]}
       />
 
-      <h2 className="pageTitle">{mode === "edit" ? `Edit ${label} Data` : `New ${label} Data`}</h2>
+      <h2 className="pageTitle">
+        {mode === "edit" ? `Edit ${label}` : `New ${label}`}
+      </h2>
 
       <div className="panelMd">
         <div className="formBox">
           <div className="field">
             <div className="label">Name</div>
-            <input className="mdInput" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+            <input
+              className="mdInput"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           <div className="field">
             <div className="label">Status</div>
-            <div className="statusPick">
-              <label className="check">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={status === "Active"}
-                  onChange={() => setStatus("Active")}
-                />
-                Active
-              </label>
-
-              <label className="check">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={status === "Inactive"}
-                  onChange={() => setStatus("Inactive")}
-                />
-                Inactive
-              </label>
-            </div>
+            <select
+              className="mdInput"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
           </div>
 
-          {type === 'brand' && (
-            <div className="field">
-              <div className="label">Number of Models</div>
-              <input 
-                className="mdInput" 
-                type="number" 
-                min="0" 
-                value={modelCount} 
-                onChange={(e) => setModelCount(e.target.value)} 
-                placeholder="e.g., 4"
-              />
-            </div>
-          )}
-
           <div className="formActions">
-            <button className="btn save" onClick={save} disabled={!canSave}>
-              Save
+            <button
+              className="btn save"
+              onClick={save}
+              disabled={!canSave || loading}
+            >
+              {loading ? "Saving..." : "Save"}
             </button>
-            <button className="btn cancel" onClick={() => navigate(returnTo)}>
+
+            <button
+              className="btn cancel"
+              onClick={() => navigate(returnTo)}
+            >
               Cancel
             </button>
           </div>

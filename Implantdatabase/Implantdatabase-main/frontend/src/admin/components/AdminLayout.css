@@ -120,25 +120,54 @@
 }
 
 .avatar{
-  width: 48px; height: 48px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
   border-radius: 999px;
-  display: grid; place-items: center;
-  font-weight: 900;
-  background: #5B7FD1;
-  color: #fff;
   overflow: hidden;
-  font-size: 20px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .avatarImg{
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.profileText{ text-align: left; }
-.profileText .name{ font-weight:700; }
-.profileText .role{ font-size:12px; opacity:.8; }
+.avatarCircle{
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 20px;
+  color: #fff;
+  user-select: none;
+}
+
+.profileText{
+  text-align: left;
+  min-width: 0;
+}
+
+.profileText .name{
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileText .role{
+  font-size: 12px;
+  opacity: .8;
+  margin-top: 2px;
+}
 
 .menuTitle{
   margin: 18px 10px 10px;
@@ -146,7 +175,11 @@
   opacity: .9;
 }
 
-.nav{ display:flex; flex-direction:column; gap:8px; }
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
 .navItem{
   width: 100%;
@@ -164,7 +197,9 @@
   gap: 10px;
 }
 
-.navItem:hover{ background: rgba(255,255,255,0.08); }
+.navItem:hover{
+  background: rgba(255,255,255,0.08);
+}
 
 .navItem.active{
   background:#ffcc3a;
@@ -176,7 +211,10 @@
   background: rgba(255,255,255,0.04);
 }
 
-.masterDropdown{ display:flex; flex-direction:column; }
+.masterDropdown{
+  display:flex;
+  flex-direction:column;
+}
 
 .masterToggle{
   display:flex;
@@ -249,7 +287,9 @@
   font-weight:700;
 }
 
-.masterLabel{ flex:1; }
+.masterLabel{
+  flex:1;
+}
 
 .masterCount{
   background:rgba(255,255,255,0.15);
@@ -269,11 +309,13 @@
   border:none;
   background:rgba(255,255,255,0.08);
   color:#fff;
-  width:28px; height:28px;
+  width:28px;
+  height:28px;
   border-radius:8px;
   cursor:pointer;
   font-weight:900;
-  display:grid; place-items:center;
+  display:grid;
+  place-items:center;
 }
 
 .sidebarAddBtn:hover{
@@ -307,26 +349,35 @@
     padding: 16px 14px;
     font-size: 13px;
   }
-  
+
   .avatar{
     width: 42px;
     height: 42px;
+    min-width: 42px;
+  }
+
+  .avatarCircle{
     font-size: 18px;
   }
-  
-  .profileText .name{ font-size: 14px; }
-  .profileText .role{ font-size: 11px; }
-  
+
+  .profileText .name{
+    font-size: 14px;
+  }
+
+  .profileText .role{
+    font-size: 11px;
+  }
+
   .navItem{
     padding: 10px 14px;
     font-size: 13px;
   }
-  
+
   .logoutBtn{
     padding: 10px 16px;
     font-size: 13px;
   }
-  
+
   .content{
     padding: 12px;
   }
@@ -334,12 +385,10 @@
 
 /* Mobile & Tablet - Drawer Sidebar */
 @media (max-width: 768px){
-  /* Show Hamburger Button */
   .hamburgerBtn {
     display: flex;
   }
-  
-  /* Sidebar as Drawer (hidden by default) */
+
   .sidebar{
     position: fixed;
     top: 0;
@@ -353,38 +402,43 @@
     padding: 80px 18px 20px 18px;
     box-shadow: none;
   }
-  
+
   .sidebar.active {
     transform: translateX(0);
     box-shadow: 4px 0 20px rgba(0,0,0,0.3);
   }
-  
+
   .content{
     margin-left: 0;
     width: 100%;
     padding: 80px 12px 12px 12px;
   }
-  
-  .profile, .profileBtn{
+
+  .profile,
+  .profileBtn{
     padding: 12px;
   }
-  
+
   .avatar{
     width: 40px;
     height: 40px;
+    min-width: 40px;
+  }
+
+  .avatarCircle{
     font-size: 16px;
   }
-  
+
   .menuTitle{
     margin: 12px 10px 8px;
     font-size: 11px;
   }
-  
+
   .navItem{
     padding: 12px 14px;
     font-size: 13px;
   }
-  
+
   .logoutBtn{
     margin-top: 16px;
     padding: 10px 14px;
@@ -400,29 +454,34 @@
     top: 16px;
     left: 16px;
   }
-  
+
   .hamburgerBtn span {
     width: 20px;
     height: 2.5px;
   }
-  
+
   .sidebar{
     width: 90vw;
     max-width: none;
   }
-  
+
   .content{
     padding: 72px 10px 10px 10px;
   }
-  
-  .profileText .name{ font-size: 13px; }
-  .profileText .role{ font-size: 10px; }
-  
+
+  .profileText .name{
+    font-size: 13px;
+  }
+
+  .profileText .role{
+    font-size: 10px;
+  }
+
   .navItem{
     padding: 10px 12px;
     font-size: 12px;
   }
-  
+
   .logoutBtn{
     padding: 8px 12px;
     font-size: 11px;

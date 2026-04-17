@@ -1,141 +1,96 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { implants as seedImplants } from "../data/implants";
-import { implantsAPI } from "../../services/api";
+import { implantsAPI, resolveImageUrl } from "../../services/api";
 
-const ADMIN_IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 
 const buildImplantKey = (implant) => {
   if (!implant) return "";
-  const slug = (implant.slug || "").trim().toLowerCase();
+
+  const slug = String(implant.slug || "").trim().toLowerCase();
   if (slug) return `slug:${slug}`;
-  const brand = (implant.brand || "").trim().toLowerCase();
-  const name = (implant.name || "").trim().toLowerCase();
-  if (brand && name) return `brandname:${brand}::${name}`;
+
   const id = String(implant.id || "").trim();
   if (id) return `id:${id}`;
-  return `idx:${Math.random()}`;
+
+  const brand = String(implant.brand || "").trim().toLowerCase();
+  const name = String(implant.name || "").trim().toLowerCase();
+  if (brand && name) return `brandname:${brand}::${name}`;
+
+  return "";
 };
 
-const dedupeImplants = (lists) => {
+const dedupeImplants = (list) => {
   const map = new Map();
-  lists.forEach((list) => {
-    (list || []).forEach((implant) => {
-      const key = buildImplantKey(implant);
-      if (!map.has(key)) {
-        map.set(key, implant);
-      }
-    });
+
+  (Array.isArray(list) ? list : []).forEach((implant) => {
+    const key = buildImplantKey(implant);
+    if (!key) return;
+    if (!map.has(key)) {
+      map.set(key, implant);
+    }
   });
+
   return Array.from(map.values());
 };
 
-const readLocalImplants = () => {
-  if (typeof window === "undefined" || !window.localStorage) return [];
-  try {
-    const raw = window.localStorage.getItem(ADMIN_IMPLANTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.warn("Failed to parse admin implants from storage", err);
-    return [];
-  }
-};
-
-const extractImage = (implant, key) => {
-  if (!implant) return null;
-  
-  let imageUrl = null;
-  
-  // Try direct key
-  if (implant[key]) imageUrl = implant[key];
-  
-  // Try alternative key
-  if (!imageUrl) {
-    const altKey = `${key}DataUrl`;
-    if (implant[altKey]) imageUrl = implant[altKey];
-  }
-  
-  // Try images array/object
-  if (!imageUrl && implant.images) {
-    if (Array.isArray(implant.images)) {
-      const index = Number(key.replace("image", "")) - 1;
-      if (!Number.isNaN(index) && implant.images[index]) {
-        imageUrl = implant.images[index];
-      }
-    } else if (implant.images[key]) {
-      imageUrl = implant.images[key];
-    }
-  }
-  
-  // 🖼️ Debug logging
-  if (imageUrl) {
-    console.log(`✅ Found image (${key}):`, `${String(imageUrl).substring(0, 50)}...`);
-  } else {
-    console.warn(`❌ No image found for ${key} in:`, implant.name || implant.id);
-  }
-  
-  if (!imageUrl) return null;
-  
-  // Convert relative paths to full URLs
-  if (typeof imageUrl === 'string') {
-    // If it's already a data URL or full URL, return as is
-    if (imageUrl.startsWith('data:') || imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-    
-    // If it's a relative path, convert to full URL
-    if (imageUrl.startsWith('/uploads/')) {
-      const apiBaseUrl = import.meta?.env?.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-      return `${apiBaseUrl}${imageUrl}`;
-    }
-  }
-  
-  return imageUrl;
-};
-
 export const pickImplantImages = (implant) => {
-  const images = [0, 1, 2].map((_, index) => {
+  return [0, 1, 2].map((_, index) => {
     const key = `image${index + 1}`;
-    const dataUrl = extractImage(implant, key);
     return {
       id: index + 1,
-      dataUrl,
+      dataUrl: resolveImageUrl(implant?.[key]),
     };
   });
-  
-  console.log("🖼️ pickImplantImages for", implant?.name || "unknown", "returned:", images.filter(img => img.dataUrl).length, "images");
-  return images;
+};
+
+const normalizeImplant = (implant) => {
+  if (!implant) return null;
+
+  return {
+    ...implant,
+    company:
+      implant?.company?.name ||
+      implant?.company?.company_name ||
+      (typeof implant?.company === "string" ? implant.company : "") ||
+      "",
+    level:
+      implant?.level?.name ||
+      implant?.level?.level_name ||
+      (typeof implant?.level === "string" ? implant.level : "") ||
+      "",
+    country:
+      implant?.country?.name ||
+      implant?.country?.country_name ||
+      (typeof implant?.country === "string" ? implant.country : "") ||
+      implant?.countryText ||
+      "",
+    image1: resolveImageUrl(implant.image1) || null,
+    image2: resolveImageUrl(implant.image2) || null,
+    image3: resolveImageUrl(implant.image3) || null,
+  };
 };
 
 export default function useMergedImplants() {
-  const [implants, setImplants] = useState(() => seedImplants);
-  const [apiImplants, setApiImplants] = useState([]);
-  const [localImplants, setLocalImplants] = useState(() => readLocalImplants());
+  const [implants, setImplants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadImplants = useCallback(async () => {
     setLoading(true);
-    let apiData = [];
-    let apiError = null;
+    setError(null);
+
     try {
       const fetched = await implantsAPI.getAll();
-      apiData = Array.isArray(fetched) ? fetched : [];
+      const safeData = Array.isArray(fetched) ? fetched : [];
+      const normalized = safeData.map(normalizeImplant).filter(Boolean);
+      setImplants(dedupeImplants(normalized));
     } catch (err) {
-      apiError = err;
-      apiData = [];
-      console.warn("Failed to fetch implants from API", err);
+      console.error("Failed to fetch implants from API", err);
+      setError(err?.message || "Failed to fetch implants");
+      setImplants([]);
+    } finally {
+      setLoading(false);
     }
-
-    const localData = readLocalImplants();
-
-    setApiImplants(apiData);
-    setLocalImplants(localData);
-    setImplants(dedupeImplants([apiData, localData, seedImplants]));
-    setError(apiError && apiData.length === 0 ? apiError : null);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -143,58 +98,33 @@ export default function useMergedImplants() {
   }, [loadImplants]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
+    const handleRefresh = () => loadImplants();
 
-    const handleStorage = (event) => {
-      if (!event || !event.key || event.key === ADMIN_IMPLANTS_KEY) {
-        loadImplants();
-      }
-    };
+    window.addEventListener(IMPLANTS_UPDATED_EVENT, handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+    window.addEventListener("storage", handleRefresh);
 
-    const handleImplantsUpdated = () => {
-      console.log("📢 Received IMPLANTS_UPDATED_EVENT in useMergedImplants");
-      loadImplants();
-    };
-
-    const handleFocus = () => loadImplants();
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
-    window.addEventListener("focus", handleFocus);
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
-      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+      window.removeEventListener("storage", handleRefresh);
     };
   }, [loadImplants]);
 
-  const implantsBySlug = useMemo(() => {
+  const bySlug = useMemo(() => {
     const map = new Map();
-    (apiImplants || []).forEach((implant) => {
-      const slug = (implant.slug || "").trim().toLowerCase();
+    (implants || []).forEach((implant) => {
+      const slug = String(implant.slug || "").trim().toLowerCase();
       if (slug) map.set(slug, implant);
     });
-    (localImplants || []).forEach((implant) => {
-      const slug = (implant.slug || "").trim().toLowerCase();
-      if (slug && !map.has(slug)) map.set(slug, implant);
-    });
-    (implants || []).forEach((implant) => {
-      const slug = (implant.slug || "").trim().toLowerCase();
-      if (slug && !map.has(slug)) map.set(slug, implant);
-    });
     return map;
-  }, [apiImplants, implants, localImplants]);
+  }, [implants]);
 
   return {
     implants,
     loading,
     error,
     refresh: loadImplants,
-    sources: {
-      api: apiImplants,
-      local: localImplants,
-      seed: seedImplants,
-    },
-    bySlug: implantsBySlug,
+    bySlug,
   };
 }

@@ -3,58 +3,142 @@ import { Blog } from '../models/index.js';
 
 const router = express.Router();
 
-// GET all blogs
+const serializeBlog = (row) => {
+  if (!row) return null;
+
+  const plain = typeof row.get === 'function' ? row.get({ plain: true }) : row;
+
+  return {
+    id: plain.id ?? null,
+    title: plain.title ?? '',
+    description: plain.description ?? '',
+    content: plain.content ?? '',
+    category: plain.category ?? '',
+    author: plain.author ?? '',
+    publishedDate: plain.publishedDate ?? null,
+    readTime: plain.readTime ?? '',
+    ctaLabel: plain.ctaLabel ?? '',
+    ctaUrl: plain.ctaUrl ?? '',
+    manualUrl: plain.manualUrl ?? '',
+    referenceUrl: plain.referenceUrl ?? '',
+    image: plain.image ?? '',
+    imageDataUrl: plain.imageDataUrl ?? '',
+    status: plain.status ?? 'Active',
+    createdAt: plain.createdAt ?? null,
+    updatedAt: plain.updatedAt ?? null,
+  };
+};
+
+const normalizeDate = (value) => {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const buildPayload = (body = {}) => {
+  return {
+    title: String(body.title ?? '').trim(),
+    description: body.description ?? '',
+    content: body.content ?? '',
+    category: String(body.category ?? '').trim(),
+    author: String(body.author ?? '').trim(),
+    publishedDate: normalizeDate(body.publishedDate),
+    readTime: String(body.readTime ?? '').trim(),
+    ctaLabel: String(body.ctaLabel ?? '').trim(),
+    ctaUrl: String(body.ctaUrl ?? '').trim(),
+    manualUrl: String(body.manualUrl ?? '').trim(),
+    referenceUrl: String(body.referenceUrl ?? '').trim(),
+    image: body.image ?? body.imageDataUrl ?? '',
+    imageDataUrl: body.imageDataUrl ?? body.image ?? '',
+    status:
+      body.status === 'Inactive' || body.status === 'Active'
+        ? body.status
+        : 'Active',
+  };
+};
+
 router.get('/', async (req, res) => {
   try {
-    const blogs = await Blog.findAll();
-    res.json(blogs);
+    const blogs = await Blog.findAll({
+      order: [
+        ['publishedDate', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+    });
+
+    res.json(blogs.map(serializeBlog));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/blogs failed:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch blogs' });
   }
 });
 
-// GET single blog
 router.get('/:id', async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id);
-    if (!blog) return res.status(404).json({ error: 'Not found' });
-    res.json(blog);
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    res.json(serializeBlog(blog));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/blogs/:id failed:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch blog' });
   }
 });
 
-// CREATE blog
 router.post('/', async (req, res) => {
   try {
-    const blog = await Blog.create(req.body);
-    res.status(201).json(blog);
+    const payload = buildPayload(req.body);
+
+    if (!payload.title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const blog = await Blog.create(payload);
+    res.status(201).json(serializeBlog(blog));
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('POST /api/blogs failed:', err);
+    res.status(400).json({ error: err.message || 'Failed to create blog' });
   }
 });
 
-// UPDATE blog
 router.put('/:id', async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id);
-    if (!blog) return res.status(404).json({ error: 'Not found' });
-    await blog.update(req.body);
-    res.json(blog);
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    const payload = buildPayload(req.body);
+
+    if (!payload.title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    await blog.update(payload);
+    res.json(serializeBlog(blog));
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('PUT /api/blogs/:id failed:', err);
+    res.status(400).json({ error: err.message || 'Failed to update blog' });
   }
 });
 
-// DELETE blog
 router.delete('/:id', async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id);
-    if (!blog) return res.status(404).json({ error: 'Not found' });
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
     await blog.destroy();
-    res.json({ message: 'Deleted' });
+    res.json({ message: 'Blog deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('DELETE /api/blogs/:id failed:', err);
+    res.status(500).json({ error: err.message || 'Failed to delete blog' });
   }
 });
 

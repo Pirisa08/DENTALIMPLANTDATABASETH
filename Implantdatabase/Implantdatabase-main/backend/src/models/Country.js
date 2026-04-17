@@ -14,7 +14,7 @@ const Country = sequelize.define('Country', {
   },
   status: {
     type: DataTypes.ENUM('Active', 'Inactive'),
-    defaultValue: 'Inactive',
+    defaultValue: 'Active',
   },
   createdAt: {
     type: DataTypes.DATE,

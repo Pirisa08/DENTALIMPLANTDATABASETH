@@ -5,7 +5,7 @@ const UserProfile = sequelize.define('UserProfile', {
   user_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true,
+    allowNull: false,
   },
   name: {
     type: DataTypes.STRING(100),
@@ -14,21 +14,25 @@ const UserProfile = sequelize.define('UserProfile', {
   surname: {
     type: DataTypes.STRING(100),
     allowNull: false,
+    defaultValue: '',
   },
   role_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: 1,
   },
   level_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: 1,
   },
   job_title_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: 1,
   },
   image_url: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT('long'),
     allowNull: true,
   },
   created_at: {

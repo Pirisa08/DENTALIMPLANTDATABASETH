@@ -2,16 +2,16 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Component หลัก
-import UserApp from './user/UserApp'; 
-import AdminApp from './admin/AdminApp'; 
+import UserApp from './user/UserApp';
+import AdminApp from './admin/AdminApp';
 
 function App() {
   return (
     <Routes>
-      {/* 1. Admin Path: ทุกอย่างที่เริ่มต้นด้วย /admin/ */}
+      {/* Admin Path */}
       <Route path="/admin/*" element={<AdminApp />} />
 
-      {/* 2. User Path: ทุกอย่างที่เหลือ */}
+      {/* User Path */}
       <Route path="/*" element={<UserApp />} />
     </Routes>
   );

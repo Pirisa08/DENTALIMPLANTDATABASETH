@@ -3,122 +3,40 @@ import "./ManageImplants.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
-import { implantsAPI, masterDataAPI } from "../../services/api.js";
-import { mockImplants } from "../data/implantsMockData.js";
+import {
+  implantsAPI,
+  masterDataAPI,
+  resolveImageUrl,
+} from "../../services/api.js";
 
-const IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
-
-const buildImplantKey = (implant) => {
-  if (!implant) return "";
-  const slug = (implant.slug || "").trim().toLowerCase();
-  if (slug) return `slug:${slug}`;
-  const brand = (implant.brand || "").trim().toLowerCase();
-  const name = (implant.name || "").trim().toLowerCase();
-  if (brand && name) return `brandname:${brand}::${name}`;
-  const id = String(implant.id || "").trim();
-  if (id) return `id:${id}`;
-  return `tmp:${Math.random()}`;
-};
-
-const dedupeImplants = (lists) => {
-  const map = new Map();
-  lists.forEach((list = []) => {
-    (list || []).forEach((implant) => {
-      const key = buildImplantKey(implant);
-      if (!map.has(key)) {
-        map.set(key, implant);
-      }
-    });
-  });
-  return Array.from(map.values());
-};
-
-// Load implants with localStorage fallback
-function loadImplantsWithFallback() {
-  const raw = localStorage.getItem(IMPLANTS_KEY);
-  
-  if (!raw) {
-    // First-time seed: use mockImplants (already has all fields including images)
-    const seed = mockImplants.map((imp) => ({
-      ...imp,
-      status: imp.status || "Active"
-    }));
-    
-    localStorage.setItem(IMPLANTS_KEY, JSON.stringify(seed));
-    return seed;
-        return merged;
-  }
-  
-  try {
-        return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) {
-      // Invalid format, reset to mockImplants
-      const seed = mockImplants.map((imp) => ({
-        ...imp,
-        status: imp.status || "Active"
-      }));
-      localStorage.setItem(IMPLANTS_KEY, JSON.stringify(seed));
-      return seed;
-    }
-    return arr;
-    
-  } catch {
-    // Parse error, reset to mockImplants
-    const seed = mockImplants.map((imp) => ({
-      ...imp,
-      status: imp.status || "Active"
-    }));
-    localStorage.setItem(IMPLANTS_KEY, JSON.stringify(seed));
-    return seed;
-  }
-}
 
 export default function ManageImplants() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
-  const [master, setMaster] = useState({ companies: [], levels: [], countries: [] });
+  const [master, setMaster] = useState({
+    companies: [],
+    levels: [],
+    countries: [],
+  });
   const [loading, setLoading] = useState(true);
-  // Pagination state
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
 
-  // Initialize rows on mount
+  const ITEMS_PER_PAGE = 8;
+
   const loadData = useCallback(async () => {
     setLoading(true);
+
     try {
-      const storedBeforeFetch = loadImplantsWithFallback();
-      let apiImplants = [];
-      try {
-        const fetched = await implantsAPI.getAll();
-        if (Array.isArray(fetched)) {
-          apiImplants = fetched;
-          console.log("✅ Loaded implants from backend API:", fetched.length);
-        }
-      } catch (apiErr) {
-        console.warn("API call failed, will use local data as fallback:", apiErr);
-      }
-
-      const merged = dedupeImplants([
-        apiImplants,
-        storedBeforeFetch,
-        mockImplants,
-      ]);
-
-      if (merged.length === 0) {
-        console.warn("No implant data available after merge; using mock data");
-        setRows([]);
-        return [];
-      }
-
-      localStorage.setItem(IMPLANTS_KEY, JSON.stringify(merged));
-      setRows(merged);
-      return merged;
+      const fetched = await implantsAPI.getAll();
+      const safeRows = Array.isArray(fetched) ? fetched : [];
+      setRows(safeRows);
+      return safeRows;
     } catch (err) {
-      console.error('Error loading implants:', err);
+      console.error("Error loading implants:", err);
       setRows([]);
       return [];
     } finally {
@@ -129,21 +47,13 @@ export default function ManageImplants() {
   useEffect(() => {
     loadData();
 
-    const handleStorageChange = (e) => {
-      if (e.key === IMPLANTS_KEY) {
-        loadData();
-      }
-    };
-
     const handleImplantsUpdated = () => {
-      console.log("📢 Received IMPLANTS_UPDATED_EVENT");
       loadData();
     };
 
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
     };
   }, [loadData]);
@@ -151,126 +61,207 @@ export default function ManageImplants() {
   useEffect(() => {
     const params = new URLSearchParams(location.search || "");
     const qp = params.get("q") || "";
-    if (qp) setQ(qp);
+    setQ(qp);
   }, [location.search]);
 
   useEffect(() => {
-    async function load() {
+    async function loadMasterData() {
       try {
         const [companies, levels, countries] = await Promise.all([
           masterDataAPI.getCompanies().catch(() => []),
           masterDataAPI.getLevels().catch(() => []),
           masterDataAPI.getCountries().catch(() => []),
         ]);
-        
-        setMaster({ companies, levels, countries });
+
+        setMaster({
+          companies: Array.isArray(companies) ? companies : [],
+          levels: Array.isArray(levels) ? levels : [],
+          countries: Array.isArray(countries) ? countries : [],
+        });
       } catch (err) {
-        console.error('Error loading master data:', err);
-        setMaster({ companies: [], levels: [], countries: [] });
+        console.error("Error loading master data:", err);
+        setMaster({
+          companies: [],
+          levels: [],
+          countries: [],
+        });
       }
     }
-    load();
-  }, []);
 
-  // Save to localStorage whenever rows change
-  useEffect(() => {
-    localStorage.setItem(IMPLANTS_KEY, JSON.stringify(rows));
-  }, [rows]);
+    loadMasterData();
+  }, []);
 
   const getName = (type, id) => {
     if (!id) return "-";
-    const list = type === "company" ? master.companies : type === "level" ? master.levels : master.countries;
-    const found = list?.find((x) => Number(x.id) === Number(id));
-    return found?.name || "-";
+
+    const list =
+      type === "company"
+        ? master.companies
+        : type === "level"
+        ? master.levels
+        : master.countries;
+
+    const found =
+      list?.find(
+        (x) =>
+          Number(x.id) === Number(id) ||
+          Number(x.idcompany) === Number(id) ||
+          Number(x.idlevel) === Number(id) ||
+          Number(x.idcountry) === Number(id)
+      ) || null;
+
+    return (
+      found?.name ||
+      found?.company_name ||
+      found?.level_name ||
+      found?.country_name ||
+      "-"
+    );
   };
 
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return rows;
-    return rows.filter((r) => {
-      const companyName = getName("company", r.companyId) || "";
-      const levelName = getName("level", r.levelId) || "";
-      const countryName = getName("country", r.countryId) || r.countryText || "";
-      return (r.name + " " + companyName + " " + levelName + " " + countryName).toLowerCase().includes(s);
-    });
-  }, [q, rows, master]);
+  const s = q.trim().toLowerCase();
+  if (!s) return rows;
 
-  // Pagination logic
+  return rows.filter((r) => {
+    const companyName =
+      r?.company?.name ||
+      r?.company ||
+      getName("company", r.companyId) ||
+      "";
+
+    const levelName =
+      r?.level?.name ||
+      r?.level ||
+      getName("level", r.levelId) ||
+      "";
+
+    const countryName =
+      r?.country?.name ||
+      r?.country ||
+      getName("country", r.countryId) ||
+      r?.countryText ||
+      "";
+
+    const brandName =
+      r?.brand?.name ||
+      r?.brandName ||
+      r?.brand ||
+      "";
+
+    const modelName =
+      r?.model?.name ||
+      r?.modelName ||
+      r?.model ||
+      r?.series ||
+      "";
+
+    const connectionTypeName =
+      r?.connectionType?.name ||
+      r?.connectionTypeName ||
+      r?.connection_type ||
+      r?.connectionType ||
+      "";
+
+    const connectionShapeName =
+      r?.connectionShape?.name ||
+      r?.connectionShapeName ||
+      r?.connection_shape ||
+      r?.connectionShape ||
+      "";
+
+    return [
+      r?.name,
+      r?.title,
+      brandName,
+      modelName,
+      companyName,
+      levelName,
+      countryName,
+      connectionTypeName,
+      connectionShapeName,
+      r?.source,
+      r?.status,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(s);
+  });
+}, [q, rows, master]);
+
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+
   const pagedRows = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
     return filtered.slice(start, start + ITEMS_PER_PAGE);
   }, [filtered, page]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [q]);
+
   const toggleStatus = async (id, current) => {
     try {
       const next = current === "Active" ? "Inactive" : "Active";
-      await implantsAPI.update(id, { status: next });
-      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: next } : r)));
+      const updatedRow = await implantsAPI.update(id, { status: next });
+
+      setRows((prev) =>
+        prev.map((r) =>
+          String(r.id) === String(id)
+            ? { ...r, ...(updatedRow || {}), status: next }
+            : r
+        )
+      );
     } catch (err) {
       alert("Failed to update status: " + (err.message || ""));
     }
   };
 
   const delImplant = async (id) => {
-    const implant = rows.find((r) => r.id === id);
+    const implant = rows.find((r) => String(r.id) === String(id));
     const name = implant ? implant.name : "this implant";
-    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
     try {
-      // Try API first
-      try {
-        await implantsAPI.delete(id);
-        console.log("✅ Deleted from backend API");
-      } catch (apiErr) {
-        console.warn("⚠️ API delete failed:", apiErr);
-      }
-      
-      // Update localStorage
-      const raw = localStorage.getItem(IMPLANTS_KEY);
-      let implants = [];
-      try {
-        implants = raw ? JSON.parse(raw) : [];
-      } catch {}
-      
-      const updated = implants.filter((imp) => String(imp.id) !== String(id));
-      localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-      
-      // Notify other components
-      window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
-      window.dispatchEvent(new Event('storage'));
-      
-      // Update UI
-      setRows((prev) => prev.filter((r) => r.id !== id));
+      await implantsAPI.delete(id);
+      setRows((prev) => prev.filter((r) => String(r.id) !== String(id)));
     } catch (err) {
       alert("Failed to delete: " + (err.message || ""));
     }
   };
 
   const refreshData = async () => {
-    const merged = await loadData();
-    const count = Array.isArray(merged) ? merged.length : rows.length;
-    alert(`Refreshed! Loaded ${count} implants`);
+    await loadData();
   };
 
-  if (loading) return <div className="impWrap">Loading implants…</div>;
-  if (!rows || rows.length === 0) {
-    return (
-      <div className="impWrap">
-        <h2>No implants found</h2>
-        <p>Loading from localStorage failed. Check console for errors.</p>
-        <button onClick={refreshData}>Try Refresh</button>
-      </div>
-    );
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  if (loading) {
+    return <div className="impWrap">Loading implants…</div>;
   }
 
   return (
     <div className="impWrap">
       <AdminSearchBar
-        placeholder="Search implants…"
-        value={q}
-        onChangeQ={setQ}
-        onSearch={setQ}
-      />
+  placeholder="Search implants, brand, model, shape..."
+  value={q}
+  onChangeQ={setQ}
+  onSearch={setQ}
+/>
 
       <Breadcrumb
         items={[
@@ -278,136 +269,156 @@ export default function ManageImplants() {
           { label: "Implants Management" },
         ]}
       />
-      <h2 className="pageTitle">🦷 Implants Management</h2>
 
-      <div className="panelImp">
-        <div className="panelHeadImp">
-          <h3>Recently Added Implants ({filtered.length} total)</h3>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="addBtnImp" onClick={() => navigate("/admin/implants/new")}>
-              + Add new implant
-            </button>
-            <button className="addBtnImp" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }} onClick={refreshData}>
-              ⟳ Refresh
-            </button>
-          </div>
+      <div className="impTopBar">
+        <h1 className="pageTitle">IMPLANT MANAGEMENT</h1>
+
+        <div className="impTopActions">
+          <button
+            className="addBtnImp addBtnGreen"
+            onClick={() => navigate("/admin/implants/new")}
+          >
+            + Add New Implant
+          </button>
+
+          <button className="addBtnImp addBtnBlue" onClick={refreshData}>
+            ↻ Refresh Data
+          </button>
+        </div>
+      </div>
+
+      <div className="panelImp blogLikePanel">
+        <div className="sectionTitle">RECENTLY ADDED IMPLANTS</div>
+
+        <div className="blogLikeTableHead">
+          <div>Image</div>
+          <div>Title</div>
+          <div>Company / Level</div>
+          <div>Source</div>
+          <div>Date</div>
+          <div>Status</div>
+          <div className="headActions">Actions</div>
         </div>
 
-        <div className="table">
-          <div className="thead">
-            <div className="imgCol">Image</div>
-            <div>Name</div>
-            <div>Company</div>
-            <div>Level</div>
-            <div>Country</div>
-            <div>Status</div>
-            <div className="actionsCol">Actions</div>
+        {pagedRows.length === 0 ? (
+          <div className="emptyStateCard">
+            <div className="emptyTitle">No implants found</div>
+            <div className="emptySub">No implant data available yet.</div>
+            <button className="refreshInlineBtn" onClick={refreshData}>
+              Try Refresh
+            </button>
           </div>
+        ) : (
+          pagedRows.map((r) => {
+            const imageUrl = resolveImageUrl(r?.image1 || r?.imageDataUrl);
+            const isMaster = r.source === "master";
 
-          {pagedRows.map((r) => (
-            <div className="trow" key={r.id}>
-              <div className="imgCol" data-label="Image">
-                {r.image1 ? (
-                  <img 
-                    src={r.image1.startsWith('data:') ? r.image1 : `http://localhost:5000${r.image1}`} 
-                    alt={r.name} 
-                    className="thumbImg"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                {!r.image1 || r.image1 === '' ? (
-                  <div className="thumbPlaceholder">🖼️</div>
-                ) : (
-                  <div className="thumbPlaceholder" style={{ display: 'none' }}>🖼️</div>
-                )}
-              </div>
-              <div
-                className="nameCol cell"
-                data-label="Implant"
-                onClick={() => navigate(`/admin/implants/edit/${r.id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                {r.name}
-              </div>
-              <div className="cell" data-label="Company">
-                {r.company || getName("company", r.companyId) || "-"}
-              </div>
-              <div className="cell" data-label="Level">
-                {r.level || getName("level", r.levelId) || "-"}
-              </div>
-              <div className="cell" data-label="Country">
-                {r.countryText || r.country || getName("country", r.countryId) || "-"}
-              </div>
-              <div className="statusCell cell" data-label="Status">
-                <button
-                  className={`pill status ${r.status === "Active" ? "on" : "off"}`}
-                  onClick={() => toggleStatus(r.id, r.status)}
-                >
-                  {r.status === "Active" ? "Open" : "Closed"}
-                </button>
-              </div>
-              <div className="actionsCol cell" data-label="Actions">
-                <button className="btn edit" onClick={() => navigate(`/admin/implants/edit/${r.id}`)}>Edit</button>
-                <button className="btn del" onClick={() => delImplant(r.id)}>Delete</button>
-              </div>
-            </div>
-          ))}
+            const companyName =
+              r?.company?.name || r?.company || getName("company", r.companyId) || "-";
 
-          {filtered.length === 0 && <div className="empty">No implants found.</div>}
-        </div>
-        {/* Pagination */}
+            const levelName =
+              r?.level?.name || r?.level || getName("level", r.levelId) || "-";
+
+            const brandText =
+              r?.brand?.name || r?.brandName || r?.brand || "No brand";
+
+            return (
+              <div className="blogLikeRow" key={r.id}>
+                <div className="rowImageCol">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={r.name}
+                      className="rowImage"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        if (e.currentTarget.nextSibling) {
+                          e.currentTarget.nextSibling.style.display = "flex";
+                        }
+                      }}
+                    />
+                  ) : null}
+
+                  <div
+                    className="rowImageFallback"
+                    style={{ display: imageUrl ? "none" : "flex" }}
+                  >
+                    No Image
+                  </div>
+                </div>
+
+                <div className="rowTitleCol">
+                  <div className="rowMainTitle">{r.name || "-"}</div>
+                  <div className="rowSubText">Brand: {brandText}</div>
+                </div>
+
+                <div className="rowMetaCol">
+                  <div className="rowMetaMain">{companyName}</div>
+                  <div className="rowMetaSub">{levelName}</div>
+                </div>
+
+                <div className="rowSourceCol">
+                  <span className={`sourceBadge ${isMaster ? "master" : "custom"}`}>
+                    {isMaster ? "MASTER" : "NEW"}
+                  </span>
+                </div>
+
+                <div className="rowDateCol">{formatDate(r.createdAt)}</div>
+
+                <div className="rowStatusCol">
+                  <button
+                    className={`statusPill ${r.status === "Active" ? "open" : "closed"}`}
+                    onClick={() => toggleStatus(r.id, r.status)}
+                    title="Click to toggle status"
+                  >
+                    {r.status === "Active" ? "OPEN" : "CLOSED"}
+                  </button>
+                </div>
+
+                <div className="rowActionsCol">
+                  <button
+                    className="actionBtn editBtn"
+                    onClick={() => navigate(`/admin/implants/edit/${r.id}`)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="actionBtn deleteBtn"
+                    onClick={() => delImplant(r.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+
         {filtered.length > ITEMS_PER_PAGE && (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 20 }}>
+          <div className="paginationWrap">
             <button
+              className="paginationBtn"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              style={{
-                padding: "8px 20px",
-                borderRadius: "999px",
-                border: "none",
-                background: page === 1 ? "#e5e7eb" : "linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)",
-                color: page === 1 ? "#9ca3af" : "#fff",
-                fontWeight: 600,
-                fontSize: "16px",
-                boxShadow: page === 1 ? "none" : "0 2px 8px rgba(59,130,246,0.10)",
-                cursor: page === 1 ? "not-allowed" : "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={e => { if (page !== 1) e.currentTarget.style.background = 'linear-gradient(90deg, #818cf8 0%, #2563eb 100%)'; }}
-              onMouseOut={e => { if (page !== 1) e.currentTarget.style.background = 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)'; }}
             >
               ← Previous
             </button>
-            <span style={{ fontWeight: 500, fontSize: "16px", color: "#374151", letterSpacing: 0.5 }}>
+
+            <span className="paginationText">
               Page {page} of {totalPages}
             </span>
+
             <button
+              className="paginationBtn"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              style={{
-                padding: "8px 20px",
-                borderRadius: "999px",
-                border: "none",
-                background: page === totalPages ? "#e5e7eb" : "linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)",
-                color: page === totalPages ? "#9ca3af" : "#fff",
-                fontWeight: 600,
-                fontSize: "16px",
-                boxShadow: page === totalPages ? "none" : "0 2px 8px rgba(59,130,246,0.10)",
-                cursor: page === totalPages ? "not-allowed" : "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={e => { if (page !== totalPages) e.currentTarget.style.background = 'linear-gradient(90deg, #818cf8 0%, #2563eb 100%)'; }}
-              onMouseOut={e => { if (page !== totalPages) e.currentTarget.style.background = 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)'; }}
             >
               Next →
             </button>
           </div>
         )}
-        </div>
       </div>
-    
+    </div>
   );
 }

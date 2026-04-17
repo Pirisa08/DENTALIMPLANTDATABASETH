@@ -1,111 +1,48 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import CustomSelect from "../components/CustomSelect.jsx";
 import { blogsAPI } from "../../services/api.js";
-import { mockBlogs } from "../data/implantsMockData.js";
 import "./BlogForm.css";
 
-const BLOG_KEY = "admin_blogs_v1";
-const DELETED_BLOGS_KEY = "deleted_blog_ids";
-const BLOGS_UPDATED_EVENT = "blogs:updated";
-
 const OPTIONS = {
-  readTime: ["3 Min", "5 Min", "10 Min", "8 min read", "9 min read", "12 min read"],
+  readTime: ["3 Min", "5 Min", "10 Min"],
   category: ["Education", "Technology", "Clinical Research", "Clinical Techniques", "Research", "News"],
+  status: ["Active", "Inactive"],
 };
 
-function readArray(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
+function normalizeBlog(b) {
+  if (!b) return null;
+
+  return {
+    id: b.id ?? null,
+    title: b.title || "",
+    description: b.description || "",
+    publishedDate: b.publishedDate || "",
+    readTime: b.readTime || "",
+    category: b.category || "News",
+    author: b.author || "",
+    content: b.content || "",
+    status: b.status || "Active",
+    manualUrl: b.manualUrl || "",
+    referenceUrl: b.referenceUrl || "",
+    imageDataUrl: b.imageDataUrl || b.image || "",
+  };
 }
 
-function loadBlogsWithFallback() {
-  const raw = localStorage.getItem(BLOG_KEY);
-  
-  // Get deleted blog IDs
-  const deletedIdsRaw = localStorage.getItem(DELETED_BLOGS_KEY);
-  let deletedIds = [];
-  try {
-    deletedIds = deletedIdsRaw ? JSON.parse(deletedIdsRaw) : [];
-  } catch {
-    deletedIds = [];
-  }
-  
-  if (!raw) {
-    // First-time seed: use mock blogs and save to localStorage
-    const mockSeed = mockBlogs
-      .filter((b) => !deletedIds.includes(b.id))
-      .map((b) => ({
-        id: b.id,
-        title: b.title,
-        description: b.description || b.excerpt || "",
-        publishedDate: b.publishedDate,
-        readTime: b.readTime || "5 min",
-        category: b.category || "News",
-        author: b.author || "Editorial Team",
-        content: b.content || "",
-        status: b.status || "Active",
-        manualUrl: b.manualUrl || "",
-        referenceUrl: b.referenceUrl || "",
-        imageDataUrl: b.imageDataUrl || "",
-      }));
-    
-    localStorage.setItem(BLOG_KEY, JSON.stringify(mockSeed));
-    return mockSeed;
-  }
-  
-  try {
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) {
-      // Invalid format, reset to mockBlogs
-      const mockSeed = mockBlogs
-        .filter((b) => !deletedIds.includes(b.id))
-        .map((b) => ({
-          id: b.id,
-          title: b.title,
-          description: b.description || b.excerpt || "",
-          publishedDate: b.publishedDate,
-          readTime: b.readTime || "5 min",
-          category: b.category || "News",
-          author: b.author || "Editorial Team",
-          content: b.content || "",
-          status: b.status || "Active",
-          manualUrl: b.manualUrl || "",
-          referenceUrl: b.referenceUrl || "",
-          imageDataUrl: b.imageDataUrl || "",
-        }));
-      localStorage.setItem(BLOG_KEY, JSON.stringify(mockSeed));
-      return mockSeed;
+function toLocalDatetime(value) {
+  if (value) {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
-    // Filter out deleted blogs from localStorage
-    return arr.filter((b) => !deletedIds.includes(b.id));
-  } catch {
-    const mockSeed = mockBlogs
-      .filter((b) => !deletedIds.includes(b.id))
-      .map((b) => ({
-        id: b.id,
-        title: b.title,
-        description: b.description || b.excerpt || "",
-        publishedDate: b.publishedDate,
-        readTime: b.readTime || "5 min",
-        category: b.category || "News",
-        author: b.author || "Editorial Team",
-        content: b.content || "",
-        status: b.status || "Active",
-        manualUrl: b.manualUrl || "",
-        referenceUrl: b.referenceUrl || "",
-        imageDataUrl: b.imageDataUrl || "",
-      }));
-    localStorage.setItem(BLOG_KEY, JSON.stringify(mockSeed));
-    return mockSeed;
   }
+
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function BlogForm({ mode }) {
@@ -113,33 +50,65 @@ export default function BlogForm({ mode }) {
   const { id } = useParams();
   const fileInputRef = useRef(null);
 
-  const list = loadBlogsWithFallback();
-  const editingItem = mode === "edit" ? list.find((x) => String(x.id) === String(id)) : null;
+  const [loading, setLoading] = useState(mode === "edit");
+  const [saving, setSaving] = useState(false);
 
-  const toLocalDatetime = () => {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-  };
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    publishedDate: toLocalDatetime(),
+    readTime: "",
+    category: "",
+    author: "",
+    content: "",
+    manualUrl: "",
+    referenceUrl: "",
+    imageDataUrl: "",
+    status: "Active",
+  });
 
-  const [form, setForm] = useState(() => ({
-    title: editingItem?.title || "",
-    description: editingItem?.description || "",
-    publishedDate: editingItem?.publishedDate || toLocalDatetime(),
-    readTime: editingItem?.readTime || "",
-    category: editingItem?.category || "",
-    author: editingItem?.author || "",
-    content: editingItem?.content || "",
-    manualUrl: editingItem?.manualUrl || editingItem?.ctaUrl || "",
-    referenceUrl: editingItem?.referenceUrl || "",
-    imageDataUrl: editingItem?.imageDataUrl || "",
-    status: editingItem?.status || "Active",
-  }));
+  useEffect(() => {
+    let ignore = false;
+
+    const loadBlog = async () => {
+      if (mode !== "edit") {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await blogsAPI.getById(id);
+        const found = normalizeBlog(data);
+
+        if (!ignore && found) {
+          setForm({
+            title: found.title || "",
+            description: found.description || "",
+            publishedDate: toLocalDatetime(found.publishedDate),
+            readTime: found.readTime || "",
+            category: found.category || "",
+            author: found.author || "",
+            content: found.content || "",
+            manualUrl: found.manualUrl || "",
+            referenceUrl: found.referenceUrl || "",
+            imageDataUrl: found.imageDataUrl || "",
+            status: found.status || "Active",
+          });
+        }
+      } catch (err) {
+        console.error("Unable to load blog:", err);
+        alert(err.message || "Unable to load blog");
+        navigate("/admin/blog");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    loadBlog();
+    return () => {
+      ignore = true;
+    };
+  }, [id, mode, navigate]);
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -158,6 +127,7 @@ export default function BlogForm({ mode }) {
   const onPickImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => setField("imageDataUrl", String(reader.result || ""));
     reader.readAsDataURL(file);
@@ -165,92 +135,48 @@ export default function BlogForm({ mode }) {
 
   const save = async () => {
     if (!canSave) {
-      alert("Please fill all fields before saving.");
+      alert("Please fill all required fields before saving.");
       return;
     }
 
-    // Read ALL blogs from localStorage (don't filter deleted items during save)
-    const allBlogsRaw = localStorage.getItem(BLOG_KEY);
-    let blogs = [];
+    setSaving(true);
+
+    const payload = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      publishedDate: form.publishedDate,
+      readTime: form.readTime,
+      category: form.category,
+      author: form.author.trim(),
+      content: form.content.trim(),
+      manualUrl: form.manualUrl.trim(),
+      referenceUrl: form.referenceUrl.trim(),
+      imageDataUrl: form.imageDataUrl,
+      image: form.imageDataUrl,
+      status: form.status,
+    };
+
     try {
-      blogs = allBlogsRaw ? JSON.parse(allBlogsRaw) : [];
-      if (!Array.isArray(blogs)) blogs = [];
-    } catch {
-      blogs = [];
-    }
-    
-    // If localStorage is empty, seed from mockBlogs
-    if (blogs.length === 0) {
-      blogs = mockBlogs.map((b) => ({
-        id: b.id,
-        title: b.title,
-        description: b.description || b.excerpt || "",
-        publishedDate: b.publishedDate,
-        readTime: b.readTime || "5 min",
-        category: b.category || "News",
-        author: b.author || "Editorial Team",
-        content: b.content || "",
-        status: b.status || "Active",
-        manualUrl: b.manualUrl || "",
-        referenceUrl: b.referenceUrl || "",
-        imageDataUrl: b.imageDataUrl || "",
-      }));
-    }
-
-    if (mode === "edit") {
-      if (!editingItem) {
-        alert("Blog not found.");
-        navigate("/admin/blog");
-        return;
-      }
-
-      // Update in localStorage
-      const updated = blogs.map((b) =>
-        String(b.id) === String(id)
-          ? { ...b, ...form, id: b.id }
-          : b
-      );
-      localStorage.setItem(BLOG_KEY, JSON.stringify(updated));
-      window.dispatchEvent(new Event(BLOGS_UPDATED_EVENT));
-
-      // Update in API
-      try {
-        await blogsAPI.update(id, form);
-      } catch (err) {
-        console.error("Failed to update blog in API:", err);
-        // Continue anyway; local storage has been updated
+      if (mode === "edit") {
+        await blogsAPI.update(id, payload);
+        alert("Blog updated successfully");
+      } else {
+        await blogsAPI.create(payload);
+        alert("Blog created successfully");
       }
 
       navigate("/admin/blog");
-      return;
-    }
-
-    // Create new blog
-    const newItem = { id: Date.now(), ...form };
-    localStorage.setItem(BLOG_KEY, JSON.stringify([newItem, ...blogs]));
-    window.dispatchEvent(new Event(BLOGS_UPDATED_EVENT));
-
-    // Also POST to API
-    try {
-      await blogsAPI.create(form);
     } catch (err) {
-      console.error("Failed to create blog in API:", err);
-      // Continue anyway; local storage has been updated
+      console.error("Failed to save blog:", err);
+      alert(err.message || "Unable to save blog");
+    } finally {
+      setSaving(false);
     }
-
-    navigate("/admin/blog");
   };
 
   return (
     <div className="bfWrap">
-      <AdminSearchBar
-        placeholder="Search blogs…"
-        onPickSuggestion={(m) => {
-          if (m.title) setField("title", m.title);
-          if (m.category) setField("category", m.category);
-          if (m.author) setField("author", m.author);
-        }}
-      />
+      <AdminSearchBar placeholder="Search blogs…" />
       <Breadcrumb
         items={[
           { label: "Home", href: "/admin" },
@@ -258,183 +184,109 @@ export default function BlogForm({ mode }) {
           { label: mode === "edit" ? "Edit Blog" : "New Blog" },
         ]}
       />
+
       <h2 className="pageTitle">{mode === "edit" ? "Edit Blog" : "New Blog"}</h2>
 
-      <div className="bfCard">
-        <label className="bfImageBox">
-          {form.imageDataUrl ? (
-            <img className="bfPreview" src={form.imageDataUrl} alt="blog" />
-          ) : (
-            <div className="bfPh">
-              <div className="bfIcon">🖼️</div>
-              <div>Add image</div>
+      {loading ? (
+        <div className="bfCard">
+          <div style={{ padding: "24px", textAlign: "center" }}>Loading blog...</div>
+        </div>
+      ) : (
+        <>
+          <div className="bfCard">
+            <label className="bfImageBox">
+              {form.imageDataUrl ? (
+                <img className="bfPreview" src={form.imageDataUrl} alt="blog" />
+              ) : (
+                <div className="bfPh">
+                  <div className="bfIcon">🖼️</div>
+                  <div>Add image</div>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={onPickImage}
+                hidden
+              />
+            </label>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button type="button" className="btnSave" onClick={() => fileInputRef.current?.click()}>
+                Change image
+              </button>
+
+              {form.imageDataUrl && (
+                <button type="button" className="btnCancel" onClick={() => setField("imageDataUrl", "")}>
+                  Remove image
+                </button>
+              )}
             </div>
-          )}
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={onPickImage} hidden />
-        </label>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <button
-            type="button"
-            className="btnSave"
-            onClick={() => fileInputRef.current?.click()}
-            title="Change image"
-          >
-            Change image
-          </button>
-          {form.imageDataUrl && (
-            <button
-              type="button"
-              className="btnCancel"
-              onClick={() => setField("imageDataUrl", "")}
-              title="Remove current image"
-            >
-              Remove image
-            </button>
-          )}
-        </div>
+            <div className="bfField">
+              <div className="bfLabel">Title</div>
+              <input className="bfInput" value={form.title} onChange={(e) => setField("title", e.target.value)} />
+            </div>
 
-        <div className="bfField">
-          <div className="bfLabel">Title</div>
-          <input className="bfInput" value={form.title} onChange={(e) => setField("title", e.target.value)} />
-        </div>
+            <div className="bfField">
+              <div className="bfLabel">Description</div>
+              <textarea className="bfTextarea" rows={3} value={form.description} onChange={(e) => setField("description", e.target.value)} />
+            </div>
 
-        <div className="bfField">
-          <div className="bfLabel">Description</div>
-          <textarea className="bfTextarea" rows={3} value={form.description} onChange={(e) => setField("description", e.target.value)} />
-        </div>
+            <div className="bfRow3">
+              <div className="bfField">
+                <div className="bfLabel">Published Date & Time</div>
+                <input className="bfInput" type="datetime-local" value={form.publishedDate} onChange={(e) => setField("publishedDate", e.target.value)} />
+              </div>
 
-        <div className="bfRow3">
-          <div className="bfField">
-            <div className="bfLabel">Published Date & Time</div>
-            <input className="bfInput" type="datetime-local" value={form.publishedDate} onChange={(e) => setField("publishedDate", e.target.value)} />
-          </div>
+              <div className="bfField">
+                <div className="bfLabel">Read Time</div>
+                <CustomSelect value={form.readTime} onChange={(val) => setField("readTime", val)} options={OPTIONS.readTime} placeholder="Select time" />
+              </div>
 
-          <div className="bfField">
-            <div className="bfLabel">Read Time</div>
-            <CustomSelect
-              value={form.readTime}
-              onChange={(val) => setField("readTime", val)}
-              options={OPTIONS.readTime}
-              placeholder="Select time"
-            />
-          </div>
-
-          <div className="bfField">
-            <div className="bfLabel">Category</div>
-            <CustomSelect
-              value={form.category}
-              onChange={(val) => setField("category", val)}
-              options={OPTIONS.category}
-              placeholder="Choose category"
-            />
-          </div>
-        </div>
-
-        <div className="bfField">
-          <div className="bfLabel">Author</div>
-          <input className="bfInput" value={form.author} onChange={(e) => setField("author", e.target.value)} />
-        </div>
-
-        <div className="bfField bfStatusRow">
-          <div className="bfLabel">Publication Status</div>
-          <div className="bfStatusChips">
-            <button
-              type="button"
-              className={`pill status ${form.status === "Active" ? "on" : "off"}`}
-              onClick={() => setField("status", "Active")}
-            >
-              <span className="statusText">Open</span>
-              <span className="statusSubtext">Published</span>
-            </button>
-            <button
-              type="button"
-              className={`pill status ${form.status === "Inactive" ? "on" : "off"}`}
-              onClick={() => setField("status", "Inactive")}
-            >
-              <span className="statusText">Closed</span>
-              <span className="statusSubtext">Draft</span>
-            </button>
-          </div>
-          {form.status === "Active" ? (
-            <div style={{ 
-              fontSize: '12px', 
-              color: '#155724', 
-              fontWeight: '600',
-              marginTop: '12px',
-              padding: '12px 16px',
-              background: '#d4edda',
-              borderRadius: '8px',
-              border: '2px solid #28a745',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ fontSize: '16px' }}>✓</span>
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '13px' }}>Currently Published</div>
-                <div style={{ fontSize: '11px', opacity: 0.8 }}>This blog is visible to all users</div>
+              <div className="bfField">
+                <div className="bfLabel">Category</div>
+                <CustomSelect value={form.category} onChange={(val) => setField("category", val)} options={OPTIONS.category} placeholder="Choose category" />
               </div>
             </div>
-          ) : (
-            <div style={{ 
-              fontSize: '12px', 
-              color: '#721c24', 
-              fontWeight: '600',
-              marginTop: '12px',
-              padding: '12px 16px',
-              background: '#f8d7da',
-              borderRadius: '8px',
-              border: '2px solid #dc3545',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ fontSize: '16px' }}>⚠</span>
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '13px' }}>Currently in Draft</div>
-                <div style={{ fontSize: '11px', opacity: 0.8 }}>This blog is hidden from users</div>
-              </div>
+
+            <div className="bfField">
+              <div className="bfLabel">Author</div>
+              <input className="bfInput" value={form.author} onChange={(e) => setField("author", e.target.value)} />
             </div>
-          )}
-        </div>
 
-        <div className="bfField">
-          <div className="bfLabel">Manual Link (our post)</div>
-          <input
-            className="bfInput"
-            type="url"
-            value={form.manualUrl}
-            onChange={(e) => setField("manualUrl", e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
+            <div className="bfField">
+              <div className="bfLabel">Status</div>
+              <CustomSelect value={form.status} onChange={(val) => setField("status", val)} options={OPTIONS.status} placeholder="Select status" />
+            </div>
 
-        <div className="bfField">
-          <div className="bfLabel">Reference Link (source)</div>
-          <input
-            className="bfInput"
-            type="url"
-            value={form.referenceUrl}
-            onChange={(e) => setField("referenceUrl", e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
+            <div className="bfField">
+              <div className="bfLabel">Manual Link</div>
+              <input className="bfInput" type="url" value={form.manualUrl} onChange={(e) => setField("manualUrl", e.target.value)} placeholder="https://..." />
+            </div>
 
-        <div className="bfField">
-          <div className="bfLabel">Content</div>
-          <textarea className="bfTextarea big" rows={10} value={form.content} onChange={(e) => setField("content", e.target.value)} />
-        </div>
-      </div>
+            <div className="bfField">
+              <div className="bfLabel">Reference Link</div>
+              <input className="bfInput" type="url" value={form.referenceUrl} onChange={(e) => setField("referenceUrl", e.target.value)} placeholder="https://..." />
+            </div>
 
-      <div className="formActions" style={{maxWidth: '1200px', margin: '0 auto'}}>
-        <button className="btnSave" onClick={save} disabled={!canSave}>
-          Save
-        </button>
-        <button className="btnCancel" onClick={() => navigate("/admin/blog")}>
-          Cancel
-        </button>
-      </div>
+            <div className="bfField">
+              <div className="bfLabel">Content</div>
+              <textarea className="bfTextarea big" rows={10} value={form.content} onChange={(e) => setField("content", e.target.value)} />
+            </div>
+          </div>
+
+          <div className="formActions" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <button className="btnSave" onClick={save} disabled={!canSave || saving}>
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button className="btnCancel" onClick={() => navigate("/admin/blog")} disabled={saving}>
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

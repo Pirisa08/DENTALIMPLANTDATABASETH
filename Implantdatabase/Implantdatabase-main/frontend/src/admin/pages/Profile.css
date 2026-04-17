@@ -36,7 +36,11 @@
   font-weight:900;
 }
 
-.pfAvatar{ margin-top: 12px; }
+.pfCircle span{
+  font-size: 32px;
+  font-weight: 900;
+  color: #fff;
+}
 
 .pfImageUpload{
   display:block;
@@ -51,7 +55,7 @@
   width: 64px;
   height: 64px;
   border-radius: 999px;
-  background: #e0ede1;
+  background: #46709d;
   display:grid;
   place-items:center;
   font-size: 28px;
@@ -59,7 +63,7 @@
 }
 
 .pfCircle:hover{
-  background: #aac6ac;
+  background: #7a70e9;
   transform: scale(1.05);
 }
 

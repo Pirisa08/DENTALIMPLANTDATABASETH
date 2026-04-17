@@ -1,728 +1,1204 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import "./MasterData.css";
-import { getTypeLabel, loadMaster, saveMaster } from "./masterDataStore.js";
+import {
+  getTypeLabel,
+  loadMaster,
+  saveMaster,
+  upsertMasterType,
+} from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { masterDataAPI, brandAPI } from "../../services/api.js";
 
 export default function MasterDataList() {
-  const navigate = useNavigate();
   const { type } = useParams();
   const label = getTypeLabel(type);
 
   const [q, setQ] = useState("");
-  const [master, setMaster] = useState(loadMaster());
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [openCountries, setOpenCountries] = useState({});
-  const [openBrands, setOpenBrands] = useState({});
-  const [quickCountrySearch, setQuickCountrySearch] = useState("");
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [quickDistributorCountrySearch, setQuickDistributorCountrySearch] = useState("");
-  const [showDistributorCountryDropdown, setShowDistributorCountryDropdown] = useState(false);
-  const [showAddIntro, setShowAddIntro] = useState(false);
+  const [error, setError] = useState("");
+  const [master, setMaster] = useState(loadMaster());
 
-  // Load data from Local Storage
-  useEffect(() => {
+  const [companies, setCompanies] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [levels, setLevels] = useState([]);
+  const [distributors, setDistributors] = useState([]);
+  const [connectionTypes, setConnectionTypes] = useState([]);
+  const [connectionShapes, setConnectionShapes] = useState([]);
+  const [screwdriverShapes, setScrewdriverShapes] = useState([]);
+  const [headShapes, setHeadShapes] = useState([]);
+  const [bodyShapes, setBodyShapes] = useState([]);
+  const [apexShapes, setApexShapes] = useState([]);
+
+  const [openCompanies, setOpenCompanies] = useState({});
+  const [openBrands, setOpenBrands] = useState({});
+  const [openCountries, setOpenCountries] = useState({});
+
+  const refreshLocalMaster = () => {
     setMaster(loadMaster());
-    const refresh = () => setMaster(loadMaster());
+  };
+
+  useEffect(() => {
+    const refresh = () => refreshLocalMaster();
+    refresh();
     window.addEventListener("focus", refresh);
     window.addEventListener("storage", refresh);
+
     return () => {
       window.removeEventListener("focus", refresh);
       window.removeEventListener("storage", refresh);
     };
   }, []);
 
-  const list = Array.isArray(master[type]) ? master[type] : [];
-
-  const updateItem = (nextList) => {
-    const nextMaster = { ...master, [type]: nextList };
-    saveMaster(nextMaster);
-    setMaster(nextMaster);
+  const syncTypeToLocal = (typeKey, items) => {
+    const current = loadMaster();
+    const next = {
+      ...current,
+      [typeKey]: Array.isArray(items) ? items : [],
+    };
+    saveMaster(next);
+    setMaster(next);
+    return next;
   };
 
-  const toggleStatus = (id) => {
-    const item = list.find(x => String(x.id) === String(id));
-    if (!item) return;
-    
-    const newStatus = item.status === "Active" ? "Inactive" : "Active";
-    const next = list.map(x =>
-      String(x.id) === String(id) ? { ...x, status: newStatus } : x
-    );
-    updateItem(next);
+  const loadCompanies = async () => {
+    const data = await masterDataAPI.getCompanies();
+    const normalized = Array.isArray(data) ? data : [];
+    setCompanies(normalized);
+    upsertMasterType("company", normalized);
+    setMaster(loadMaster());
   };
 
-  // Filter countries for dropdown search
-  const filteredCountriesForSearch = useMemo(() => {
-    if (type !== "country") return [];
-    const search = quickCountrySearch.toLowerCase();
-    if (!search) return list;
-    return list.filter(c => c.name.toLowerCase().includes(search));
-  }, [list, type, quickCountrySearch]);
+  const loadBrands = async () => {
+    const data = await brandAPI.getAll();
+    const normalized = Array.isArray(data)
+      ? data.map((item) => ({
+          id: item.id ?? item.idbrand,
+          name: item.name ?? item.brand_name,
+          companyId: item.companyId ?? item.manufacturer_id ?? null,
+          companyName: item.companyName || null,
+          website: item.website || "",
+          status: item.status || "Active",
+        }))
+      : [];
 
-  // Filter countries for official distributor dropdown search
-  const filteredDistributorCountries = useMemo(() => {
-    if (type !== "officialDistributor") return [];
-    const countriesData = Array.isArray(master.country) ? master.country : [];
-    const search = quickDistributorCountrySearch.toLowerCase();
-    if (!search) return countriesData;
-    return countriesData.filter(c => c.name.toLowerCase().includes(search));
-  }, [master, type, quickDistributorCountrySearch]);
+    setBrands(normalized);
+    upsertMasterType("brand", normalized);
+    setMaster(loadMaster());
+  };
 
-  // ✅ Special handling for brand: show companies
-  if (type === "brand") {
-    const brands = list;
+  const loadCountries = async () => {
+    const data = await masterDataAPI.getCountries();
+    const normalized = Array.isArray(data) ? data : [];
+    setCountries(normalized);
+    syncTypeToLocal("country", normalized);
+  };
 
-    const filtered = useMemo(() => {
-      const s = q.trim().toLowerCase();
-      const companiesData = Array.isArray(master.company) ? master.company : [];
-      const brandsData = Array.isArray(master.brand) ? master.brand : [];
-      
-      const companiesWithCount = companiesData.map((company) => {
-        const count = brandsData.filter((b) => b.companyId === company.id).length;
-        return { ...company, brandCount: count };
-      });
-      
-      if (!s) return companiesWithCount;
-      return companiesWithCount.filter((x) => String(x.name || "").toLowerCase().includes(s));
-    }, [q, master]);
+  const loadLevels = async () => {
+    const data = await masterDataAPI.getLevels();
+    const normalized = Array.isArray(data) ? data : [];
+    setLevels(normalized);
+    syncTypeToLocal("level", normalized);
+  };
 
-    const toggleBrandStatus = (id) => {
-      const brand = brands.find(x => x.id === id);
-      if (!brand) return;
-      
-      const newStatus = brand.status === "Active" ? "Inactive" : "Active";
-      const next = brands.map(x =>
-        x.id === id ? { ...x, status: newStatus } : x
-      );
-      updateItem(next);
-    };
+  const loadDistributors = async () => {
+    const data = await masterDataAPI.getDistributors();
+    const normalized = Array.isArray(data) ? data : [];
+    setDistributors(normalized);
+    syncTypeToLocal("officialDistributor", normalized);
+  };
 
-    const deleteBrand = (id) => {
-      const brand = list.find(x => x.id === id);
-      const name = brand ? brand.name : 'this brand';
-      if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
-      
-      const next = list.filter((x) => x.id !== id);
-      updateItem(next);
-    };
+  const loadConnectionTypes = async () => {
+    const data = await masterDataAPI.getConnectionTypes();
+    const normalized = Array.isArray(data) ? data : [];
+    setConnectionTypes(normalized);
+    syncTypeToLocal("connectionType", normalized);
+    setMaster(loadMaster());
+  };
 
-    if (loading) return <div className="mdWrap"><div className="empty">Loading...</div></div>;
+  const loadConnectionShapes = async () => {
+    const data = await masterDataAPI.getConnectionShapes();
+    const normalized = Array.isArray(data) ? data : [];
+    setConnectionShapes(normalized);
+    syncTypeToLocal("connectionShape", normalized);
+    setMaster(loadMaster());
+  };
 
-    return (
-      <div className="mdWrap">
-        <AdminSearchBar
-          placeholder="Search companies…"
-          value={q}
-          onChangeQ={setQ}
-          onSearch={setQ}
-        />
+  const loadScrewdriverShapes = async () => {
+    const data = await masterDataAPI.getScrewdriverShapes();
+    const normalized = Array.isArray(data) ? data : [];
+    setScrewdriverShapes(normalized);
+    syncTypeToLocal("screwdriverShape", normalized);
+    setMaster(loadMaster());
+  };
 
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/admin" },
-            { label: "Master Data", href: "/admin/master" },
-            { label: `${label} Data` },
-          ]}
-        />
-        <h2 className="pageTitle">Master Data Management</h2>
+  const loadHeadShapes = async () => {
+    const data = await masterDataAPI.getHeadShapes();
+    const normalized = Array.isArray(data) ? data : [];
+    setHeadShapes(normalized);
+    syncTypeToLocal("headShape", normalized);
+    setMaster(loadMaster());
+  };
 
-        {error && <div className="empty" style={{ color: '#dc3545' }}>{error}</div>}
+  const loadBodyShapes = async () => {
+    const data = await masterDataAPI.getBodyShapes();
+    const normalized = Array.isArray(data) ? data : [];
+    setBodyShapes(normalized);
+    syncTypeToLocal("bodyShape", normalized);
+    setMaster(loadMaster());
+  };
 
-        <div className="panelMd">
-          <div className="panelHeadRow">
-            <h3 className="panelTitle">{label} by Company</h3>
-            <button
-              className="addBtnMd"
-              onClick={() => navigate(`/admin/master/company/new?returnTo=/admin/master/brand`)}
-            >
-              + Add Company
-            </button>
-          </div>
+  const loadApexShapes = async () => {
+    const data = await masterDataAPI.getApexShapes();
+    const normalized = Array.isArray(data) ? data : [];
+    setApexShapes(normalized);
+    syncTypeToLocal("apexShape", normalized);
+    setMaster(loadMaster());
+  };
 
-        {filtered.length === 0 ? (
-          <div className="empty">No companies found</div>
-        ) : (
-          <div className="mdAccordion">
-            {filtered.map((company) => {
-              const companyBrands = brands.filter((b) => b.companyId === company.id);
-              const isOpen = openCountries[company.id] || false;
-              
-              return (
-                <div key={company.id} className="mdAccItem">
-                  <div 
-                    className="mdAccHeader"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setOpenCountries(prev => ({ ...prev, [company.id]: !prev[company.id] }))}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setOpenCountries(prev => ({ ...prev, [company.id]: !prev[company.id] }));
-                      }
-                    }}
-                  >
-                    <div>
-                      <div className="mdAccTitle">{company.name}</div>
-                      <div className="mdAccMeta">{company.brandCount || 0} brand(s)</div>
-                    </div>
-                    <div className="mdAccActions">
-                      <button
-                        className="pill ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const brandName = prompt(`Add brand for ${company.name}:`);
-                          if (!brandName || !brandName.trim()) return;
-                          
-                          const modelCount = prompt(`Number of models for ${brandName}:`, "0");
-                          if (modelCount === null) return;
-                          
-                          const newBrand = {
-                            id: Date.now(),
-                            name: brandName.trim(),
-                            status: "Active",
-                            companyId: company.id,
-                            modelCount: parseInt(modelCount) || 0
-                          };
-                          
-                          const updatedBrands = [newBrand, ...brands];
-                          const nextMaster = { ...master, brand: updatedBrands };
-                          saveMaster(nextMaster);
-                          setMaster(nextMaster);
-                        }}
-                      >
-                        + Add brand
-                      </button>
-                      <div className="mdChevron">{isOpen ? "−" : "+"}</div>
-                    </div>
-                  </div>
+  useEffect(() => {
+    async function boot() {
+      setLoading(true);
+      setError("");
 
-                  {isOpen && (
-                    <div className="mdAccBody">
-                      {companyBrands.length === 0 && <div className="empty">No brands yet.</div>}
-                      {companyBrands.map((brand) => {
-                        const brandModels = Array.isArray(master.model) ? master.model.filter((m) => m.brandId === brand.id) : [];
-                        const isBrandOpen = openBrands[brand.id] || false;
-                        
-                        return (
-                          <div key={brand.id} className="mdBrandItem">
-                            {/* Brand Row */}
-                            <div 
-                              className="mdBrandHeader"
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => setOpenBrands(prev => ({ ...prev, [brand.id]: !prev[brand.id] }))}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  setOpenBrands(prev => ({ ...prev, [brand.id]: !prev[brand.id] }));
-                                }
-                              }}
-                            >
-                              <div className="brandNameCell">
-                                <div className="brandName">{brand.name}</div>
-                                <div className="brandMeta">{brandModels.length} model(s)</div>
-                              </div>
-                              <div className="statusCell">
-                                <button
-                                  className={`statusPill ${brand.status === "Active" ? "on" : "off"}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleBrandStatus(brand.id);
-                                  }}
-                                  title={brand.status === "Active" ? "Click to close" : "Click to open"}
-                                >
-                                  <span className="statusDot" />
-                                  {brand.status === "Active" ? "Open" : "Closed"}
-                                </button>
-                              </div>
-                              <div className="actionsCol">
-                                <button className="btn edit" onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/admin/master/brand/edit/${brand.id}`);
-                                }}>
-                                  Edit
-                                </button>
-                                <button className="btn del" onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteBrand(brand.id);
-                                }}>
-                                  Delete
-                                </button>
-                                <div className="mdChevron">{isBrandOpen ? "−" : "+"}</div>
-                              </div>
-                            </div>
+      try {
+        if (type === "company") {
+          await loadCompanies();
+        } else if (type === "brand") {
+          await Promise.all([loadCompanies(), loadBrands()]);
+        } else if (type === "country") {
+          await loadCountries();
+        } else if (type === "level") {
+          await loadLevels();
+        } else if (type === "officialDistributor") {
+          await Promise.all([loadCountries(), loadDistributors()]);
+        } else if (type === "connectionType") {
+          await loadConnectionTypes();
+        } else if (type === "connectionShape") {
+          await loadConnectionShapes();
+        } else if (type === "screwdriverShape") {
+          await loadScrewdriverShapes();
+        } else if (type === "headShape") {
+          await loadHeadShapes();
+        } else if (type === "bodyShape") {
+          await loadBodyShapes();
+        } else if (type === "apexShape") {
+          await loadApexShapes();
+        } else {
+          refreshLocalMaster();
+        }
+      } catch (err) {
+        console.error(err);
+        setError(`Failed to load ${type}`);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-                            {/* Models */}
-                            {isBrandOpen && (
-                              <div className="mdModelsBody">
-                                {brandModels.length === 0 ? (
-                                  <div className="empty" style={{ padding: '12px 20px', fontSize: '13px' }}>No models yet.</div>
-                                ) : (
-                                  brandModels.map((model) => (
-                                    <div key={model.id} className="mdModelRow">
-                                      <div className="modelNameCell">{model.name}</div>
-                                      <div className="statusCell">
-                                        <button
-                                          className={`statusPill ${model.status === "Active" ? "on" : "off"}`}
-                                          onClick={() => {
-                                            const newStatus = model.status === "Active" ? "Inactive" : "Active";
-                                            const models = Array.isArray(master.model) ? master.model : [];
-                                            const next = models.map(m =>
-                                              m.id === model.id ? { ...m, status: newStatus } : m
-                                            );
-                                            const nextMaster = { ...master, model: next };
-                                            saveMaster(nextMaster);
-                                            setMaster(nextMaster);
-                                          }}
-                                          title={model.status === "Active" ? "Click to close" : "Click to open"}
-                                        >
-                                          <span className="statusDot" />
-                                          {model.status === "Active" ? "Open" : "Closed"}
-                                        </button>
-                                      </div>
-                                      <div className="actionsCol">
-                                        <button className="btn edit" onClick={() => navigate(`/admin/master/model/edit/${model.id}?brandId=${brand.id}`)}>
-                                          Edit
-                                        </button>
-                                        <button className="btn del" onClick={() => {
-                                          if (!confirm(`Delete "${model.name}"?`)) return;
-                                          const models = Array.isArray(master.model) ? master.model : [];
-                                          const next = models.filter((m) => m.id !== model.id);
-                                          const nextMaster = { ...master, model: next };
-                                          saveMaster(nextMaster);
-                                          setMaster(nextMaster);
-                                        }}>
-                                          Delete
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                                <button
-                                  className="pill ghost addModelBtn"
-                                  onClick={() => {
-                                    const modelName = prompt(`Add model for ${brand.name}:`);
-                                    if (!modelName || !modelName.trim()) return;
-                                    
-                                    const models = Array.isArray(master.model) ? master.model : [];
-                                    const newModel = {
-                                      id: Date.now(),
-                                      name: modelName.trim(),
-                                      status: "Active",
-                                      brandId: brand.id
-                                    };
-                                    
-                                    const updatedModels = [...models, newModel];
-                                    const nextMaster = { ...master, model: updatedModels };
-                                    saveMaster(nextMaster);
-                                    setMaster(nextMaster);
-                                  }}
-                                >
-                                  + Add model
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        </div>
-      </div>
-    );
-  }
+    boot();
+  }, [type]);
 
+  const localList = useMemo(() => {
+    if (!type) return [];
+    return Array.isArray(master?.[type]) ? master[type] : [];
+  }, [master, type]);
 
-  // ✅ Special handling for officialDistributor: show countries
-  if (type === "officialDistributor") {
-    const distributors = list;
-
-    const filtered = useMemo(() => {
-      const s = q.trim().toLowerCase();
-      const countriesData = Array.isArray(master.country) ? master.country : [];
-      const distributorsData = Array.isArray(master.officialDistributor) ? master.officialDistributor : [];
-      
-      const countriesWithCount = countriesData.map((country) => {
-        const count = distributorsData.filter((d) => d.countryId === country.id).length;
-        return { ...country, distributorCount: count };
-      });
-      
-      if (!s) return countriesWithCount;
-      return countriesWithCount.filter((x) => String(x.name || "").toLowerCase().includes(s));
-    }, [q, master]);
-
-    const toggleDistributorStatus = (id) => {
-      const distributor = distributors.find(x => x.id === id);
-      if (!distributor) return;
-      
-      const newStatus = distributor.status === "Active" ? "Inactive" : "Active";
-      const next = distributors.map(x =>
-        x.id === id ? { ...x, status: newStatus } : x
-      );
-      updateItem(next);
-    };
-
-    const deleteDistributor = (id) => {
-      const distributor = list.find(x => x.id === id);
-      const name = distributor ? distributor.name : 'this distributor';
-      if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
-      
-      const next = list.filter((x) => x.id !== id);
-      updateItem(next);
-    };
-
-    if (loading) return <div className="mdWrap"><div className="empty">Loading...</div></div>;
-
-    return (
-      <div className="mdWrap">
-        <AdminSearchBar
-          placeholder="Search countries…"
-          value={q}
-          onChangeQ={setQ}
-          onSearch={setQ}
-        />
-
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/admin" },
-            { label: "Master Data", href: "/admin/master" },
-            { label: `${label} Data` },
-          ]}
-        />
-        <h2 className="pageTitle">Master Data Management</h2>
-
-        {error && <div className="empty" style={{ color: '#dc3545' }}>{error}</div>}
-
-        <div className="panelMd">
-          <div className="panelHeadRow">
-            <h3 className="panelTitle">{label} by Country</h3>
-            <button
-              className="addBtnMd"
-              onClick={() => navigate(`/admin/master/country/new?returnTo=/admin/master/officialDistributor`)}
-            >
-              + Add Country
-            </button>
-          </div>
-
-          {type === "officialDistributor" && (
-            <div className="inlineCreate">
-              <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
-                <input
-                  className="mdInput"
-                  value={quickDistributorCountrySearch}
-                  onChange={(e) => setQuickDistributorCountrySearch(e.target.value)}
-                  onFocus={() => setShowDistributorCountryDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowDistributorCountryDropdown(false), 200)}
-                  placeholder="Search country..."
-                />
-                {showDistributorCountryDropdown && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    background: "#fff",
-                    border: "1px solid #d1d7e6",
-                    borderTop: "none",
-                    borderRadius: "0 0 8px 8px",
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    zIndex: 10,
-                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                    marginTop: "8px"
-                  }}>
-                    {filteredDistributorCountries.map(country => (
-                      <div
-                        key={country.id}
-                        style={{
-                          padding: "10px 14px",
-                          margin: "8px 10px",
-                          fontSize: "13px",
-                          transition: "all 0.2s",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          borderRadius: "8px",
-                          border: "1px solid #e0e6f2",
-                          backgroundColor: "#fff"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f0f4ff";
-                          e.currentTarget.style.borderColor = "#5b7adb";
-                          e.currentTarget.style.boxShadow = "0 2px 6px rgba(91, 122, 219, 0.15)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "#fff";
-                          e.currentTarget.style.borderColor = "#e0e6f2";
-                          e.currentTarget.style.boxShadow = "none";
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <span>{country.name}</span>
-                          <span style={{ 
-                            fontSize: "11px", 
-                            color: country.status === "Active" ? "#28a745" : "#dc3545",
-                            fontWeight: "700",
-                            textTransform: "uppercase",
-                            marginLeft: "12px"
-                          }}>
-                            {country.status === "Active" ? "Open" : "Closed"}
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", gap: "6px", marginLeft: "12px" }}>
-                          <button
-                            className="btn edit"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/admin/master/officialDistributor/${country.id}/new`);
-                              setQuickDistributorCountrySearch("");
-                              setShowDistributorCountryDropdown(false);
-                            }}
-                            style={{ padding: "4px 10px", fontSize: "12px" }}
-                          >
-                            Add Distributor
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {filteredDistributorCountries.length === 0 && (
-                      <div style={{ padding: "12px 14px", color: "#6b7a99", fontSize: "13px", textAlign: "center" }}>
-                        No countries found
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="mdAccordion">
-            {filtered.map((x) => {
-              const child = distributors.filter((d) => d.countryId === x.id);
-              const isOpen = !!openCountries[x.id];
-              return (
-                <div className="mdAccItem" key={x.id}>
-                  <div
-                    className="mdAccHeader"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setOpenCountries((prev) => ({ ...prev, [x.id]: !prev[x.id] }))}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setOpenCountries((prev) => ({ ...prev, [x.id]: !prev[x.id] }));
-                      }
-                    }}
-                  >
-                    <div>
-                      <div className="mdAccTitle">{x.name}</div>
-                      <div className="mdAccMeta">{child.length} distributor(s)</div>
-                    </div>
-                    <div className="mdAccActions">
-                      <button
-                        className="pill ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/admin/master/officialDistributor/${x.id}/new`);
-                        }}
-                      >
-                        + Add distributor
-                      </button>
-                      <div className="mdChevron">{isOpen ? "−" : "+"}</div>
-                    </div>
-                  </div>
-
-                  {isOpen && (
-                    <div className="mdAccBody">
-                      {child.length === 0 && <div className="empty">No distributors yet.</div>}
-                      {child.map((d) => (
-                        <div className="mdSubRow" key={d.id}>
-                          <div className="nameCell">{d.name}</div>
-                          <div className="statusCell">
-                            <button
-                              className={`statusPill ${d.status === "Active" ? "on" : "off"}`}
-                              onClick={() => toggleDistributorStatus(d.id)}
-                              title={d.status === "Active" ? "Click to close" : "Click to open"}
-                            >
-                              <span className="statusDot" />
-                              {d.status === "Active" ? "Open" : "Closed"}
-                            </button>
-                          </div>
-                          <div className="actionsCol">
-                            <button
-                              className="btn edit"
-                              onClick={() => navigate(`/admin/master/officialDistributor/${x.id}/edit/${d.id}`)}
-                            >
-                              Edit
-                            </button>
-                            <button className="btn del" onClick={() => deleteDistributor(d.id)}>
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {filtered.length === 0 && <div className="empty">No countries found.</div>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const filtered = useMemo(() => {
+  const filteredCompanies = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return list;
-    return list.filter((x) => String(x.name || "").toLowerCase().includes(s));
-  }, [q, list]);
+    if (!s) return companies;
+    return companies.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, companies]);
 
-  const delItem = (id) => {
-    if (!confirm("Delete this item?")) return;
-    const next = list.filter((x) => x.id !== id);
-    updateItem(next);
+  const filteredBrands = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return brands;
+    return brands.filter((x) =>
+      `${x.name || ""} ${x.companyName || ""} ${x.website || ""}`
+        .toLowerCase()
+        .includes(s)
+    );
+  }, [q, brands]);
+
+  const filteredCountries = useMemo(() => {
+    const source =
+      countries.length > 0
+        ? countries
+        : Array.isArray(master?.country)
+        ? master.country
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, countries, master]);
+
+  const filteredLevels = useMemo(() => {
+    const source =
+      levels.length > 0
+        ? levels
+        : Array.isArray(master?.level)
+        ? master.level
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, levels, master]);
+
+  const filteredConnectionTypes = useMemo(() => {
+    const source =
+      connectionTypes.length > 0
+        ? connectionTypes
+        : Array.isArray(master?.connectionType)
+        ? master.connectionType
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, connectionTypes, master]);
+
+  const filteredConnectionShapes = useMemo(() => {
+    const source =
+      connectionShapes.length > 0
+        ? connectionShapes
+        : Array.isArray(master?.connectionShape)
+        ? master.connectionShape
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, connectionShapes, master]);
+
+  const filteredScrewdriverShapes = useMemo(() => {
+    const source =
+      screwdriverShapes.length > 0
+        ? screwdriverShapes
+        : Array.isArray(master?.screwdriverShape)
+        ? master.screwdriverShape
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, screwdriverShapes, master]);
+
+  const filteredHeadShapes = useMemo(() => {
+    const source =
+      headShapes.length > 0
+        ? headShapes
+        : Array.isArray(master?.headShape)
+        ? master.headShape
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, headShapes, master]);
+
+  const filteredBodyShapes = useMemo(() => {
+    const source =
+      bodyShapes.length > 0
+        ? bodyShapes
+        : Array.isArray(master?.bodyShape)
+        ? master.bodyShape
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, bodyShapes, master]);
+
+  const filteredApexShapes = useMemo(() => {
+    const source =
+      apexShapes.length > 0
+        ? apexShapes
+        : Array.isArray(master?.apexShape)
+        ? master.apexShape
+        : [];
+    const s = q.trim().toLowerCase();
+    if (!s) return source;
+    return source.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, apexShapes, master]);
+
+  const filteredLocalList = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return localList;
+    return localList.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [q, localList]);
+
+  const groupedDistributorCountries = useMemo(() => {
+    const countrySource =
+      countries.length > 0
+        ? countries
+        : Array.isArray(master?.country)
+        ? master.country
+        : [];
+
+    const distributorSource =
+      distributors.length > 0
+        ? distributors
+        : Array.isArray(master?.officialDistributor)
+        ? master.officialDistributor
+        : [];
+
+    const mapped = countrySource.map((country) => {
+      const child = distributorSource.filter(
+        (d) => Number(d.countryId) === Number(country.id)
+      );
+      return { ...country, distributorCount: child.length, distributors: child };
+    });
+
+    const s = q.trim().toLowerCase();
+    if (!s) return mapped;
+    return mapped.filter((x) =>
+      String(x.name || "").toLowerCase().includes(s)
+    );
+  }, [countries, distributors, master, q]);
+
+  const updateLocalType = (nextItems) => {
+    const current = loadMaster();
+    const updated = { ...current, [type]: nextItems };
+    saveMaster(updated);
+    setMaster(updated);
   };
 
-  if (loading) return <div className="mdWrap"><div className="empty">Loading...</div></div>;
+  const toggleLocalStatus = (id) => {
+    const next = localList.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            status: item.status === "Active" ? "Inactive" : "Active",
+          }
+        : item
+    );
+    updateLocalType(next);
+  };
 
-  return (
+  const deleteLocalItem = (id) => {
+    if (!window.confirm("Delete this item?")) return;
+    const next = localList.filter((item) => item.id !== id);
+    updateLocalType(next);
+  };
+
+  const addCompany = async () => {
+    const name = window.prompt("Enter new company name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createCompany({ name: name.trim(), status: "Active" });
+      await loadCompanies();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add company");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCompanyStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateCompany(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadCompanies();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update company");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCompany = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteCompany(id);
+      await loadCompanies();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete company");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addBrand = async () => {
+    const name = window.prompt("Enter new brand name:");
+    if (!name || !name.trim()) return;
+
+    const companyIdText = window.prompt("Enter company ID for this brand (optional):", "");
+    const website = window.prompt("Enter website (optional):", "") || "";
+    const companyId = companyIdText && companyIdText.trim() ? Number(companyIdText) : null;
+
+    setLoading(true);
+    setError("");
+    try {
+      await brandAPI.create({
+        name: name.trim(),
+        companyId,
+        website,
+        status: "Active",
+      });
+      await loadBrands();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add brand");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editBrand = async (id, currentName, currentStatus, currentWebsite = "") => {
+    const name = window.prompt("Edit brand name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Brand name is required");
+      return;
+    }
+
+    const website = window.prompt("Edit website:", currentWebsite || "") ?? currentWebsite;
+
+    setLoading(true);
+    setError("");
+    try {
+      await brandAPI.update(id, {
+        name: trimmed,
+        website,
+        status: currentStatus,
+      });
+      await loadBrands();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit brand");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateBrandStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await brandAPI.update(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadBrands();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update brand");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteBrand = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await brandAPI.delete(id);
+      await loadBrands();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete brand");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addCountry = async () => {
+    const name = window.prompt("Enter new country name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createCountry({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadCountries();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editCountry = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit country name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Country name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateCountry(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadCountries();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCountryStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateCountry(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadCountries();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCountry = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteCountry(id);
+      await loadCountries();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete country");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addLevel = async () => {
+    const name = window.prompt("Enter new level name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createLevel({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadLevels();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add level");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editLevel = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit level name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Level name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateLevel(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadLevels();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit level");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateLevelStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateLevel(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadLevels();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update level");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteLevel = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteLevel(id);
+      await loadLevels();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete level");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addConnectionType = async () => {
+    const name = window.prompt("Enter new connection type name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createConnectionType({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadConnectionTypes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add connection type");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editConnectionType = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit connection type name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Connection type name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateConnectionType(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadConnectionTypes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit connection type");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateConnectionTypeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateConnectionType(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadConnectionTypes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update connection type");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteConnectionType = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteConnectionType(id);
+      await loadConnectionTypes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete connection type");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addConnectionShape = async () => {
+    const name = window.prompt("Enter new connection shape name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createConnectionShape({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadConnectionShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add connection shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editConnectionShape = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit connection shape name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Connection shape name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateConnectionShape(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadConnectionShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit connection shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateConnectionShapeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateConnectionShape(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadConnectionShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update connection shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteConnectionShape = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteConnectionShape(id);
+      await loadConnectionShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete connection shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addScrewdriverShape = async () => {
+    const name = window.prompt("Enter new screwdriver shape name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createScrewdriverShape({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadScrewdriverShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add screwdriver shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editScrewdriverShape = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit screwdriver shape name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Screwdriver shape name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateScrewdriverShape(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadScrewdriverShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit screwdriver shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateScrewdriverShapeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateScrewdriverShape(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadScrewdriverShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update screwdriver shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteScrewdriverShape = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteScrewdriverShape(id);
+      await loadScrewdriverShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete screwdriver shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addHeadShape = async () => {
+    const name = window.prompt("Enter new head shape name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createHeadShape({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadHeadShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add head shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editHeadShape = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit head shape name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Head shape name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateHeadShape(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadHeadShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit head shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateHeadShapeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateHeadShape(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadHeadShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update head shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteHeadShape = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteHeadShape(id);
+      await loadHeadShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete head shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addBodyShape = async () => {
+    const name = window.prompt("Enter new body shape name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createBodyShape({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadBodyShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add body shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editBodyShape = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit body shape name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Body shape name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateBodyShape(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadBodyShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit body shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateBodyShapeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateBodyShape(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadBodyShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update body shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteBodyShape = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteBodyShape(id);
+      await loadBodyShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete body shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addApexShape = async () => {
+    const name = window.prompt("Enter new apex shape name:");
+    if (!name || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.createApexShape({
+        name: name.trim(),
+        status: "Active",
+      });
+      await loadApexShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to add apex shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editApexShape = async (id, currentName, currentStatus) => {
+    const name = window.prompt("Edit apex shape name:", currentName);
+    if (name === null) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      alert("Apex shape name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateApexShape(id, {
+        name: trimmed,
+        status: currentStatus,
+      });
+      await loadApexShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to edit apex shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateApexShapeStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.updateApexShape(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadApexShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update apex shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteApexShape = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await masterDataAPI.deleteApexShape(id);
+      await loadApexShapes();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete apex shape");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mdWrap">
+        <div className="empty">Loading...</div>
+      </div>
+    );
+  }
+
+  const renderSimpleTable = ({
+    title,
+    addLabel,
+    items,
+    onAdd,
+    onEdit,
+    onToggleStatus,
+    onDelete,
+    emptyText,
+  }) => (
     <div className="mdWrap">
       <AdminSearchBar
-        placeholder="Search items…"
+        placeholder={`Search ${title.toLowerCase()}…`}
         value={q}
         onChangeQ={setQ}
         onSearch={setQ}
       />
-
       <Breadcrumb
         items={[
           { label: "Home", href: "/admin" },
           { label: "Master Data", href: "/admin/master" },
-          { label: `${label} Data` },
+          { label: title },
         ]}
       />
       <h2 className="pageTitle">Master Data Management</h2>
-
-      {error && <div className="empty" style={{ color: '#dc3545' }}>{error}</div>}
+      {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
 
       <div className="panelMd">
         <div className="panelHeadRow">
-          <h3 className="panelTitle">{label} Data</h3>
-          <button className="addBtnMd" onClick={() => setShowAddIntro(true)}>
-            + Add new
+          <h3 className="panelTitle">{title}</h3>
+          <button className="addBtnMd" onClick={onAdd}>
+            {addLabel}
           </button>
         </div>
-
-        {type === "country" && (
-          <div className="inlineCreate">
-            <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
-              <input
-                className="mdInput"
-                value={quickCountrySearch}
-                onChange={(e) => setQuickCountrySearch(e.target.value)}
-                onFocus={() => setShowCountryDropdown(true)}
-                onBlur={() => setTimeout(() => setShowCountryDropdown(false), 200)}
-                placeholder="Search country..."
-              />
-              {showCountryDropdown && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  background: "#fff",
-                  border: "1px solid #d1d7e6",
-                  borderTop: "none",
-                  borderRadius: "0 0 8px 8px",
-                  maxHeight: "400px",
-                  overflowY: "auto",
-                  zIndex: 10,
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                  marginTop: "8px"
-                }}>
-                  {filteredCountriesForSearch.map(country => (
-                    <div
-                      key={country.id}
-                      style={{
-                        padding: "10px 14px",
-                        margin: "8px 10px",
-                        fontSize: "13px",
-                        transition: "all 0.2s",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        borderRadius: "8px",
-                        border: "1px solid #e0e6f2",
-                        backgroundColor: "#fff"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f0f4ff";
-                        e.currentTarget.style.borderColor = "#5b7adb";
-                        e.currentTarget.style.boxShadow = "0 2px 6px rgba(91, 122, 219, 0.15)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "#fff";
-                        e.currentTarget.style.borderColor = "#e0e6f2";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <span>{country.name}</span>
-                        <span style={{ 
-                          fontSize: "11px", 
-                          color: country.status === "Active" ? "#28a745" : "#dc3545",
-                          fontWeight: "700",
-                          textTransform: "uppercase",
-                          marginLeft: "12px"
-                        }}>
-                          {country.status === "Active" ? "Open" : "Closed"}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", gap: "6px", marginLeft: "12px" }}>
-                        <button
-                          className="btn edit"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/master/country/edit/${country.id}`);
-                          }}
-                          style={{ padding: "4px 10px", fontSize: "12px" }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn del"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm(`Delete "${country.name}"? This action cannot be undone.`)) {
-                              delItem(country.id);
-                              setQuickCountrySearch("");
-                              setShowCountryDropdown(false);
-                            }
-                          }}
-                          style={{ padding: "4px 10px", fontSize: "12px" }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {filteredCountriesForSearch.length === 0 && (
-                    <div style={{ padding: "12px 14px", color: "#6b7a99", fontSize: "13px", textAlign: "center" }}>
-                      No countries found
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className="mdTable">
           <div className="mdHead detail">
@@ -732,64 +1208,493 @@ export default function MasterDataList() {
             <div className="actionsCol">Actions</div>
           </div>
 
-          {filtered.map((x, idx) => (
+          {items.map((x, idx) => (
             <div className="mdRow detail" key={x.id}>
               <div>{idx + 1}</div>
               <div className="nameCell">{x.name}</div>
               <div className="statusCell">
                 <button
                   className={`statusPill ${x.status === "Active" ? "on" : "off"}`}
-                  onClick={() => toggleStatus(x.id)}
-                  title={x.status === "Active" ? "Click to close" : "Click to open"}
+                  onClick={() => onToggleStatus(x.id, x.status)}
                 >
                   <span className="statusDot" />
                   {x.status === "Active" ? "Open" : "Closed"}
                 </button>
               </div>
               <div className="actionsCol">
-                <button className="btn edit" onClick={() => navigate(`/admin/master/${type}/edit/${x.id}`)}>
+                <button className="btn edit" onClick={() => onEdit(x.id, x.name, x.status)}>
                   Edit
                 </button>
-                <button className="btn del" onClick={() => delItem(x.id)}>
+                <button className="btn del" onClick={() => onDelete(x.id, x.name)}>
                   Delete
                 </button>
               </div>
             </div>
           ))}
 
-          {filtered.length === 0 && <div className="empty">No items found.</div>}
+          {items.length === 0 && <div className="empty">{emptyText}</div>}
         </div>
       </div>
+    </div>
+  );
 
-      {showAddIntro && (
-        <div className="modalOverlay" onClick={() => setShowAddIntro(false)}>
-          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHead">
-              <h3 className="modalTitle">Add New {label}</h3>
-              <button className="modalClose" onClick={() => setShowAddIntro(false)}>×</button>
-            </div>
-            <div className="modalBody">
-              <p className="modalText">Please review recent items before adding. This helps avoid duplicates and keeps data consistent.</p>
-              <div className="mdPreviewList">
-                {(Array.isArray(list) ? list.slice(0, 3) : []).map((x) => (
-                  <div className="mdPreviewRow" key={x.id}>
-                    <span className="dot" />
-                    <div className="previewText">{x.name}</div>
-                    <div className="statusTiny">{x.status === "Active" ? "Open" : "Closed"}</div>
+  if (type === "connectionType") {
+    return renderSimpleTable({
+      title: "Connection Type Data",
+      addLabel: "+ Add Connection Type",
+      items: filteredConnectionTypes,
+      onAdd: addConnectionType,
+      onEdit: editConnectionType,
+      onToggleStatus: updateConnectionTypeStatus,
+      onDelete: deleteConnectionType,
+      emptyText: "No connection types found.",
+    });
+  }
+
+  if (type === "connectionShape") {
+    return renderSimpleTable({
+      title: "Connection Shape Data",
+      addLabel: "+ Add Connection Shape",
+      items: filteredConnectionShapes,
+      onAdd: addConnectionShape,
+      onEdit: editConnectionShape,
+      onToggleStatus: updateConnectionShapeStatus,
+      onDelete: deleteConnectionShape,
+      emptyText: "No connection shapes found.",
+    });
+  }
+
+  if (type === "screwdriverShape") {
+    return renderSimpleTable({
+      title: "Screwdriver Shape Data",
+      addLabel: "+ Add Screwdriver Shape",
+      items: filteredScrewdriverShapes,
+      onAdd: addScrewdriverShape,
+      onEdit: editScrewdriverShape,
+      onToggleStatus: updateScrewdriverShapeStatus,
+      onDelete: deleteScrewdriverShape,
+      emptyText: "No screwdriver shapes found.",
+    });
+  }
+
+  if (type === "headShape") {
+    return renderSimpleTable({
+      title: "Head Shape Data",
+      addLabel: "+ Add Head Shape",
+      items: filteredHeadShapes,
+      onAdd: addHeadShape,
+      onEdit: editHeadShape,
+      onToggleStatus: updateHeadShapeStatus,
+      onDelete: deleteHeadShape,
+      emptyText: "No head shapes found.",
+    });
+  }
+
+  if (type === "bodyShape") {
+    return renderSimpleTable({
+      title: "Body Shape Data",
+      addLabel: "+ Add Body Shape",
+      items: filteredBodyShapes,
+      onAdd: addBodyShape,
+      onEdit: editBodyShape,
+      onToggleStatus: updateBodyShapeStatus,
+      onDelete: deleteBodyShape,
+      emptyText: "No body shapes found.",
+    });
+  }
+
+  if (type === "apexShape") {
+    return renderSimpleTable({
+      title: "Apex Shape Data",
+      addLabel: "+ Add Apex Shape",
+      items: filteredApexShapes,
+      onAdd: addApexShape,
+      onEdit: editApexShape,
+      onToggleStatus: updateApexShapeStatus,
+      onDelete: deleteApexShape,
+      emptyText: "No apex shapes found.",
+    });
+  }
+
+  if (type === "company") {
+    return (
+      <div className="mdWrap">
+        <AdminSearchBar placeholder="Search companies…" value={q} onChangeQ={setQ} onSearch={setQ} />
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/admin" },
+            { label: "Master Data", href: "/admin/master" },
+            { label: `${label} Data` },
+          ]}
+        />
+        <h2 className="pageTitle">Master Data Management</h2>
+        {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+        <div className="panelMd">
+          <div className="panelHeadRow">
+            <h3 className="panelTitle">{label} Companies</h3>
+            <button className="addBtnMd" onClick={addCompany}>+ Add Company</button>
+          </div>
+
+          {filteredCompanies.length === 0 ? (
+            <div className="empty">No companies found</div>
+          ) : (
+            <div className="mdAccordion">
+              {filteredCompanies.map((company) => {
+                const isOpen = !!openCompanies[company.id];
+
+                return (
+                  <div key={company.id} className="mdAccItem">
+                    <div
+                      className="mdAccHeader"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        setOpenCompanies((prev) => ({
+                          ...prev,
+                          [company.id]: !prev[company.id],
+                        }))
+                      }
+                    >
+                      <div>
+                        <div className="mdAccTitle">{company.name}</div>
+                        <div className="mdAccMeta">Status: {company.status}</div>
+                      </div>
+
+                      <div className="mdAccActions">
+                        <button
+                          className="pill ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateCompanyStatus(company.id, company.status);
+                          }}
+                        >
+                          {company.status === "Active" ? "Deactivate" : "Activate"}
+                        </button>
+
+                        <button
+                          className="pill del"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteCompany(company.id, company.name);
+                          }}
+                        >
+                          Delete
+                        </button>
+
+                        <div className="mdChevron">{isOpen ? "−" : "+"}</div>
+                      </div>
+                    </div>
+
+                    {isOpen && (
+                      <div className="mdAccBody">
+                        <div className="empty">Country Code: {company.countryCode || "-"}</div>
+                      </div>
+                    )}
                   </div>
-                ))}
-                {(!Array.isArray(list) || list.length === 0) && (
-                  <div className="empty">No items yet.</div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "brand") {
+    return (
+      <div className="mdWrap">
+        <AdminSearchBar placeholder="Search brands…" value={q} onChangeQ={setQ} onSearch={setQ} />
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/admin" },
+            { label: "Master Data", href: "/admin/master" },
+            { label: `${label} Data` },
+          ]}
+        />
+        <h2 className="pageTitle">Master Data Management</h2>
+        {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+        <div className="panelMd">
+          <div className="panelHeadRow">
+            <h3 className="panelTitle">{label} Data</h3>
+            <button className="addBtnMd" onClick={addBrand}>+ Add Brand</button>
+          </div>
+
+          {filteredBrands.length === 0 ? (
+            <div className="empty">No brands found</div>
+          ) : (
+            <div className="mdAccordion">
+              {filteredBrands.map((brand) => {
+                const isOpen = !!openBrands[brand.id];
+
+                return (
+                  <div key={brand.id} className="mdAccItem">
+                    <div
+                      className="mdAccHeader"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        setOpenBrands((prev) => ({
+                          ...prev,
+                          [brand.id]: !prev[brand.id],
+                        }))
+                      }
+                    >
+                      <div>
+                        <div className="mdAccTitle">{brand.name}</div>
+                        <div className="mdAccMeta">
+                          Company: {brand.companyName || brand.companyId || "-"} | Status: {brand.status}
+                        </div>
+                      </div>
+
+                      <div className="mdAccActions">
+                        <button
+                          className="pill ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateBrandStatus(brand.id, brand.status);
+                          }}
+                        >
+                          {brand.status === "Active" ? "Deactivate" : "Activate"}
+                        </button>
+
+                        <button
+                          className="btn edit"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            editBrand(brand.id, brand.name, brand.status, brand.website);
+                          }}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="pill del"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteBrand(brand.id, brand.name);
+                          }}
+                        >
+                          Delete
+                        </button>
+
+                        <div className="mdChevron">{isOpen ? "−" : "+"}</div>
+                      </div>
+                    </div>
+
+                    {isOpen && (
+                      <div className="mdAccBody">
+                        <div className="empty">Website: {brand.website || "-"}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "level") {
+    return renderSimpleTable({
+      title: `${label} Data`,
+      addLabel: "+ Add Level",
+      items: filteredLevels,
+      onAdd: addLevel,
+      onEdit: editLevel,
+      onToggleStatus: updateLevelStatus,
+      onDelete: deleteLevel,
+      emptyText: "No levels found.",
+    });
+  }
+
+  if (type === "country") {
+    return renderSimpleTable({
+      title: `${label} Data`,
+      addLabel: "+ Add Country",
+      items: filteredCountries,
+      onAdd: addCountry,
+      onEdit: editCountry,
+      onToggleStatus: updateCountryStatus,
+      onDelete: deleteCountry,
+      emptyText: "No countries found.",
+    });
+  }
+
+if (type === "officialDistributor") { 
+  return (
+    <div className="mdWrap">
+      <AdminSearchBar
+        placeholder="Search countries…"
+        value={q}
+        onChangeQ={setQ}
+        onSearch={setQ}
+     />
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/admin" },
+          { label: "Master Data", href: "/admin/master" },
+          { label: `${label} Data` },
+        ]}
+      />
+      <h2 className="pageTitle">Master Data Management</h2>
+      {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+      <div className="panelMd">
+        <div className="panelHeadRow">
+          <h3 className="panelTitle">{label} by Country</h3>
+        </div>
+
+        <div className="mdAccordion">
+          {groupedDistributorCountries.map((x) => {
+            const isOpen = !!openCountries[x.id];
+            const child = x.distributors || [];
+
+            return (
+              <div className="mdAccItem" key={x.id}>
+                <div
+                  className="mdAccHeader"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    setOpenCountries((prev) => ({
+                      ...prev,
+                      [x.id]: !prev[x.id],
+                    }))
+                  }
+                >
+                  <div>
+                    <div className="mdAccTitle">{x.name}</div>
+                    <div className="mdAccMeta">{child.length} distributor(s)</div>
+                  </div>
+
+                  <div className="mdAccActions">
+                    <button
+                      className="btn edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/admin/master/officialDistributor/${x.id}`;
+                      }}
+                    >
+                      Manage
+                    </button>
+                    <div className="mdChevron">{isOpen ? "−" : "+"}</div>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="mdAccBody">
+                    {child.length === 0 && (
+                      <div className="empty">No distributors yet.</div>
+                    )}
+
+                    {child.map((d) => (
+                      <div className="mdSubRow" key={d.id}>
+                        <div className="nameCell">{d.name}</div>
+                        <div className="statusCell">
+                          <button
+                            className={`statusPill ${d.status === "Active" ? "on" : "off"}`}
+                          >
+                            <span className="statusDot" />
+                            {d.status === "Active" ? "Open" : "Closed"}
+                          </button>
+                        </div>
+                        <div className="actionsCol">
+                          <button
+                            className="btn edit"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `/admin/master/officialDistributor/${x.id}/edit/${d.id}`;
+                            }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div style={{ marginTop: "12px" }}>
+                      <button
+                        className="addBtnMd"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `/admin/master/officialDistributor/${x.id}/new`;
+                        }}
+                      >
+                        + Add Distributor
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="modalActions">
-              <button className="btn save" onClick={() => navigate(`/admin/master/${type}/new`)}>Continue</button>
-              <button className="btn cancel" onClick={() => setShowAddIntro(false)}>Cancel</button>
-            </div>
-          </div>
+            );
+          })}
+
+          {groupedDistributorCountries.length === 0 && (
+            <div className="empty">No countries found.</div>
+          )}
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+  return (
+    <div className="mdWrap">
+      <AdminSearchBar placeholder="Search items…" value={q} onChangeQ={setQ} onSearch={setQ} />
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/admin" },
+          { label: "Master Data", href: "/admin/master" },
+          { label: `${label} Data` },
+        ]}
+      />
+      <h2 className="pageTitle">Master Data Management</h2>
+
+      {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+      <div className="panelMd">
+        <div className="panelHeadRow">
+          <h3 className="panelTitle">{label} Data</h3>
+        </div>
+
+        <div className="mdTable">
+          <div className="mdHead detail">
+            <div>ID</div>
+            <div>Name</div>
+            <div>Status</div>
+            <div className="actionsCol">Actions</div>
+          </div>
+
+          {filteredLocalList.map((x, idx) => (
+            <div className="mdRow detail" key={x.id}>
+              <div>{idx + 1}</div>
+              <div className="nameCell">{x.name}</div>
+              <div className="statusCell">
+                <button
+                  className={`statusPill ${x.status === "Active" ? "on" : "off"}`}
+                  onClick={() => toggleLocalStatus(x.id)}
+                >
+                  <span className="statusDot" />
+                  {x.status === "Active" ? "Open" : "Closed"}
+                </button>
+              </div>
+              <div className="actionsCol">
+                <button className="btn edit" disabled>Edit</button>
+                <button className="btn del" onClick={() => deleteLocalItem(x.id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {filteredLocalList.length === 0 && (
+            <div className="empty">No items found.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

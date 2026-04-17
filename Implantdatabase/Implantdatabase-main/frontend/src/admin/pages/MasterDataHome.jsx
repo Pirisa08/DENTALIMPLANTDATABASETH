@@ -4,19 +4,53 @@ import "./MasterData.css";
 import { loadMaster, MASTER_TYPES } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { masterDataAPI, brandAPI } from "../../services/api.js";
 
 export default function MasterDataHome() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [master, setMaster] = useState(loadMaster());
+  const [companyCount, setCompanyCount] = useState(0);
+  const [brandCount, setBrandCount] = useState(0);
+  const [countryCount, setCountryCount] = useState(0);
+  const [distributorCount, setDistributorCount] = useState(0);
   const [showAddIntro, setShowAddIntro] = useState(false);
   const [addType, setAddType] = useState(null);
 
   useEffect(() => {
-    const refresh = () => setMaster(loadMaster());
+    const refresh = async () => {
+      const localMaster = loadMaster();
+      setMaster(localMaster);
+
+      try {
+        const [companies, brands, countries, distributors] = await Promise.all([
+          masterDataAPI.getCompanies(),
+          brandAPI.getAll(),
+          masterDataAPI.getCountries(),
+          masterDataAPI.getDistributors(),
+        ]);
+
+        setCompanyCount(Array.isArray(companies) ? companies.length : 0);
+        setBrandCount(Array.isArray(brands) ? brands.length : 0);
+        setCountryCount(Array.isArray(countries) ? countries.length : 0);
+        setDistributorCount(Array.isArray(distributors) ? distributors.length : 0);
+      } catch (err) {
+        console.error(err);
+        setCompanyCount(Array.isArray(localMaster.company) ? localMaster.company.length : 0);
+        setBrandCount(Array.isArray(localMaster.brand) ? localMaster.brand.length : 0);
+        setCountryCount(Array.isArray(localMaster.country) ? localMaster.country.length : 0);
+        setDistributorCount(
+          Array.isArray(localMaster.officialDistributor)
+            ? localMaster.officialDistributor.length
+            : 0
+        );
+      }
+    };
+
     refresh();
     window.addEventListener("focus", refresh);
     window.addEventListener("storage", refresh);
+
     return () => {
       window.removeEventListener("focus", refresh);
       window.removeEventListener("storage", refresh);
@@ -25,13 +59,28 @@ export default function MasterDataHome() {
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
-    const list = MASTER_TYPES.map((t) => ({
-      ...t,
-      total: Array.isArray(master[t.key]) ? master[t.key].length : 0,
-    }));
+
+    const list = MASTER_TYPES.map((t) => {
+      let total = 0;
+
+      if (t.key === "company") {
+        total = companyCount;
+      } else if (t.key === "brand") {
+        total = brandCount;
+      } else if (t.key === "country") {
+        total = countryCount;
+      } else if (t.key === "officialDistributor") {
+        total = distributorCount;
+      } else {
+        total = Array.isArray(master[t.key]) ? master[t.key].length : 0;
+      }
+
+      return { ...t, total };
+    });
+
     if (!s) return list;
     return list.filter((x) => x.label.toLowerCase().includes(s));
-  }, [q, master]);
+  }, [q, master, companyCount, brandCount, countryCount, distributorCount]);
 
   return (
     <div className="mdWrap">
@@ -48,6 +97,7 @@ export default function MasterDataHome() {
           { label: "Master Data Management" },
         ]}
       />
+
       <h2 className="pageTitle">Master Data Management</h2>
 
       <div className="panelMd">
@@ -87,9 +137,12 @@ export default function MasterDataHome() {
         <div className="modalOverlay" onClick={() => setShowAddIntro(false)}>
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <div className="modalHead">
-              <h3 className="modalTitle">Add New {MASTER_TYPES.find(t => t.key === addType)?.label || "Item"}</h3>
+              <h3 className="modalTitle">
+                Add New {MASTER_TYPES.find((t) => t.key === addType)?.label || "Item"}
+              </h3>
               <button className="modalClose" onClick={() => setShowAddIntro(false)}>×</button>
             </div>
+
             <div className="modalBody">
               <p className="modalText">Preview recent items to reduce duplicates before adding.</p>
               <div className="mdPreviewList">
@@ -105,6 +158,7 @@ export default function MasterDataHome() {
                 )}
               </div>
             </div>
+
             <div className="modalActions">
               <button
                 className="btn save"
@@ -113,7 +167,9 @@ export default function MasterDataHome() {
               >
                 Continue
               </button>
-              <button className="btn cancel" onClick={() => setShowAddIntro(false)}>Cancel</button>
+              <button className="btn cancel" onClick={() => setShowAddIntro(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

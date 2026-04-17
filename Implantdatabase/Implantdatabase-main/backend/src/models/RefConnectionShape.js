@@ -1,19 +1,30 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const RefConnectionShape = sequelize.define('RefConnectionShape', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+const RefConnectionShape = sequelize.define(
+  'RefConnectionShape',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      field: 'connection_shape_name',
+    },
+    status: {
+      type: DataTypes.ENUM('Active', 'Inactive'),
+      allowNull: false,
+      defaultValue: 'Active',
+      field: 'status',
+    },
   },
-  connection_shape_name: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-  },
-}, {
-  tableName: 'ref_connection_shape',
-  timestamps: false,
-});
+  {
+    tableName: 'ref_connection_shape',
+    timestamps: false,
+  }
+);
 
 export default RefConnectionShape;
