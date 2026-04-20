@@ -1,0 +1,320 @@
+.loginPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.07), transparent 32%),
+    linear-gradient(180deg, #eef3fb 0%, #e8eef8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.loginShell {
+  width: 100%;
+  max-width: 1120px;
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.loginBrandPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 42px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.32) 100%);
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.brandCenterWrap {
+  width: 100%;
+  max-width: 430px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.brandLogoImage {
+  width: 124px;
+  height: 124px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 22px;
+}
+
+.brandEyebrow {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #40618f;
+  font-weight: 700;
+}
+
+/* 🔥 โลโก้ใหญ่ขึ้นแบบ official */
+.brandLogoImage {
+  width: 220px;       /* 🔥 เพิ่มจาก 124 */
+  height: 220px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 28px;
+}
+
+/* 🔥 ชื่อหลัก */
+.brandTitleMain {
+  margin: 0;
+  font-size: clamp(2.4rem, 3.2vw, 3.2rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* 🔥 subtitle แบบ university style */
+.brandTitleSub {
+  margin: 6px 0 12px;
+  font-size: 0.85rem;
+  letter-spacing: 0.35em; /* 🔥 spacing แบบทางการ */
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* 🔥 university label */
+.brandEyebrow {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6b7fa3;
+  font-weight: 600;
+}
+
+.loginCard {
+  background: rgba(255, 255, 255, 0.96);
+  padding: 56px 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.loginCardHeader {
+  margin-bottom: 30px;
+}
+
+.loginEyebrow {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.loginHeading {
+  margin: 0;
+  font-size: clamp(1.9rem, 2.8vw, 2.5rem);
+  line-height: 1.12;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.loginDescription {
+  margin: 14px 0 0;
+  color: #64748b;
+  line-height: 1.75;
+  font-size: 0.95rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.91rem;
+  color: #243b66;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  height: 54px;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  border: 1px solid #d9e3f0;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+  font-weight: 300;
+  opacity: 0.7;
+  letter-spacing: 0.02em; /* 🔥 ดู clean ขึ้น */
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.10);
+  background: #ffffff;
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 56px;
+}
+
+.togglePasswordBtn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.togglePasswordBtn:hover {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.passwordIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.checkbox input {
+  accent-color: #2563eb;
+}
+
+.signInBtn {
+  margin-top: 10px;
+  height: 54px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
+}
+
+.signInBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
+}
+
+.signInBtn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  color: #991b1b;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #7b8798;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .loginShell {
+    grid-template-columns: 1fr;
+  }
+
+  .loginBrandPanel {
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    padding: 40px 34px 24px;
+  }
+
+  .loginCard {
+    padding: 40px 34px 42px;
+  }
+}
+
+@media (max-width: 768px) {
+  .loginPage {
+    padding: 18px;
+  }
+
+  .loginShell {
+    border-radius: 24px;
+  }
+
+  .loginBrandPanel,
+  .loginCard {
+    padding: 28px 22px;
+  }
+
+  .brandLogoImage {
+    width: 98px;
+    height: 98px;
+    margin-bottom: 16px;
+  }
+
+  .brandSubtitle {
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+
+  .signInBtn {
+    height: 50px;
+  }
+}

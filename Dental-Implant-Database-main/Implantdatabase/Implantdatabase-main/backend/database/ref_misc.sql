@@ -1,0 +1,24 @@
+CREATE TABLE ref_driver_shape (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    driver_shape_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE ref_head_shape (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE ref_job_title (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) NOT NULL
+);
+
+CREATE TABLE ref_read_time (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    label VARCHAR(40) NOT NULL
+);
+
+CREATE TABLE ref_role (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
