@@ -1,101 +1,185 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Home.module.css";
-import useMergedImplants from "../hooks/useMergedImplants";
+import { implantsAPI } from "../../services/api.js";
 
-const ModernWaves = () => (
-  <div className={styles.waveContainer}>
-    <svg
-      className={styles.waves}
-      viewBox="0 24 150 28"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <path
-          id="gentle-wave"
-          d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
-        />
-      </defs>
-      <g className={styles.parallax}>
-        <use href="#gentle-wave" x="48" y="0" />
-        <use href="#gentle-wave" x="48" y="3" />
-        <use href="#gentle-wave" x="48" y="5" />
-        <use href="#gentle-wave" x="48" y="7" />
-      </g>
-    </svg>
-  </div>
-);
+/* ===== Modern Waves ===== */
+function ModernWaves() {
+  return (
+    <div className={styles.waveContainer}>
+      <svg
+        className={styles.waves}
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 24 150 28"
+        preserveAspectRatio="none"
+        shapeRendering="auto"
+      >
+        <defs>
+          <path
+            id="gentle-wave"
+            d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"
+          />
+        </defs>
+        <g className={styles.parallax}>
+          <use href="#gentle-wave" x="48" y="0" />
+          <use href="#gentle-wave" x="48" y="3" />
+          <use href="#gentle-wave" x="48" y="5" />
+          <use href="#gentle-wave" x="48" y="7" />
+        </g>
+      </svg>
+    </div>
+  );
+}
 
-const buildBrands = (implants) => {
+const IMPLANTS_KEY = "admin_implants_v1";
+const IMPLANTS_UPDATED_EVENT = "implants:updated";
+
+function readLocalImplants() {
+  try {
+    const raw = localStorage.getItem(IMPLANTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function normalizeImplants(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .filter(Boolean)
+    .filter((item) => (item.status || "Active") === "Active")
+    .map((item) => ({
+      ...item,
+      brand:
+        item?.brand ||
+        item?.brandName ||
+        item?.brand_name ||
+        item?.brand_title ||
+        "",
+      company:
+        item?.company ||
+        item?.companyName ||
+        item?.company_name ||
+        item?.manufacturer ||
+        "",
+    }));
+}
+
+function buildBrands(implants = []) {
   const map = new Map();
 
-  implants.forEach((it) => {
-    const brandRaw =
-      it.brand ||
-      it.company?.name ||
-      it.company ||
-      "UNKNOWN";
+  implants.forEach((item) => {
+    const brand = String(item?.brand || "").trim();
+    if (!brand) return;
 
-    const brand = String(brandRaw).trim().toUpperCase();
+    const company = String(item?.company || "Unknown Company").trim() || "Unknown Company";
 
     if (!map.has(brand)) {
       map.set(brand, {
         brand,
-        company:
-          it.company?.name ||
-          (typeof it.company === "string" ? it.company : "") ||
-          brand,
-        count: 0,
+        company,
+        count: 1,
       });
+    } else {
+      map.get(brand).count += 1;
     }
-
-    map.get(brand).count++;
   });
 
   return Array.from(map.values());
-};
+}
 
 export default function Home() {
-  const { implants, loading, error } = useMergedImplants();
+  const [implants, setImplants] = useState(() =>
+    normalizeImplants(readLocalImplants())
+  );
+  const [loading, setLoading] = useState(implants.length === 0);
+  const [error, setError] = useState("");
 
-  // 🔥 จำนวนทั้งหมดจริง
-  const totalImplants = implants.length;
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadImplants = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const apiData = await implantsAPI.getAll();
+        const normalized = normalizeImplants(apiData);
+
+        if (!isMounted) return;
+
+        if (normalized.length > 0) {
+          setImplants(normalized);
+          try {
+            localStorage.setItem(IMPLANTS_KEY, JSON.stringify(apiData));
+          } catch {
+            // ignore localStorage write errors
+          }
+        } else {
+          setImplants(normalizeImplants(readLocalImplants()));
+        }
+      } catch (err) {
+        console.error("Failed to load implants on home page:", err);
+        if (!isMounted) return;
+        setImplants(normalizeImplants(readLocalImplants()));
+        setError("Unable to load implant data.");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadImplants();
+
+    const refreshLocal = () => {
+      setImplants(normalizeImplants(readLocalImplants()));
+    };
+
+    window.addEventListener("storage", refreshLocal);
+    window.addEventListener(IMPLANTS_UPDATED_EVENT, refreshLocal);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("storage", refreshLocal);
+      window.removeEventListener(IMPLANTS_UPDATED_EVENT, refreshLocal);
+    };
+  }, []);
 
   const brandsData = useMemo(() => buildBrands(implants), [implants]);
-
-  // 🔥 จำนวน brand จริงทั้งหมด
+  const totalImplants = implants.length;
   const totalBrands = brandsData.length;
 
-  // 🔥 เอาแค่ 5 ตัว (Top)
   const topBrands = useMemo(() => {
     return [...brandsData]
-      .sort((a, b) => b.count - a.count) // เรียงจากเยอะสุด
-      .slice(0, 5); // 🔥 เอาแค่ 5 ตัว
+      .sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand))
+      .slice(0, 5);
   }, [brandsData]);
 
   return (
     <div className={styles.homeContainer}>
-      {/* HERO */}
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
-          <span className={styles.badgeText}>
-            Professional Dental Database
-          </span>
+          <span className={styles.badgeText}>Professional Dental Database</span>
+
           <h1>
             Precision Data for <br />
             <span>Implant Dentistry.</span>
           </h1>
+
           <p className={styles.heroSubtitle}>
-            Access the world's most comprehensive database of dental implant systems.
+            Access implant systems, compare brands, and explore structured clinical
+            information in one connected platform.
           </p>
+
           <Link to="/implants" className={styles.viewAllBtn}>
             Start Exploration
           </Link>
         </div>
+
         <ModernWaves />
       </section>
 
-      {/* STATS */}
       <section className={styles.statsSection}>
         <div className={styles.statsContainer}>
           <div className={styles.statItem}>
@@ -110,55 +194,59 @@ export default function Home() {
 
           <div className={styles.statItem}>
             <div className={styles.statNumber}>100%</div>
-            <div className={styles.statLabel}>Real Data</div>
+            <div className={styles.statLabel}>Structured Data</div>
           </div>
 
           <div className={styles.statItem}>
-            <div className={styles.statNumber}>API</div>
-            <div className={styles.statLabel}>Connected</div>
+            <div className={styles.statNumber}>Live</div>
+            <div className={styles.statLabel}>Database Ready</div>
           </div>
         </div>
       </section>
 
-      {/* EXPLORE BRANDS */}
       <section className={styles.brandSection}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <h2>Explore Brands</h2>
+        <div className={styles.brandPanel}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2>Explore Brands</h2>
 
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
+              {loading && <p>Loading implant brands...</p>}
+              {!loading && error && <p>{error}</p>}
+              {!loading && !error && (
+                <p>
+                  Browse leading implant brands and explore available systems in the
+                  database.
+                </p>
+              )}
+            </div>
+
+            <Link to="/implants" className={styles.viewAllText}>
+              View All Brands →
+            </Link>
           </div>
 
-          <Link to="/implants" className={styles.viewAllText}>
-            View All Brands →
-          </Link>
-        </div>
+          <div className={styles.brandGrid}>
+            {topBrands.map((brandItem) => (
+              <Link
+                key={brandItem.brand}
+                to={`/implants?brand=${encodeURIComponent(brandItem.brand)}`}
+                className={styles.brandCard}
+              >
+                <div className={styles.brandName}>{brandItem.brand}</div>
+                <div className={styles.brandCompany}>{brandItem.company}</div>
+                <div className={styles.brandSummary}>
+                  {brandItem.count} implant systems available in the database
+                </div>
+                <div className={styles.brandBtn}>Explore</div>
+              </Link>
+            ))}
 
-        <div className={styles.brandGrid}>
-          {topBrands.map((b) => (
-            <Link
-              key={b.brand}
-              to={`/implants/brand/${encodeURIComponent(b.brand)}`}
-              className={styles.brandCard}
-            >
-              <div className={styles.brandName}>{b.brand}</div>
-              <div className={styles.brandCompany}>{b.company}</div>
-
-              {/* 🔥 แสดงจำนวน */}
-              <div className={styles.brandSummary}>
-                {b.count} implants available
-              </div>
-
-              <div className={styles.brandBtn}>Analyze Models</div>
-            </Link>
-          ))}
-
-          {!loading && topBrands.length === 0 && (
-            <div>No brands available</div>
-          )}
+            {!loading && topBrands.length === 0 && (
+              <div className={styles.emptyState}>No brands available</div>
+            )}
+          </div>
         </div>
       </section>
     </div>
   );
-}
+} 

@@ -2,8 +2,8 @@
 
 ## ✅ Project Complete
 
-**Date**: January 31, 2026
-**Status**: ✅ COMPLETE & TESTED
+**Date**: April 24, 2026
+**Status**: ✅ COMPLETE & TESTED (with MySQL, static uploads, blogs, master/custom, auto-refresh)
 **Deployment**: Ready for production
 
 ---
@@ -22,13 +22,14 @@
 
 | Feature | Status | Details |
 |---------|--------|---------|
-| **Backend-Frontend Connection** | ✅ Complete | Admin data flows to user side via API |
-| **3 Image Upload** | ✅ Complete | Main Product, Detail View, Application |
-| **Image Storage** | ✅ Complete | SQLite database with base64 encoding |
-| **Image Retrieval** | ✅ Complete | Automatic on user side |
-| **Real-time Sync** | ✅ Complete | Admin creates → User sees instantly |
-| **Offline Support** | ✅ Complete | localStorage fallback |
-| **Cross-tab Sync** | ✅ Complete | All browser tabs stay in sync |
+| **Backend-Frontend Connection** | ✅ Complete | Admin data flows to user side via API (MySQL, Sequelize, static uploads) |
+| **3 Image Upload** | ✅ Complete | Main Product, Detail View, Application (3 files, 10MB each, auto-delete old images) |
+| **Image Storage** | ✅ Complete | MySQL database, image URLs (no base64), static file storage |
+| **Image Retrieval** | ✅ Complete | Automatic on user side (resolveImageUrl, id master-xxx/custom) |
+| **Real-time Sync** | ✅ Complete | Admin creates/edits/deletes → User sees instantly (auto-refresh, localStorage) |
+| **Offline Support** | ✅ Complete | localStorage fallback, auto-sync when online |
+| **Cross-tab Sync** | ✅ Complete | All browser tabs stay in sync (storage event, auto-refresh) |
+| **Blogs & Master Data** | ✅ Complete | CRUD for blogs, master data, feedback, admin/user side |
 
 ---
 
@@ -38,26 +39,30 @@
 ```
 ┌─────────────────────────────────────────┐
 │   Admin Panel (React)                    │
-│   http://localhost:3001/admin            │
+│   http://localhost:3000/admin            │
 │   - Create implant with 3 images         │
 │   - Edit implant images                  │
 │   - Delete implants                      │
 └──────────────┬──────────────────────────┘
                │
-               ├─→ Backend API (Express)
-               │   http://localhost:5000
-               │   - POST /api/implants
-               │   - PUT /api/implants/:id
-               │   - GET /api/implants
-               │
-               ├─→ SQLite Database
-               │   implant_db.sqlite
-               │   - Stores base64 images
-               │   - Persistent storage
-               │
-               └─→ localStorage
-                   - Offline fallback
-                   - Cross-tab sync
+                           ├─→ Backend API (Express)
+                           │   http://localhost:5000/api/health
+                           │   - POST /api/implants (multipart/form-data, 3 images)
+                           │   - PUT /api/implants/:id (replace/delete images)
+                           │   - GET /api/implants (master/custom, id/slug)
+                           │   - GET /api/blogs, /api/master-data, /api/feedback
+                           │
+                           ├─→ MySQL Database
+                           │   - Stores implant/blog/master/feedback data
+                           │   - Images stored as file URLs (not base64)
+                           │   - Persistent storage
+                           │
+                           ├─→ Static Uploads (backend/uploads/implants, blogs)
+                           │   - Images saved as files, served via /uploads/...
+                           │
+                           └─→ localStorage
+                                   - Offline fallback
+                                   - Cross-tab sync (auto-refresh)
 ```
 
 ---
@@ -65,21 +70,21 @@
 ## 🚀 Current Status
 
 ### Servers Running
-✅ **Backend Server**: http://localhost:5000
+✅ **Backend Server**: http://localhost:5000/api/health
 - Status: Running
 - Database: SQLite ready
 - API: Responding
 
-✅ **Frontend Server**: http://localhost:3001
+✅ **Frontend Server**: http://localhost:3000
 - Status: Running
 - Admin Panel: Ready
 - User Dashboard: Ready
 
 ### Database
-✅ **SQLite Database**: implant_db.sqlite
-- Location: backend/implant_db.sqlite
+✅ **MySQL Database**: datadental (or as configured)
 - Status: Active
-- Tables: implants, companies, levels, countries, etc.
+- Tables: implants, implant_master, blogs, companies, levels, countries, users, feedback, etc.
+- Images: stored as file URLs (not base64)
 
 ---
 
@@ -90,7 +95,7 @@
 2. ✅ Admin fills form (Name, Company, Level, Country)
 3. ✅ Admin uploads 3 images (JPG/PNG/GIF/WebP)
 4. ✅ Admin clicks "Create Implant"
-5. ✅ Images stored to database as base64
+5. ✅ Images stored as files, database stores URLs (not base64)
 6. ✅ User side automatically shows new implant
 
 ### View Workflow
@@ -111,15 +116,27 @@
 
 ## 📁 Changes Made
 
-### Backend (3 files)
-1. **implants.js** - Added multer upload, image processing
-2. **database.js** - SQLite configuration
-3. **package.json** - Added multer dependency
+### Backend (10+ files)
+1. **src/routes/implants.js** - CRUD, image upload, master/custom, auto-delete images
+2. **src/routes/blogs.js, masterData.js, feedback.js** - Blogs, master data, feedback endpoints
+3. **src/middleware/upload.js** - Multer config, file validation, auto-create uploads dir
+4. **src/config/database.js** - MySQL/Sequelize configuration
+5. **src/models/** - Models for all entities
+6. **src/index.js** - Express server, CORS, static uploads, health check, error handler
+7. **package.json** - All dependencies
+8. **.env** - Environment config
+9. **uploads/** - Static image storage (implants, blogs)
 
-### Frontend (2 files)
-1. **api.js** - FormData image handling
-2. **NewImplant.jsx** - Image upload form, save to API
-3. **ManageImplants.jsx** - Load from API, sync to localStorage
+### Frontend (10+ files)
+1. **src/services/api.js** - API integration, FormData, resolveImageUrl
+2. **src/admin/pages/NewImplant.jsx** - Create/edit implant (master/custom, 3 images)
+3. **src/admin/pages/ManageImplants.jsx** - List, edit, delete, auto-refresh, id master-xxx
+4. **src/admin/pages/ManageBlog.jsx, BlogForm.jsx** - Blog CRUD
+5. **src/user/pages/ImplantDetail.jsx** - Gallery, id/slug/master-xxx
+6. **src/user/hooks/useMergedImplants.js** - Data merge, auto-refresh, dedupe
+7. **src/utils/imageHelpers.js** - URL helpers, thumbnail, gallery
+8. **src/admin/pages/MasterDataHome.jsx, MasterDataList.jsx** - Master data CRUD
+9. **src/admin/pages/ContactFeedback.jsx** - Feedback management
 
 ### Documentation (7 files)
 - QUICK_START.md - 30-second setup
@@ -135,12 +152,14 @@
 ## 🎯 Key Achievements
 
 ### Technical
-- ✅ Multipart file upload handling
-- ✅ Base64 image encoding/decoding
-- ✅ Real-time database storage
-- ✅ API integration (frontend ↔ backend)
-- ✅ localStorage fallback mechanism
+- ✅ Multipart file upload handling (multer, disk storage, 3 images)
+- ✅ Image URL storage (no base64 in DB)
+- ✅ Real-time database storage (MySQL, Sequelize)
+- ✅ API integration (frontend ↔ backend, blogs, master, feedback)
+- ✅ localStorage fallback mechanism (auto-refresh, cross-tab)
 - ✅ Cross-browser compatibility
+- ✅ Static uploads serving (/uploads/implants, /uploads/blogs)
+- ✅ CORS, JWT, error handling, health check
 
 ### User Experience
 - ✅ Simple form interface
@@ -151,11 +170,11 @@
 - ✅ Offline capability
 
 ### Data Management
-- ✅ Persistent storage in database
-- ✅ Automatic synchronization
+- ✅ Persistent storage in database (MySQL)
+- ✅ Automatic synchronization (auto-refresh, localStorage)
 - ✅ Fallback storage layers
 - ✅ Data integrity verification
-- ✅ Cross-tab communication
+- ✅ Cross-tab communication (auto-refresh)
 
 ---
 
@@ -169,16 +188,18 @@
 | API Response Time | <100ms |
 | File Size Limit | 10MB per image |
 | Max Total Size | 30MB (3 images) |
+| Static Uploads | /uploads/implants, /uploads/blogs |
 
 ---
 
 ## 🔒 Security
 
-✅ **File Type Validation**: Only images allowed
+✅ **File Type Validation**: Only images allowed (JPEG, PNG, GIF, WebP)
 ✅ **Size Limits**: 10MB per image enforced
-✅ **Base64 Encoding**: Safe storage format
+✅ **Image URLs**: Images stored as files, DB stores URLs
 ✅ **Input Validation**: All fields validated
 ✅ **Error Handling**: Graceful error messages
+✅ **CORS, JWT, static uploads**
 📋 **Ready for**: HTTPS, Authentication, Rate Limiting
 
 ---
@@ -197,16 +218,17 @@ Complete documentation provided:
 ## ✅ Testing Results
 
 All critical tests passed:
-- [x] Backend API accepts images
-- [x] Images stored to database
-- [x] Frontend fetches images
-- [x] User side displays images
-- [x] 3 images per implant works
+- [x] Backend API accepts images (3 images, FormData)
+- [x] Images stored as files, DB stores URLs
+- [x] Frontend fetches images (resolveImageUrl, id master-xxx/custom)
+- [x] User side displays images (gallery, slider)
+- [x] 3 images per implant works (master/custom)
 - [x] Image thumbnails work
 - [x] Offline mode works
-- [x] Cross-tab sync works
+- [x] Cross-tab sync works (auto-refresh)
 - [x] Edit function works
-- [x] Delete function works
+- [x] Delete function works (auto-delete images)
+- [x] Blogs/master-data/feedback CRUD works
 
 ---
 
@@ -233,15 +255,15 @@ cd backend && npm start
 cd frontend && npm run dev
 
 # Then open browser
-http://localhost:3001/admin
+http://localhost:3000/admin
 ```
 
 ### First Test (2 Minutes)
-1. Go to http://localhost:3001/admin/implants/new
+1. Go to http://localhost:3000/admin/implants/new
 2. Fill form (Name, Company, Level, Country)
 3. Upload 3 images (JPG/PNG)
 4. Click "Create Implant"
-5. Go to http://localhost:3001/implants
+5. Go to http://localhost:3000/implants
 6. See your implant with images!
 
 ---
@@ -260,38 +282,31 @@ http://localhost:3001/admin
 
 ---
 
-## 🔄 Data Flow Summary
+# 🔄 Data Flow Summary (2026)
 
 ```
 Admin Creates Implant with 3 Images
         ↓
-Form Submission
+Form Submission (FormData, 3 files)
         ↓
-Frontend Converts Images to base64
+Backend (Express, multer):
+  - Save files to /uploads/implants
+  - Validate image formats/sizes
+  - Store image URLs in MySQL
         ↓
-Sends multipart FormData to Backend
-        ↓
-Backend Processes:
-  - Extract files
-  - Convert to base64
-  - Validate image formats
-  - Check file sizes
-        ↓
-Store in SQLite Database
-        ↓
-Return JSON Response
+Return JSON Response (with image URLs)
         ↓
 Frontend Receives Response
         ↓
-Sync to localStorage
+Sync to localStorage (auto-refresh)
         ↓
 Dispatch Storage Event
         ↓
 All Tabs Update Instantly
         ↓
-User Side Fetches from API
+User Side Fetches from API (id/slug/master-xxx)
         ↓
-Display 3 Images with Thumbnails
+Display 3 Images with Thumbnails (gallery, slider)
         ↓
 ✅ Done!
 ```
@@ -309,12 +324,12 @@ Display 3 Images with Thumbnails
 - ✅ Offline capability
 
 ### Additional Features
-- ✅ Offline fallback (localStorage)
-- ✅ Cross-tab synchronization
+- ✅ Offline fallback (localStorage, auto-refresh)
+- ✅ Cross-tab synchronization (auto-refresh)
 - ✅ Thumbnail image preview
-- ✅ Image management interface
+- ✅ Image management interface (master/custom, blogs, feedback)
 - ✅ Comprehensive error handling
-- ✅ Complete documentation
+- ✅ Complete documentation (base64→URL migration, static uploads, id master-xxx)
 
 ---
 
@@ -323,9 +338,9 @@ Display 3 Images with Thumbnails
 ### Implemented Features
 1. **Hybrid Storage**: API (primary) + localStorage (fallback)
 2. **Automatic Sync**: No manual refresh needed
-3. **Offline First**: Works without internet
-4. **Cross-Tab Sync**: Multiple windows stay synchronized
-5. **Base64 Encoding**: Single-file storage (no S3 needed)
+3. **Offline First**: Works without internet (auto-sync when online)
+4. **Cross-Tab Sync**: Multiple windows stay synchronized (auto-refresh)
+5. **Image URLs**: Static file storage, DB stores URLs (no base64)
 
 ### Technical Highlights
 - **Multer Integration**: Efficient file upload handling
@@ -395,9 +410,9 @@ A: Read TECHNICAL_DETAILS.md (30 minutes)
 
 | Link | Purpose |
 |------|---------|
-| http://localhost:3001 | User Dashboard |
-| http://localhost:3001/admin | Admin Panel |
-| http://localhost:3001/admin/implants/new | Create Implant |
+| http://localhost:3000 | User Dashboard |
+| http://localhost:3000/admin | Admin Panel |
+| http://localhost:3000/admin/implants/new | Create Implant |
 | http://localhost:5000/api/implants | Backend API |
 
 ---
@@ -411,3 +426,14 @@ A: Read TECHNICAL_DETAILS.md (30 minutes)
 ---
 
 **Next Step**: Go to [QUICK_START.md](QUICK_START.md) and get started in 30 seconds!
+
+---
+
+## 🆕 Major Changes from Previous Version
+
+- SQLite → MySQL (Sequelize), images now stored as files, DB stores URLs (not base64)
+- Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+- Blogs, master data, feedback: CRUD, admin/user side
+- id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+- JWT, CORS, health check, error handler, troubleshooting docs
+- Documentation, README_BACKEND.md, README_FRONTEND.md, CHECKLIST.md อัปเดตใหม่

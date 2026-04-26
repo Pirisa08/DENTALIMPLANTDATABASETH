@@ -6,110 +6,126 @@
 
 #### 1.1 Installed Dependencies
 - **multer** - For handling multipart/form-data file uploads
+- **mysql2**, **sequelize** - For MySQL database connection and ORM
 
 #### 1.2 Updated [backend/src/routes/implants.js](backend/src/routes/implants.js)
-- Added multer middleware for image file uploads
-- Configured memory storage to handle 3 image files (image1, image2, image3)
-- Updated POST `/api/implants` endpoint to accept file uploads and convert to base64 data URLs
-- Updated PUT `/api/implants/:id` endpoint to handle image updates
-- Images are stored as base64-encoded data URLs in the database
+- Added multer middleware for image file uploads (disk storage, 3 files, auto-delete old images)
+- Updated POST `/api/implants` endpoint to accept file uploads and store as files (not base64)
+- Updated PUT `/api/implants/:id` endpoint to handle image updates, auto-delete old images
+- Images are stored as files in `/uploads/implants`, DB stores URLs (no base64)
+- Added support for master/custom, id master-xxx, slug
 
-#### 1.3 Database Configuration [backend/src/config/database.js](backend/src/config/database.js)
-- Updated to use SQLite for development (since MySQL isn't available)
-- Maintains compatibility with MySQL for production
-- Database file: `implant_db.sqlite`
+#### 1.3 Added [backend/src/routes/blogs.js, masterData.js, feedback.js]
+- CRUD endpoints for blogs, master data, feedback (admin/user)
 
-#### 1.4 Implant Model [backend/src/models/Implant.js](backend/src/models/Implant.js)
-- Verified image1, image2, image3 fields exist as TEXT('long') to store base64 images
-- No changes needed - already configured correctly
+#### 1.4 Middleware [backend/src/middleware/upload.js]
+- Multer config, file validation, auto-create uploads dir
+
+#### 1.5 Database Configuration [backend/src/config/database.js](backend/src/config/database.js)
+- Updated to use MySQL (Sequelize, .env config, see MYSQL_MIGRATION_GUIDE.md)
+- Database: MySQL only (no SQLite in production)
+
+#### 1.6 Models [backend/src/models/]
+- Models for all entities: implants, implant_master, blogs, companies, levels, countries, users, feedback, etc.
+
+#### 1.7 Server [backend/src/index.js]
+- Express server, CORS, static uploads, health check, error handler
 
 ### 2. Frontend Updates (React/Vite)
 
 #### 2.1 Updated [frontend/src/services/api.js](frontend/src/services/api.js)
-- Added helper function `dataUrlToFile()` to convert base64 data URLs back to File objects
-- Updated `implantsAPI.create()` to use FormData and send images as multipart files
-- Updated `implantsAPI.update()` to use FormData and send images as multipart files
-- Maintains timeout of 10 seconds for file upload operations
+- API integration, FormData, resolveImageUrl, auto-refresh
+- No more base64 conversion; uses image URLs from backend
 
 #### 2.2 Updated [frontend/src/admin/pages/NewImplant.jsx](frontend/src/admin/pages/NewImplant.jsx)
-- Modified save function to prioritize backend API storage
-- Falls back to localStorage if API fails
-- Now sends FormData with images to the backend
-- Syncs data between backend and localStorage
-- Dispatches storage events to notify other components of changes
+- Create/edit implant (master/custom, 3 images, id master-xxx)
+- Sends FormData with images to backend, auto-refresh, localStorage fallback
 
 #### 2.3 Updated [frontend/src/admin/pages/ManageImplants.jsx](frontend/src/admin/pages/ManageImplants.jsx)
-- Modified initialization to load from backend API first
-- Falls back to localStorage if API fails
-- Added localStorage change listener for cross-tab synchronization
-- Displays images from API responses
+- List, edit, delete, auto-refresh, id master-xxx
+- Change images (replace/delete, auto-delete old images)
 
-#### 2.4 ImplantDetail Page (User Side) [frontend/src/user/pages/ImplantDetail.jsx](frontend/src/user/pages/ImplantDetail.jsx)
-- Already supported API loading with localStorage fallback
-- Automatically displays 3 images from admin data when available
-- No changes needed
+#### 2.4 Added/Updated [frontend/src/admin/pages/ManageBlog.jsx, BlogForm.jsx, MasterDataHome.jsx, MasterDataList.jsx, ContactFeedback.jsx]
+- Blogs, master data, feedback CRUD (admin/user)
 
-## Data Flow
+#### 2.5 Updated [frontend/src/user/pages/ImplantDetail.jsx](frontend/src/user/pages/ImplantDetail.jsx)
+- Gallery, id/slug/master-xxx, resolveImageUrl
+
+#### 2.6 Added [frontend/src/user/hooks/useMergedImplants.js]
+- Data merge, auto-refresh, dedupe
+
+#### 2.7 Updated [frontend/src/utils/imageHelpers.js]
+- URL helpers, thumbnail, gallery
+
+## Data Flow (2026)
 
 ### Creating a New Implant
 
 1. **Admin** fills form in NewImplant page with:
    - Basic info (name, company, level, etc.)
-   - 3 images (image1, image2, image3) as base64 data URLs
+   - 3 images (image1, image2, image3) as files (JPEG/PNG/GIF/WebP, ≤10MB)
 
 2. **Form submission** triggers:
-   - Convert base64 data URLs to File objects
    - Create FormData with all fields and image files
    - POST to `/api/implants` endpoint
 
 3. **Backend** processes:
    - Receive multipart form data
-   - Convert image files to base64 data URLs
-   - Store in SQLite database
+   - Save image files to `/uploads/implants`
+   - Store image URLs in MySQL database
 
 4. **Frontend** updates:
-   - Save response to localStorage
+   - Save response to localStorage (auto-refresh)
    - Dispatch storage events
    - Redirect to ManageImplants page
 
 5. **User Side** displays:
-   - ImplantDetail page loads data from API
-   - Shows 3 images with thumbnails
+   - ImplantDetail page loads data from API (id/slug/master-xxx)
+   - Shows 3 images with thumbnails (gallery, slider)
    - Falls back to localStorage if API unavailable
 
 ### Editing an Implant
 
 - Same flow as creation, but sends PUT request with ID
-- Can update or remove any of the 3 images
+- Can update or remove any of the 3 images (auto-delete old images)
 
 ## Running the Application
 
 ### Backend
 ```bash
-cd /workspaces/Implantdatabase/backend
-npm start
-# Runs on http://localhost:5000
+cd backend
+npm run dev
+# Runs on http://localhost:5000/api/health
 ```
 
 ### Frontend
 ```bash
-cd /workspaces/Implantdatabase/frontend
+cd frontend
 npm run dev
-# Runs on http://localhost:3001
+# Runs on http://localhost:3000
 ```
 
 ## Image Upload Limits
 - Max file size per image: 10MB
-- Supported formats: All standard image types (JPEG, PNG, GIF, WebP, etc.)
-- Storage format: Base64-encoded data URLs in database
+- Supported formats: JPEG, PNG, GIF, WebP
+- Storage format: Files in /uploads/implants, DB stores URLs (no base64)
 
 ## Fallback Mechanism
-- **API unavailable**: Data stored in localStorage
+- **API unavailable**: Data stored in localStorage (auto-refresh)
 - **Both unavailable**: Initial data seeded from mockImplants
-- **Cross-tab sync**: Storage events notify all open tabs of changes
+- **Cross-tab sync**: Storage events notify all open tabs of changes (auto-refresh)
 
 ## Database Schema
-Using SQLite for development with Sequelize ORM:
-- Table: `implants`
-- Fields include: id, name, brand, slug, image1, image2, image3, and all other implant specifications
-- Images stored as TEXT('long') to accommodate base64 encoding
+Using MySQL for all environments with Sequelize ORM:
+- Tables: implants, implant_master, blogs, companies, levels, countries, users, feedback, etc.
+- Fields include: id, name, brand, slug, image1Url, image2Url, image3Url, and all other implant specifications
+- Images stored as files in /uploads/implants, DB stores URLs (no base64)
+
+---
+## 🆕 Major Changes from Previous Version
+- SQLite → MySQL (Sequelize), images now stored as files, DB stores URLs (not base64)
+- Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+- Blogs, master data, feedback: CRUD, admin/user side
+- id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+- JWT, CORS, health check, error handler, troubleshooting docs
+- Documentation, README_BACKEND.md, README_FRONTEND.md, CHECKLIST.md อัปเดตใหม่

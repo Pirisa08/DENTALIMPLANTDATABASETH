@@ -1,15 +1,17 @@
 .fbWrap{
   max-width:1200px;
   margin:0 auto;
-  padding:24px 36px 40px 36px;
+  padding:clamp(16px,2vw,36px);
   color:var(--dark2);
+  font-size:clamp(14px,1vw,16px);
 }
 
 .fbTitle{
-  font-size:1.9rem;
+  font-size:clamp(1.4rem,2vw,1.9rem);
   font-weight:800;
   margin:20px 0 24px 0;
   color:var(--dark);
+  letter-spacing:0.02em;
 }
 
 .fbSummary{
@@ -31,7 +33,7 @@
 }
 
 .fbSummaryLabel{
-  font-size:0.95rem;
+  font-size:clamp(12px,0.9vw,13px);
   text-transform:uppercase;
   letter-spacing:0.06em;
   color:var(--muted);
@@ -39,13 +41,13 @@
 }
 
 .fbSummaryValue{
-  font-size:2.2rem;
+  font-size:clamp(1.8rem,2vw,2.2rem);
   font-weight:800;
   color:var(--dark);
 }
 
 .fbSummaryHint{
-  font-size:0.9rem;
+  font-size:clamp(12px,0.9vw,14px);
   color:rgba(15,31,61,0.7);
 }
 
@@ -62,6 +64,7 @@
   border-radius:14px;
   margin-bottom:20px;
   font-weight:600;
+  font-size:clamp(13px,0.95vw,14px);
   display:flex;
   align-items:center;
   gap:10px;
@@ -96,7 +99,7 @@
 }
 
 .fbFilterLabel{
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
   font-weight:600;
   color:var(--dark);
 }
@@ -105,7 +108,7 @@
   border:1px solid rgba(148,163,184,0.4);
   border-radius:12px;
   padding:10px 14px;
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
   background:#ffffff;
   color:var(--dark2);
   box-shadow:0 10px 18px rgba(15,27,58,0.1);
@@ -121,7 +124,7 @@
 
 .fbStatusSelect.compact{
   padding:8px 12px;
-  font-size:0.9rem;
+  font-size:clamp(12px,0.9vw,13px);
 }
 
 .fbRefreshBtn{
@@ -131,6 +134,7 @@
   border-radius:12px;
   padding:12px 20px;
   font-weight:700;
+  font-size:clamp(12px,0.9vw,13px);
   letter-spacing:0.02em;
   cursor:pointer;
   box-shadow:0 18px 32px rgba(37,99,235,0.26);
@@ -178,7 +182,7 @@
 }
 
 .fbItemSubject{
-  font-size:1.1rem;
+  font-size:clamp(1rem,1.1vw,1.1rem);
   font-weight:700;
   color:var(--dark);
   margin-bottom:6px;
@@ -188,7 +192,7 @@
   display:flex;
   flex-wrap:wrap;
   gap:8px;
-  font-size:0.9rem;
+  font-size:clamp(12px,0.9vw,13px);
   color:rgba(15,31,61,0.7);
 }
 
@@ -199,7 +203,7 @@
 
 .fbLocalNotice{
   margin-top:8px;
-  font-size:0.85rem;
+  font-size:clamp(12px,0.85vw,13px);
   font-weight:600;
   color:#b45309;
   background:rgba(251,191,36,0.18);
@@ -226,7 +230,7 @@
 .statusTag{
   padding:6px 12px;
   border-radius:999px;
-  font-size:0.8rem;
+  font-size:11px;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:0.08em;
@@ -255,7 +259,7 @@
   background:rgba(241,245,249,0.8);
   border-radius:14px;
   padding:16px 18px;
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
   line-height:1.6;
   color:var(--dark2);
   white-space:pre-wrap;
@@ -266,6 +270,7 @@
   padding:40px 16px;
   color:var(--muted);
   font-weight:600;
+  font-size:clamp(13px,0.95vw,14px);
   border:1px dashed rgba(148,163,184,0.4);
   border-radius:16px;
   background:rgba(226,232,240,0.24);
@@ -286,6 +291,7 @@
   padding:10px 18px;
   border-radius:12px;
   font-weight:700;
+  font-size:clamp(12px,0.9vw,13px);
   letter-spacing:0.02em;
   cursor:pointer;
   box-shadow:0 16px 30px rgba(37,99,235,0.24);
@@ -313,9 +319,10 @@
   border:1px solid rgba(148,163,184,0.4);
   border-radius:12px;
   padding:12px 14px;
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
   font-family:inherit;
-  color:var(--dark2);
+  color:#222;
+  background:#fff;
   box-shadow:0 10px 18px rgba(15,27,58,0.08);
 }
 
@@ -337,6 +344,7 @@
   padding:10px 20px;
   border-radius:12px;
   font-weight:700;
+  font-size:clamp(12px,0.9vw,13px);
   cursor:pointer;
   box-shadow:0 18px 34px rgba(15,27,58,0.22);
   transition:all 0.25s ease;
@@ -373,21 +381,21 @@
 
 .fbAdminReplyLabel{
   font-weight:700;
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
   letter-spacing:0.04em;
   text-transform:uppercase;
   color:#1d4ed8;
 }
 
 .fbAdminReplyMeta{
-  font-size:0.85rem;
+  font-size:12px;
   color:rgba(15,31,61,0.7);
 }
 
 .fbAdminReply p{
   margin:0;
   line-height:1.6;
-  font-size:0.95rem;
+  font-size:clamp(13px,0.95vw,14px);
 }
 
 .fbFinished{
@@ -405,6 +413,7 @@
   padding:10px 18px;
   border-radius:12px;
   font-weight:700;
+  font-size:clamp(12px,0.9vw,13px);
   cursor:pointer;
   box-shadow:0 18px 32px rgba(30,64,175,0.28);
   transition:all 0.25s ease;
@@ -431,9 +440,6 @@
 @media (max-width:768px){
   .fbWrap{
     padding:90px 18px 32px 18px;
-  }
-  .fbTitle{
-    font-size:1.6rem;
   }
   .fbItemHeader{
     flex-direction:column;
@@ -470,8 +476,5 @@
   }
   .fbItem{
     padding:18px 16px;
-  }
-  .fbSummaryValue{
-    font-size:1.8rem;
   }
 }

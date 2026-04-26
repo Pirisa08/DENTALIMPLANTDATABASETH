@@ -33,20 +33,29 @@ This folder contains complete implementation for connecting the admin backend wi
 - API endpoints
 - Next steps for production
 - **Best for**: Checking what's done
-
-### 📖 Implementation Details
-**[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** (4.3 KB)
+ **Type**: MySQL (dev/prod, Sequelize)
+ **Storage**: Images stored as files in /uploads/implants, /uploads/blogs; DB stores URLs (not base64)
 - Changes made to backend
 - Changes made to frontend
-- Data flow explanation
-- Running the application
-- Image upload specifications
-- **Best for**: Quick overview of changes
-
+ ✅ 3 images per implant (Main, Detail, Application, master/custom)
+ ✅ 10MB size limit per image (JPEG, PNG, GIF, WebP)
+ ✅ Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+ ✅ Blogs, master data, feedback CRUD (admin/user)
+ ✅ id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+ ✅ Instant sync between admin and user (auto-refresh)
+ ✅ Offline support (localStorage fallback)
+ ✅ Cross-tab synchronization (auto-refresh)
+ ✅ JWT, CORS, health check, error handler, troubleshooting docs
 ### 🧪 Testing Guide
-**[TESTING_GUIDE.md](TESTING_GUIDE.md)** (4.6 KB)
+└── uploads/                    ← Static image storage (implants, blogs)
 - System status
 - How to test the feature
+    └── ManageBlog.jsx           ← Updated
+    └── BlogForm.jsx             ← Updated
+    └── MasterDataHome.jsx       ← Updated
+    └── MasterDataList.jsx       ← Updated
+    └── MasterDataForm.jsx       ← Updated
+    └── ContactFeedback.jsx      ← Updated
 - Step-by-step testing procedures
 - API endpoints documentation
 - Troubleshooting guide
@@ -62,24 +71,22 @@ This folder contains complete implementation for connecting the admin backend wi
 - Data flow diagram
 - Performance notes
 - Browser compatibility
-- Troubleshooting table
+3. See all 3 images with thumbnails (gallery, slider, id master-xxx/custom)
 - **Best for**: Quick lookup
 
 ### 🏗️ Technical Details
 **[TECHNICAL_DETAILS.md](TECHNICAL_DETAILS.md)** (12 KB)
 - Architecture overview (diagram)
-- Image processing flow
+4. Click "Save Changes" (auto-delete old images, update static uploads)
 - Key files modified
 - Data structure (JSON examples)
-- Error handling
-- Performance optimizations
-- Security considerations
-- Database queries
-- Dependencies added
-- Browser compatibility
-- Development vs Production
-- Testing scenarios
-- Future enhancements
+ - [ ] Create test implant (3 images, master/custom)
+ - [ ] Upload 3 images (JPEG, PNG, GIF, WebP, ≤10MB)
+ - [ ] View on user side (gallery, id master-xxx/custom)
+ - [ ] Edit implant (replace/delete images, auto-delete old)
+ - [ ] Test blogs/master-data/feedback CRUD
+ - [ ] Test offline mode (localStorage fallback)
+ - [ ] Read technical docs (base64→URL, static uploads, id master-xxx)
 - **Best for**: Deep technical understanding
 
 ---
@@ -112,6 +119,30 @@ This folder contains complete implementation for connecting the admin backend wi
 - URLs to visit
 
 ### "What was changed?"
+Admin Creates Implant with 3 Images
+     ↓
+Form Submission (FormData, 3 files)
+     ↓
+Backend (Express, multer):
+  - Save files to /uploads/implants
+  - Validate image formats/sizes
+  - Store image URLs in MySQL
+     ↓
+Return JSON Response (with image URLs)
+     ↓
+Frontend Receives Response
+     ↓
+Sync to localStorage (auto-refresh)
+     ↓
+Dispatch Storage Event
+     ↓
+All Tabs Update Instantly
+     ↓
+User Side Fetches from API (id/slug/master-xxx)
+     ↓
+Display 3 Images with Thumbnails (gallery, slider)
+     ↓
+✅ Done!
 **→ [README_IMPLEMENTATION.md](README_IMPLEMENTATION.md)**
 - Complete overview
 - File-by-file changes
@@ -120,14 +151,7 @@ This folder contains complete implementation for connecting the admin backend wi
 ### "How do I test it?"
 **→ [TESTING_GUIDE.md](TESTING_GUIDE.md)**
 - Step-by-step tests
-- API examples
 - Troubleshooting
-
-### "I need to understand the architecture"
-**→ [TECHNICAL_DETAILS.md](TECHNICAL_DETAILS.md)**
-- Diagrams
-- Code examples
-- Security details
 
 ### "I need a quick lookup"
 **→ [QUICK_REFERENCE.md](QUICK_REFERENCE.md)**
@@ -146,10 +170,10 @@ This folder contains complete implementation for connecting the admin backend wi
 ## 🔑 Key Information
 
 ### Running Servers
-- **Backend**: http://localhost:5000 ✅
-- **Frontend**: http://localhost:3001 ✅
-- **Admin Panel**: http://localhost:3001/admin
-- **User Dashboard**: http://localhost:3001/implants
+- **Backend**: http://localhost:5000/api/health✅
+- **Frontend**: http://localhost:3000 ✅
+- **Admin Panel**: http://localhost:3000/admin
+- **User Dashboard**: http://localhost:3000/implants
 
 ### Database
 - **Type**: SQLite (development) / MySQL (production)
@@ -216,18 +240,18 @@ cd frontend && npm run dev
 ```
 
 ### Create Implant
-1. Go to http://localhost:3001/admin/implants/new
+1. Go to http://localhost:3000/admin/implants/new
 2. Fill form
 3. Upload 3 images
 4. Click "Create Implant"
 
 ### View Results
-1. Go to http://localhost:3001/implants
+1. Go to http://localhost:3000/implants
 2. Click on implant
 3. See all 3 images with thumbnails
 
 ### Edit Implant
-1. Go to http://localhost:3001/admin/implants
+1. Go to http://localhost:3000/admin/implants
 2. Click "Edit"
 3. Change images
 4. Click "Save Changes"

@@ -8,7 +8,14 @@ import "./BlogForm.css";
 
 const OPTIONS = {
   readTime: ["3 Min", "5 Min", "10 Min"],
-  category: ["Education", "Technology", "Clinical Research", "Clinical Techniques", "Research", "News"],
+  category: [
+    "Education",
+    "Technology",
+    "Clinical Research",
+    "Clinical Techniques",
+    "Research",
+    "News",
+  ],
   status: ["Active", "Inactive"],
 };
 
@@ -36,13 +43,17 @@ function toLocalDatetime(value) {
     const d = new Date(value);
     if (!Number.isNaN(d.getTime())) {
       const pad = (n) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+        d.getDate()
+      )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
   }
 
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+    d.getDate()
+  )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function BlogForm({ mode }) {
@@ -133,6 +144,17 @@ export default function BlogForm({ mode }) {
     reader.readAsDataURL(file);
   };
 
+  const openImagePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeImage = () => {
+    setField("imageDataUrl", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const save = async () => {
     if (!canSave) {
       alert("Please fill all required fields before saving.");
@@ -194,15 +216,67 @@ export default function BlogForm({ mode }) {
       ) : (
         <>
           <div className="bfCard">
-            <label className="bfImageBox">
-              {form.imageDataUrl ? (
-                <img className="bfPreview" src={form.imageDataUrl} alt="blog" />
-              ) : (
-                <div className="bfPh">
-                  <div className="bfIcon">🖼️</div>
-                  <div>Add image</div>
+            <div className="bfImageSection">
+              <div className="bfImageBox">
+                <div className="bfImageInner">
+                  <div className="bfImagePreviewPane">
+                    {form.imageDataUrl ? (
+                      <img className="bfPreview" src={form.imageDataUrl} alt="blog" />
+                    ) : (
+                      <div className="bfPh">
+                        <div className="bfPhInner">
+                          <div className="bfIcon">🖼️</div>
+                          <div className="bfPhTitle">Add image</div>
+                          <div className="bfPhSub">
+                            Upload a cover image for this article.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bfImageActionPane">
+                    <div className="bfImageTitle">Cover image</div>
+                    <p className="bfImageSub">
+                      Use a clear, professional image that matches the topic of the
+                      article and looks consistent with the rest of the blog.
+                    </p>
+
+                    <div className="bfImageActions">
+                      <button
+                        type="button"
+                        className="bfImageBtn change"
+                        onClick={openImagePicker}
+                      >
+                        {form.imageDataUrl ? "Change image" : "Upload image"}
+                      </button>
+
+                      {form.imageDataUrl && (
+                        <>
+                          <button
+                            type="button"
+                            className="bfImageBtn remove"
+                            onClick={removeImage}
+                          >
+                            Remove image
+                          </button>
+
+                          <button
+                            type="button"
+                            className="bfImageIconBtn"
+                            onClick={removeImage}
+                            aria-label="Remove image"
+                            title="Remove image"
+                          >
+                            🗑️
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -210,70 +284,108 @@ export default function BlogForm({ mode }) {
                 onChange={onPickImage}
                 hidden
               />
-            </label>
-
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button type="button" className="btnSave" onClick={() => fileInputRef.current?.click()}>
-                Change image
-              </button>
-
-              {form.imageDataUrl && (
-                <button type="button" className="btnCancel" onClick={() => setField("imageDataUrl", "")}>
-                  Remove image
-                </button>
-              )}
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Title</div>
-              <input className="bfInput" value={form.title} onChange={(e) => setField("title", e.target.value)} />
+              <input
+                className="bfInput"
+                value={form.title}
+                onChange={(e) => setField("title", e.target.value)}
+              />
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Description</div>
-              <textarea className="bfTextarea" rows={3} value={form.description} onChange={(e) => setField("description", e.target.value)} />
+              <textarea
+                className="bfTextarea"
+                rows={3}
+                value={form.description}
+                onChange={(e) => setField("description", e.target.value)}
+              />
             </div>
 
             <div className="bfRow3">
               <div className="bfField">
                 <div className="bfLabel">Published Date & Time</div>
-                <input className="bfInput" type="datetime-local" value={form.publishedDate} onChange={(e) => setField("publishedDate", e.target.value)} />
+                <input
+                  className="bfInput"
+                  type="datetime-local"
+                  value={form.publishedDate}
+                  onChange={(e) => setField("publishedDate", e.target.value)}
+                />
               </div>
 
               <div className="bfField">
                 <div className="bfLabel">Read Time</div>
-                <CustomSelect value={form.readTime} onChange={(val) => setField("readTime", val)} options={OPTIONS.readTime} placeholder="Select time" />
+                <CustomSelect
+                  value={form.readTime}
+                  onChange={(val) => setField("readTime", val)}
+                  options={OPTIONS.readTime}
+                  placeholder="Select time"
+                />
               </div>
 
               <div className="bfField">
                 <div className="bfLabel">Category</div>
-                <CustomSelect value={form.category} onChange={(val) => setField("category", val)} options={OPTIONS.category} placeholder="Choose category" />
+                <CustomSelect
+                  value={form.category}
+                  onChange={(val) => setField("category", val)}
+                  options={OPTIONS.category}
+                  placeholder="Choose category"
+                />
               </div>
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Author</div>
-              <input className="bfInput" value={form.author} onChange={(e) => setField("author", e.target.value)} />
+              <input
+                className="bfInput"
+                value={form.author}
+                onChange={(e) => setField("author", e.target.value)}
+              />
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Status</div>
-              <CustomSelect value={form.status} onChange={(val) => setField("status", val)} options={OPTIONS.status} placeholder="Select status" />
+              <CustomSelect
+                value={form.status}
+                onChange={(val) => setField("status", val)}
+                options={OPTIONS.status}
+                placeholder="Select status"
+              />
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Manual Link</div>
-              <input className="bfInput" type="url" value={form.manualUrl} onChange={(e) => setField("manualUrl", e.target.value)} placeholder="https://..." />
+              <input
+                className="bfInput"
+                type="url"
+                value={form.manualUrl}
+                onChange={(e) => setField("manualUrl", e.target.value)}
+                placeholder="https://..."
+              />
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Reference Link</div>
-              <input className="bfInput" type="url" value={form.referenceUrl} onChange={(e) => setField("referenceUrl", e.target.value)} placeholder="https://..." />
+              <input
+                className="bfInput"
+                type="url"
+                value={form.referenceUrl}
+                onChange={(e) => setField("referenceUrl", e.target.value)}
+                placeholder="https://..."
+              />
             </div>
 
             <div className="bfField">
               <div className="bfLabel">Content</div>
-              <textarea className="bfTextarea big" rows={10} value={form.content} onChange={(e) => setField("content", e.target.value)} />
+              <textarea
+                className="bfTextarea big"
+                rows={10}
+                value={form.content}
+                onChange={(e) => setField("content", e.target.value)}
+              />
             </div>
           </div>
 
@@ -281,7 +393,11 @@ export default function BlogForm({ mode }) {
             <button className="btnSave" onClick={save} disabled={!canSave || saving}>
               {saving ? "Saving..." : "Save"}
             </button>
-            <button className="btnCancel" onClick={() => navigate("/admin/blog")} disabled={saving}>
+            <button
+              className="btnCancel"
+              onClick={() => navigate("/admin/blog")}
+              disabled={saving}
+            >
               Cancel
             </button>
           </div>

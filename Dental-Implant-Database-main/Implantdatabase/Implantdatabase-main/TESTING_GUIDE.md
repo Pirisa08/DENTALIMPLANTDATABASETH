@@ -1,14 +1,14 @@
 # Testing Guide: Backend-Frontend Integration for Implants
 
 ## System Status
-- ✅ Backend running on `http://localhost:5000`
-- ✅ Frontend running on `http://localhost:3001`
-- ✅ Database: SQLite (`implant_db.sqlite`)
+- ✅ Backend running on `http://localhost:5000/api/health`
+- ✅ Frontend running on `http://localhost:3000`
+- ✅ Database: MySQL (`datadental`)
 
 ## How to Test the New Feature
 
 ### Step 1: Access Admin Panel
-1. Open `http://localhost:3001/admin`
+1. Open `http://localhost:3000/admin`
 2. Navigate to **Implants Management**
 
 ### Step 2: Create New Implant with 3 Images
@@ -45,7 +45,7 @@ The new implant will be:
 - ✅ Accessible from user side
 
 ### Step 4: View Images on User Side
-1. Navigate to `http://localhost:3001/implants` (User Dashboard)
+1. Navigate to `http://localhost:3000/implants` (User Dashboard)
 2. Search for or browse to your newly created implant
 3. Click on it to see:
    - 3 high-quality images (Main Product, Detail View, Application)

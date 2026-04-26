@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import "./ManageImplants.css";
+const MySwal = withReactContent(Swal);
 import { useNavigate, useLocation } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
@@ -221,21 +224,51 @@ export default function ManageImplants() {
   const delImplant = async (id) => {
     const implant = rows.find((r) => String(r.id) === String(id));
     const name = implant ? implant.name : "this implant";
-
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
+    const result = await MySwal.fire({
+      title: `<span style='font-size:1.05em;font-weight:800;font-family:inherit;color:#22304c;'>Are you sure you want to delete?</span>`,
+      html: `<div style='font-size:0.98em;font-family:inherit;color:#374151;'>Do you want to delete <b>"${name}"</b>?<br><span style='color:#b91c1c;font-weight:700;font-size:0.95em;'>Once deleted, it cannot be undone!</span></div>`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#3085d6",
+      focusCancel: true,
+      customClass: {
+        popup: 'swal2-imp-popup',
+        title: 'swal2-imp-title',
+        htmlContainer: 'swal2-imp-html',
+        confirmButton: 'swal2-imp-confirm',
+        cancelButton: 'swal2-imp-cancel',
+      },
+    });
+    if (!result.isConfirmed) return;
 
     try {
       await implantsAPI.delete(id);
       setRows((prev) => prev.filter((r) => String(r.id) !== String(id)));
+      await MySwal.fire({
+        icon: "success",
+        title: `<span style='font-size:1em;font-family:inherit;color:#1f7a3a;'>Data deleted successfully</span>`,
+        showConfirmButton: false,
+        timer: 1500,
+        customClass: {
+          popup: 'swal2-imp-popup',
+          title: 'swal2-imp-title',
+        },
+      });
     } catch (err) {
-      alert("Failed to delete: " + (err.message || ""));
+      await MySwal.fire({
+        icon: "error",
+        title: `<span style='font-size:1em;font-family:inherit;color:#b91c1c;'>An error occurred while deleting</span>`,
+        html: `<div style='font-size:0.97em;font-family:inherit;color:#374151;'>${err.message || "Please try again later"}</div>`,
+        customClass: {
+          popup: 'swal2-imp-popup',
+          title: 'swal2-imp-title',
+          htmlContainer: 'swal2-imp-html',
+        },
+      });
     }
-  };
-
-  const refreshData = async () => {
-    await loadData();
   };
 
   const formatDate = (value) => {
@@ -287,14 +320,10 @@ export default function ManageImplants() {
 
         <div className="impTopActions">
           <button
-            className="addBtnImp addBtnGreen"
+            className="addBtnImp"
             onClick={() => navigate("/admin/implants/new")}
           >
             + Add New Implant
-          </button>
-
-          <button className="addBtnImp addBtnBlue" onClick={refreshData}>
-            ↻ Refresh Data
           </button>
         </div>
       </div>
@@ -316,9 +345,6 @@ export default function ManageImplants() {
           <div className="emptyStateCard">
             <div className="emptyTitle">No implants found</div>
             <div className="emptySub">No implant data available yet.</div>
-            <button className="refreshInlineBtn" onClick={refreshData}>
-              Try Refresh
-            </button>
           </div>
         ) : (
           pagedRows.map((r) => {
@@ -404,7 +430,7 @@ export default function ManageImplants() {
                     onClick={() => toggleStatus(r.id, r.status)}
                     title="Click to toggle status"
                   >
-                    {r.status === "Active" ? "OPEN" : "CLOSED"}
+                    {r.status === "Active" ? "Open" : "Closed"}
                   </button>
                 </div>
 
@@ -435,7 +461,7 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ← Previous
+              Previous
             </button>
 
             <span className="paginationText">
@@ -447,7 +473,7 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next →
+              Next
             </button>
           </div>
         )}

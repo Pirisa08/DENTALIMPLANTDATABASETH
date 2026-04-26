@@ -915,6 +915,8 @@ export default function NewImplant() {
         {isMasterEdit ? " (Master editable)" : ""}
       </h2>
 
+      <div style={{marginBottom: 10, color: '#b73232', fontWeight: 700, fontSize: 13}}> Fields marked with an asterisk (*) are required.</div>
+
       {saveError && <div className="saveWarning">{saveError}</div>}
 
       <div className="newGrid">
@@ -986,7 +988,7 @@ export default function NewImplant() {
 
         <div className="formCard">
           <div className="twoCol">
-            <Field label="Name">
+            <Field label={<><span>Name</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.name}
@@ -995,7 +997,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Brand">
+            <Field label={<><span>Brand</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               {form.companyId ? (
                 <div className="selectRow">
                   <select
@@ -1034,7 +1036,7 @@ export default function NewImplant() {
               )}
             </Field>
 
-            <Field label="Slug">
+            <Field label={<><span>Slug</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.slug}
@@ -1043,7 +1045,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Level">
+            <Field label={<><span>Level</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1077,7 +1079,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Company">
+            <Field label={<><span>Company</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1113,7 +1115,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Country (select)">
+            <Field label={<><span>Country (select)</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1147,7 +1149,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Country (text, optional)">
+            <Field label={<><span>Country (text, optional)</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.countryText}
@@ -1156,7 +1158,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Website">
+            <Field label={<><span>Website</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.website}
@@ -1165,7 +1167,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Brand Description">
+            <Field label={<><span>Brand Description</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <textarea
                 className="input"
                 value={form.brandDescription}
@@ -1174,7 +1176,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Connection Type">
+            <Field label={<><span>Connection Type</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1210,7 +1212,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Connection Shape">
+            <Field label={<><span>Connection Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1246,7 +1248,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Screwdriver Shape">
+            <Field label={<><span>Screwdriver Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1282,7 +1284,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Head Shape">
+            <Field label={<><span>Head Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1317,7 +1319,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Body Shape">
+            <Field label={<><span>Body Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1352,7 +1354,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Apex Shape">
+            <Field label={<><span>Apex Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1387,7 +1389,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Official Distributor">
+            <Field label={<><span>Official Distributor</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
@@ -1422,7 +1424,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Status">
+            <Field label={<><span>Status</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <select
                 className="input"
                 value={form.status}

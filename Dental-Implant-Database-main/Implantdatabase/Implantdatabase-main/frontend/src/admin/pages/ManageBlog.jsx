@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import { useNavigate, useLocation } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { blogsAPI } from "../../services/api.js";
 import "./ManageBlog.css";
+const MySwal = withReactContent(Swal);
 
 const slugify = (str) =>
   String(str || "")
@@ -106,23 +109,59 @@ export default function ManageBlog() {
     }
   };
 
-  const delBlog = async (id) => {
-    const blog = rows.find((x) => String(x.id) === String(id));
-    const ok = window.confirm(`Delete "${blog?.title || "this blog"}" ?`);
-    if (!ok) return;
+ const delBlog = async (id) => {
+  const blog = rows.find((x) => String(x.id) === String(id));
+  const result = await MySwal.fire({
+    title: `<span style='font-size:1.05em;font-weight:800;font-family:inherit;color:#22304c;'>Are you sure you want to delete?</span>`,
+    html: `<div style='font-size:0.98em;font-family:inherit;color:#374151;'>Do you want to delete <b>"${blog?.title || "this blog"}"</b>?<br><span style='color:#b91c1c;font-weight:700;font-size:0.95em;'>Once deleted, it cannot be undone!</span></div>`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#3085d6",
+    focusCancel: true,
+    customClass: {
+      popup: 'swal2-blog-popup',
+      title: 'swal2-blog-title',
+      htmlContainer: 'swal2-blog-html',
+      confirmButton: 'swal2-blog-confirm',
+      cancelButton: 'swal2-blog-cancel',
+    },
+  });
+  if (!result.isConfirmed) return;
 
-    try {
-      setActionId(id);
-      await blogsAPI.delete(id);
-      setRows((prev) => prev.filter((x) => String(x.id) !== String(id)));
-      alert("Deleted successfully");
-    } catch (err) {
-      console.error("Delete blog failed:", err);
-      alert(err.message || "Delete failed");
-    } finally {
-      setActionId(null);
-    }
-  };
+  try {
+    setActionId(id);
+    await blogsAPI.delete(id);
+    setRows((prev) => prev.filter((x) => String(x.id) !== String(id)));
+    await MySwal.fire({
+      icon: "success",
+      title: `<span style='font-size:1em;font-family:inherit;color:#1f7a3a;'>Data deleted successfully</span>`,
+      showConfirmButton: false,
+      timer: 1500,
+      customClass: {
+        popup: 'swal2-blog-popup',
+        title: 'swal2-blog-title',
+      },
+    });
+  } catch (err) {
+    console.error("Delete blog failed:", err);
+    await MySwal.fire({
+      icon: "error",
+      title: `<span style='font-size:1em;font-family:inherit;color:#b91c1c;'>An error occurred while deleting</span>`,
+      html: `<div style='font-size:0.97em;font-family:inherit;color:#374151;'>${err.message || "Please try again later"}</div>`,
+      customClass: {
+        popup: 'swal2-blog-popup',
+        title: 'swal2-blog-title',
+        htmlContainer: 'swal2-blog-html',
+      },
+    });
+  } finally {
+    setActionId(null);
+  }
+ };
+
 
   const toggleStatus = async (id) => {
     const target = rows.find((x) => String(x.id) === String(id));
@@ -168,12 +207,9 @@ export default function ManageBlog() {
 
       <div className="headRow">
         <h2 className="pageTitle">Blog Management</h2>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+        <div className="blogActionTop">
           <button className="addBtnBlog" onClick={() => navigate("/admin/blog/new")}>
             + Add New Blog
-          </button>
-          <button className="addBtnBlog refresh" onClick={fetchBlogs}>
-            ⟳ Refresh Data
           </button>
         </div>
       </div>
@@ -188,8 +224,8 @@ export default function ManageBlog() {
             <div>Image</div>
             <div>Title</div>
             <div>Links</div>
-            <div style={{ textAlign: "center" }}>Date</div>
-            <div style={{ textAlign: "center" }}>Status</div>
+            <div className="centerCell">Date</div>
+            <div className="centerCell">Status</div>
             <div className="actionsCol">Actions</div>
           </div>
 
@@ -215,7 +251,7 @@ export default function ManageBlog() {
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  📄 View Post
+                  View Post
                 </a>
 
                 {b.referenceUrl ? (
@@ -226,7 +262,7 @@ export default function ManageBlog() {
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    🔗 Reference
+                    Reference
                   </a>
                 ) : null}
               </div>
@@ -253,6 +289,7 @@ export default function ManageBlog() {
                 >
                   Edit
                 </button>
+
                 <button
                   className="btn del"
                   onClick={() => delBlog(b.id)}
@@ -270,14 +307,21 @@ export default function ManageBlog() {
         </div>
 
         {totalPages > 1 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              Prev
-            </button>
-            <span style={{ padding: "6px 12px" }}>
-              {page} / {totalPages}
-            </span>
+          <div className="paginationWrap">
             <button
+              className="paginationBtn"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+
+            <span className="paginationText">
+              Page {page} of {totalPages}
+            </span>
+
+            <button
+              className="paginationBtn"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >

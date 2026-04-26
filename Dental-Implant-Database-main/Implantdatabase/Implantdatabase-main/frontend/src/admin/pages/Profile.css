@@ -1,8 +1,13 @@
-.pfWrap{ max-width: 1200px; margin: 0 auto; padding: 20px 30px 0 30px; font-size: 14px; }
+.pfWrap{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(16px,2vw,32px);
+  font-size: clamp(14px,1vw,16px);
+}
 
 .pageTitle{
   margin:20px 0 16px 0;
-  font-size: 2.2rem;
+  font-size: clamp(1.4rem,2vw,1.9rem);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -19,7 +24,7 @@
   display:flex;
   flex-direction:column;
   align-items:center;
-  font-size: 14px;
+  font-size: clamp(14px,1vw,16px);
 }
 
 .pfEdit{
@@ -34,6 +39,7 @@
   gap:8px;
   color:#222;
   font-weight:900;
+  font-size: clamp(12px,0.9vw,13px);
 }
 
 .pfCircle span{
@@ -78,13 +84,13 @@
 
 .pfLabel{
   margin-top: 10px;
-  font-size: 16px;
+  font-size: clamp(14px,1vw,16px);
   color: var(--muted);
   font-weight: 800;
 }
 .pfName{
   margin-top: 4px;
-  font-size: 18px;
+  font-size: clamp(16px,1.1vw,18px);
   font-weight: 1000;
 }
 
@@ -99,7 +105,7 @@
   margin-bottom: 8px;
 }
 .pfValue{
-  font-size: 15px;
+  font-size: clamp(14px,1vw,15px);
   font-weight: 1000;
 }
 
@@ -112,7 +118,7 @@
   gap: 22px;
 }
 
-.pfField{ width:100%; font-size: 14px; }
+.pfField{ width:100%; font-size: clamp(13px,1vw,14px); }
 
 .pfSelect{
   width:100%;
@@ -126,7 +132,7 @@
   outline:none;
   font-weight: 800;
   color:#111;
-  font-size: 14px;
+  font-size: clamp(13px,1vw,14px);
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -167,7 +173,7 @@
   background: #84cb86;
   color:#fff;
   font-weight: 1000;
-  font-size: 22px;
+  font-size: clamp(16px,1.2vw,22px);
   cursor:pointer;
   box-shadow: var(--shadow);
 }
@@ -175,72 +181,14 @@
 .pfSave:disabled{ opacity:.5; cursor:not-allowed; }
 
 /* ✅ Responsive Design */
-@media (max-width: 1200px){
-  .pfWrap{ padding: 20px 25px 0 25px; font-size: 13px; }
-  .pageTitle{ font-size: 1.4rem; margin: 18px 0 14px 0; }
-  .pfCard{ padding: 18px 14px; font-size: 13px; min-height: 320px; }
-  .pfCircle{ width: 58px; height: 58px; font-size: 26px; }
-  .pfImg{ width: 58px; height: 58px; }
-  .pfLabel{ font-size: 14px; margin-top: 9px; }
-  .pfName{ font-size: 16px; }
-  .pfSmallLabel{ font-size: 11px; }
-  .pfValue{ font-size: 14px; }
-  .pfField{ font-size: 13px; }
-  .pfSelect{ height: 36px; font-size: 13px; }
-  .pfSave{ height: 52px; width: 460px; font-size: 20px; margin-top: 24px; }
-}
-
-@media (max-width: 1024px){
-  .pfWrap{ padding: 18px 22px 0 22px; font-size: 12px; }
-  .pageTitle{ font-size: 1.2rem; margin: 16px 0 12px 0; }
-  .pfCard{ padding: 16px 12px; font-size: 12px; min-height: 300px; }
-  .pfCircle{ width: 54px; height: 54px; font-size: 24px; }
-  .pfImg{ width: 54px; height: 54px; }
-  .pfLabel{ font-size: 13px; margin-top: 8px; }
-  .pfName{ font-size: 15px; }
-  .pfGroup{ margin-top: 18px; }
-  .pfSmallLabel{ font-size: 10px; margin-bottom: 6px; }
-  .pfValue{ font-size: 13px; }
-  .pfEditRow{ margin-top: 24px; gap: 18px; }
-  .pfField{ font-size: 12px; }
-  .pfSelect{ height: 34px; font-size: 12px; }
-  .pfSave{ height: 48px; width: 420px; font-size: 18px; margin-top: 22px; }
-}
-
 @media (max-width: 820px){
   .pfEditRow{ grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px){
-  .pfWrap{ padding: 15px 18px 0 18px; font-size: 11px; }
-  .pageTitle{ font-size: 1.1rem; margin: 14px 0 10px 0; }
-  .pfCard{ padding: 14px 10px; font-size: 11px; min-height: 280px; }
-  .pfCircle{ width: 50px; height: 50px; font-size: 22px; }
-  .pfImg{ width: 50px; height: 50px; }
-  .pfLabel{ font-size: 12px; margin-top: 7px; }
-  .pfName{ font-size: 14px; }
-  .pfGroup{ margin-top: 16px; }
-  .pfSmallLabel{ font-size: 10px; margin-bottom: 5px; }
-  .pfValue{ font-size: 12px; }
-  .pfEditRow{ margin-top: 20px; gap: 16px; }
-  .pfField{ font-size: 11px; }
-  .pfSelect{ height: 32px; font-size: 11px; padding: 0 10px; }
-  .pfSave{ height: 44px; width: 360px; font-size: 16px; margin-top: 20px; }
+  .pfWrap{ padding: 100px 14px 20px 14px; }
 }
 
 @media (max-width: 480px){
-  .pfWrap{ padding: 12px 15px 0 15px; font-size: 10px; }
-  .pageTitle{ font-size: 1rem; margin: 12px 0 8px 0; }
-  .pfCard{ padding: 12px 8px; font-size: 10px; min-height: 260px; }
-  .pfCircle{ width: 46px; height: 46px; font-size: 20px; }
-  .pfImg{ width: 46px; height: 46px; }
-  .pfLabel{ font-size: 11px; margin-top: 6px; }
-  .pfName{ font-size: 13px; }
-  .pfGroup{ margin-top: 14px; }
-  .pfSmallLabel{ font-size: 9px; margin-bottom: 4px; }
-  .pfValue{ font-size: 11px; }
-  .pfEditRow{ margin-top: 18px; gap: 14px; }
-  .pfField{ font-size: 10px; }
-  .pfSelect{ height: 30px; font-size: 10px; padding: 0 9px; }
-  .pfSave{ height: 40px; width: 300px; font-size: 14px; margin-top: 18px; }
+  .pfWrap{ padding: 80px 10px 20px 10px; }
 }

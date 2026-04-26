@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Breadcrumb from "../components/Breadcrumb";
 import styles from "./BlogDetail.module.css";
-import { blogsAPI } from "../../services/api.js";
+import { blogsAPI, resolveImageUrl } from "../../services/api.js";
 
 const BLOG_KEY = "admin_blogs_v1";
 const DELETED_BLOGS_KEY = "deleted_blog_ids";
@@ -20,17 +20,42 @@ const formatDate = (iso) => {
   if (!iso) return "";
   try {
     const d = new Date(iso);
-    const opts = { year: "numeric", month: "long", day: "numeric" };
-    return d.toLocaleDateString(undefined, opts);
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   } catch {
     return String(iso);
   }
 };
 
-const mapAdminBlogToUser = (blog) => {
-  const safeContent = typeof blog?.content === "string" ? blog.content : "";
+const normalizeHtmlContent = (value) => {
+  if (!value || typeof value !== "string") return "";
 
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed);
+  if (hasHtml) return trimmed;
+
+  return trimmed
+    .split("\n")
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph}</p>`)
+    .join("");
+};
+
+const mapAdminBlogToUser = (blog) => {
   const id = blog?.id ?? blog?.blog_id ?? null;
+
+  const imageValue =
+    blog?.imageDataUrl ||
+    blog?.image_url ||
+    blog?.image ||
+    blog?.thumbnail ||
+    "";
 
   return {
     id,
@@ -42,16 +67,11 @@ const mapAdminBlogToUser = (blog) => {
     excerpt: blog?.description || "",
     author: blog?.author || blog?.author_name || "",
     readTime: blog?.readTime || blog?.read_time || "",
-    imageDataUrl: blog?.imageDataUrl || blog?.image_url || blog?.image || "",
+    imageDataUrl: resolveImageUrl(imageValue),
     manualUrl: blog?.manualUrl || blog?.manual_url || "",
     referenceUrl: blog?.referenceUrl || blog?.reference_url || "",
     status: blog?.status || "Active",
-    content: safeContent
-      .split("\n")
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .map((p) => `<p>${p}</p>`)
-      .join(""),
+    content: normalizeHtmlContent(blog?.content),
   };
 };
 
@@ -68,21 +88,20 @@ const readDeletedBlogIds = () => {
 const readLocalBlogs = () => {
   try {
     const raw = localStorage.getItem(BLOG_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-
-    if (!Array.isArray(arr)) return [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
 
     const deletedIds = readDeletedBlogIds();
 
-    return arr
-      .filter((b) => (b.status || "Active") === "Active")
-      .filter((b) => !deletedIds.includes(b.id ?? b.blog_id))
+    return parsed
+      .filter((entry) => (entry.status || "Active") === "Active")
+      .filter((entry) => !deletedIds.includes(entry.id ?? entry.blog_id))
       .sort(
         (a, b) =>
           new Date(b.publishedDate || b.published_date || 0) -
           new Date(a.publishedDate || a.published_date || 0)
       )
-      .map(mapAdminBlogToUser);
+      .map((entry) => mapAdminBlogToUser(entry));
   } catch {
     return [];
   }
@@ -115,29 +134,19 @@ const getBlogs = async () => {
             new Date(b.publishedDate || b.published_date || 0) -
             new Date(a.publishedDate || a.published_date || 0)
         )
-        .map(mapAdminBlogToUser);
+        .map((entry) => mapAdminBlogToUser(entry));
     }
 
     return readLocalBlogs();
   } catch (err) {
-    console.error("Failed to fetch blogs from API, fallback to localStorage:", err);
+    console.error("Failed to load blogs from API, fallback to localStorage:", err);
     return readLocalBlogs();
   }
 };
 
-const getRelatedBlogs = (posts, currentPost, limit = 2) => {
-  if (!Array.isArray(posts) || !currentPost) return [];
-
-  return posts
-    .filter(
-      (post) =>
-        post.category === currentPost.category && post.slug !== currentPost.slug
-    )
-    .slice(0, limit);
-};
-
 export default function BlogDetail() {
   const { slug } = useParams();
+
   const [posts, setPosts] = useState(() => readLocalBlogs());
   const [loading, setLoading] = useState(posts.length === 0);
   const [error, setError] = useState("");
@@ -151,13 +160,13 @@ export default function BlogDetail() {
         setError("");
 
         const blogs = await getBlogs();
-
         if (!isMounted) return;
+
         setPosts(Array.isArray(blogs) ? blogs : []);
       } catch (err) {
-        console.error("Failed to load blog detail:", err);
+        console.error("Failed to load blog detail", err);
         if (!isMounted) return;
-        setError("Unable to load blog post.");
+        setError("Unable to load article.");
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -165,26 +174,84 @@ export default function BlogDetail() {
 
     loadBlogs();
 
-    const refresh = () => {
+    const refreshLocal = () => {
       setPosts(readLocalBlogs());
     };
 
-    window.addEventListener("storage", refresh);
-    window.addEventListener(BLOGS_UPDATED_EVENT, refresh);
+    window.addEventListener("storage", refreshLocal);
+    window.addEventListener(BLOGS_UPDATED_EVENT, refreshLocal);
 
     return () => {
       isMounted = false;
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener(BLOGS_UPDATED_EVENT, refresh);
+      window.removeEventListener("storage", refreshLocal);
+      window.removeEventListener(BLOGS_UPDATED_EVENT, refreshLocal);
     };
   }, []);
 
-  const post = useMemo(() => posts.find((x) => x.slug === slug) || null, [posts, slug]);
-  const relatedPosts = useMemo(() => getRelatedBlogs(posts, post, 2), [posts, post]);
+  const post = useMemo(() => {
+    if (!slug) return null;
+    return posts.find((entry) => entry.slug === slug) || null;
+  }, [posts, slug]);
 
-  if (loading && !post) return <div style={{ padding: 90 }}>Loading post...</div>;
-  if (error && !post) return <div style={{ padding: 90, color: "red" }}>{error}</div>;
-  if (!post) return <div style={{ padding: 90 }}>Post not found</div>;
+  const relatedPosts = useMemo(() => {
+    if (!post) return [];
+
+    return posts
+      .filter((entry) => entry.slug !== post.slug)
+      .sort((a, b) => {
+        const sameCategoryA = a.category === post.category ? 1 : 0;
+        const sameCategoryB = b.category === post.category ? 1 : 0;
+
+        if (sameCategoryA !== sameCategoryB) {
+          return sameCategoryB - sameCategoryA;
+        }
+
+        return (
+          new Date(b.publishedDate || 0).getTime() -
+          new Date(a.publishedDate || 0).getTime()
+        );
+      })
+      .slice(0, 4);
+  }, [posts, post]);
+
+  if (loading && !post) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.article}>Loading article...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !post) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.article}>{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.article}>
+            <h1 className={styles.title}>Article not found</h1>
+            <div className={styles.sidebarFooter}>
+              <Link to="/blog" className={styles.backButton}>
+                Back to Blogs
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const tags = [post.category, post.author, post.readTime].filter(Boolean);
 
   return (
     <div className={styles.page}>
@@ -197,122 +264,153 @@ export default function BlogDetail() {
       />
 
       <div className={styles.container}>
-        <article className={styles.article}>
-          {post.imageDataUrl && (
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
-              <img
-                src={post.imageDataUrl}
-                alt={post.title}
-                style={{
-                  width: "100%",
-                  maxWidth: "700px",
-                  aspectRatio: "16/9",
-                  maxHeight: "380px",
-                  objectFit: "cover",
-                  borderRadius: "18px",
-                  boxShadow: "0 8px 32px rgba(31,47,74,0.13)",
-                  border: "2px solid #e0e7ef",
-                  background: "#f8f9fa",
+        <div className={styles.layout}>
+          <main className={styles.mainColumn}>
+            <article className={styles.article}>
+              <header className={styles.header}>
+                <span className={styles.categoryBadge}>{post.category}</span>
+                <h1 className={styles.title}>{post.title}</h1>
+
+                <div className={styles.meta}>
+                  {post.published ? <span>{post.published}</span> : null}
+                  {post.author ? (
+                    <>
+                      <span>•</span>
+                      <span>{post.author}</span>
+                    </>
+                  ) : null}
+                  {post.readTime ? (
+                    <>
+                      <span>•</span>
+                      <span>{post.readTime}</span>
+                    </>
+                  ) : null}
+                </div>
+
+                {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
+              </header>
+
+              {post.imageDataUrl ? (
+                <div className={styles.featuredMedia}>
+                  <img
+                    src={post.imageDataUrl}
+                    alt={post.title}
+                    className={styles.featuredImage}
+                  />
+                </div>
+              ) : null}
+
+              {(post.manualUrl || post.referenceUrl) && (
+                <section className={styles.resourcesSection}>
+                  <div className={styles.resourcesCopy}>
+                    <span className={styles.resourcesEyebrow}>Resources</span>
+                    <h2 className={styles.resourcesTitle}>Supporting materials</h2>
+                    <p className={styles.resourcesSubtitle}>
+                      Access additional documentation and external references for this
+                      article.
+                    </p>
+                  </div>
+
+                  <div className={styles.resourcesActions}>
+                    {post.manualUrl ? (
+                      <a
+                        href={post.manualUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.resourceButton}
+                      >
+                        Documentation
+                      </a>
+                    ) : null}
+
+                    {post.referenceUrl ? (
+                      <a
+                        href={post.referenceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${styles.resourceButton} ${styles.referenceButton}`}
+                      >
+                        Reference
+                      </a>
+                    ) : null}
+                  </div>
+                </section>
+              )}
+
+              <section
+                className={styles.content}
+                dangerouslySetInnerHTML={{
+                  __html: post.content || "<p>No content available.</p>",
                 }}
               />
-            </div>
-          )}
 
-          <header className={styles.header}>
-            <div className={styles.categoryBadge}>{post.category}</div>
-            <h1 className={styles.title}>{post.title}</h1>
-            <div className={styles.meta}>
-              <span className={styles.metaIcon}>📅</span>
-              <span>Published: {post.published}</span>
-            </div>
-            <p className={styles.excerpt}>{post.excerpt}</p>
-          </header>
-
-          {(post.manualUrl || post.referenceUrl) && (
-            <section className={styles.resourcesSection}>
-              <div className={styles.resourcesCopy}>
-                <span className={styles.resourcesEyebrow}>Additional Resources</span>
-                <h2 className={styles.resourcesTitle}>Supporting Clinical Documentation</h2>
-                <p className={styles.resourcesSubtitle}>
-                  Access complementary materials that expand on the insights
-                  discussed in this article.
-                </p>
-              </div>
-
-              <div className={styles.resourcesActions}>
-                {post.manualUrl && (
-                  <a
-                    href={post.manualUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.resourceButton}
-                  >
-                    📄 Read Our Analysis
-                  </a>
-                )}
-
-                {post.referenceUrl && (
-                  <a
-                    href={post.referenceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`${styles.resourceButton} ${styles.referenceButton}`}
-                  >
-                    🔗 View Reference Source
-                  </a>
-                )}
-              </div>
-            </section>
-          )}
-
-          <div
-            className={styles.content}
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-
-          <footer className={styles.footer}>
-            <div className={styles.tags}>
-              <span className={styles.tagLabel}>Tags:</span>
-              <span className={styles.tag}>Dental Implants</span>
-              <span className={styles.tag}>{post.category}</span>
-              <span className={styles.tag}>Clinical Research</span>
-            </div>
-          </footer>
-        </article>
-
-        {relatedPosts.length > 0 && (
-          <aside className={styles.relatedSection}>
-            <h2 className={styles.relatedTitle}>Related Articles</h2>
-
-            <div className={styles.relatedGrid}>
-              {relatedPosts.map((relatedPost) => (
-                <Link
-                  key={relatedPost.slug}
-                  to={`/blog/${relatedPost.slug}`}
-                  className={styles.relatedCard}
-                >
-                  <div className={styles.relatedImage}>
-                    <span className={styles.relatedIcon}>🦷</span>
+              {tags.length > 0 && (
+                <footer className={styles.footer}>
+                  <div className={styles.tags}>
+                    <span className={styles.tagLabel}>Tags:</span>
+                    {tags.map((tag) => (
+                      <span key={tag} className={styles.tag}>
+                        {tag}
+                      </span>
+                    ))}
                   </div>
+                </footer>
+              )}
+            </article>
+          </main>
 
-                  <div className={styles.relatedContent}>
-                    <div className={styles.relatedCategory}>
-                      {relatedPost.category}
-                    </div>
-                    <h3 className={styles.relatedCardTitle}>{relatedPost.title}</h3>
-                    <p className={styles.relatedExcerpt}>{relatedPost.excerpt}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+          <aside className={styles.sidebarColumn}>
+            {relatedPosts.length > 0 && (
+              <section className={styles.relatedSidebar}>
+                <h2 className={styles.sidebarTitle}>Related Articles</h2>
 
-            <div className={styles.backToBlogs}>
-              <Link to="/blog" className={styles.backButton}>
-                ← Back to All Articles
-              </Link>
-            </div>
+                <div className={styles.sidebarList}>
+                  {relatedPosts.map((related) => {
+                    const hasImage = Boolean(related.imageDataUrl);
+
+                    return (
+                      <Link
+                        key={related.slug}
+                        to={`/blog/${related.slug}`}
+                        className={styles.sidebarItem}
+                      >
+                        <div className={styles.sidebarThumb}>
+                          {hasImage ? (
+                            <img
+                              src={related.imageDataUrl}
+                              alt={related.title}
+                              className={styles.sidebarThumbImage}
+                            />
+                          ) : (
+                            <div className={styles.sidebarThumbPlaceholder}>
+                              <div className={styles.sidebarThumbPlaceholderPanel}>
+                                <span className={styles.sidebarThumbBarLong} />
+                                <span className={styles.sidebarThumbBarShort} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.sidebarText}>
+                          <h3 className={styles.sidebarItemTitle}>{related.title}</h3>
+                          <p className={styles.sidebarItemMeta}>
+                            {related.published || related.category || "Read article"}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.sidebarFooter}>
+                  <Link to="/blog" className={styles.backButton}>
+                    Back to Blogs
+                  </Link>
+                </div>
+              </section>
+            )}
           </aside>
-        )}
+        </div>
       </div>
     </div>
   );

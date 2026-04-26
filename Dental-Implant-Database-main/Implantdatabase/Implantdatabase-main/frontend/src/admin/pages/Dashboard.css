@@ -4,8 +4,6 @@
   padding: 20px 30px 0 30px;
 }
 
-
-
 .topbar{
   display:flex;
   align-items:center;
@@ -58,7 +56,6 @@
   margin-bottom: 16px;
 }
 
-
 .statCard{
   background:#fff;
   border-radius:16px;
@@ -91,7 +88,7 @@
 .statCard.yellow .statLabel{ color: rgba(255,255,255,0.82); }
 .statCard.purple{ background: linear-gradient(135deg, #2f4568, #3c567c); color:#fff; }
 .statCard.purple .statLabel{ color: rgba(255,255,255,0.82); }
-.statCard.green{ background: linear-gradient(135deg, #1f4a4a, #2f5f5f); color:#fff; } 
+.statCard.green{ background: linear-gradient(135deg, #1f4a4a, #2f5f5f); color:#fff; }
 .statCard.green .statLabel{ color: rgba(255,255,255,0.82); }
 
 .grid{
@@ -114,9 +111,8 @@
 .panelHead{
   display:flex;
   align-items:center;
-  justify-content: space-between; 
+  justify-content: space-between;
 }
-
 
 .addBtn{
   border:none;
@@ -167,8 +163,8 @@
 }
 .btn.edit{ background:#1f2f4a; color:#fff; }
 .btn.edit:hover{ background:#2d4263; }
-.btn.del{ background:#a12828; color:#fff; }
-.btn.del:hover{ background:#b73232; }
+.btn.del{ background:#dc2626; color:#fff; }
+.btn.del:hover{ background:#b91c1c; }
 
 .masterBox{
   display:flex;
@@ -264,11 +260,11 @@
   font-weight:900;
 }
 
-.dashModalBody{ 
-  margin-top:12px; 
-  display:flex; 
-  flex-direction:column; 
-  gap:12px; 
+.dashModalBody{
+  margin-top:12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
   max-height:65vh;
   overflow-y:auto;
   padding-right:4px;
@@ -409,5 +405,3 @@
   .blogTitle{ font-size: 10px; }
   .blogMeta{ font-size: 9px; }
 }
-
-

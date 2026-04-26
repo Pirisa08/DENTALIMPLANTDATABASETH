@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Breadcrumb from "../components/Breadcrumb";
 import styles from "./Blog.module.css";
-import { blogsAPI } from "../../services/api.js";
+import { blogsAPI, resolveImageUrl } from "../../services/api.js";
 
 const BLOG_KEY = "admin_blogs_v1";
 const DELETED_BLOGS_KEY = "deleted_blog_ids";
@@ -29,6 +29,8 @@ const formatDate = (iso) => {
 
 function mapAdminBlogToUser(blog) {
   const safeContent = typeof blog?.content === "string" ? blog.content : "";
+  const imageValue =
+    blog?.imageDataUrl || blog?.image_url || blog?.image || blog?.thumbnail || "";
 
   return {
     id: blog?.id ?? blog?.blog_id ?? null,
@@ -40,7 +42,7 @@ function mapAdminBlogToUser(blog) {
     excerpt: blog?.description || "",
     author: blog?.author || blog?.author_name || "",
     readTime: blog?.readTime || blog?.read_time || "",
-    imageDataUrl: blog?.imageDataUrl || blog?.image_url || blog?.image || "",
+    imageDataUrl: resolveImageUrl(imageValue),
     manualUrl: blog?.manualUrl || blog?.manual_url || "",
     referenceUrl: blog?.referenceUrl || blog?.reference_url || "",
     status: blog?.status || "Active",
@@ -167,13 +169,13 @@ function Blog() {
   const mainPost = useMemo(() => (posts.length > 0 ? posts[0] : null), [posts]);
   const latestPosts = useMemo(() => (posts.length > 1 ? posts.slice(1) : []), [posts]);
 
-  const heroCategory = mainPost?.category || "Event news";
-  const heroPublished = mainPost?.published || "December 15, 2025";
+  const heroCategory = mainPost?.category || "Clinical Research";
+  const heroPublished = mainPost?.published || "April 20, 2026";
   const heroTitle =
-    mainPost?.title || "Stay informed with the latest implant insights";
+    mainPost?.title || "Implant Materials: Titanium vs Zirconia";
   const heroExcerpt =
     mainPost?.excerpt ||
-    "Explore updates, clinical perspectives, and event highlights from across the implant dentistry community.";
+    "A comprehensive comparison of titanium and zirconia implants, their advantages, disadvantages, and clinical applications.";
 
   return (
     <div className={styles.page}>
@@ -202,38 +204,7 @@ function Blog() {
                     />
                   </Link>
                 ) : (
-                  <div className={styles.heroPlaceholder} aria-hidden="true">
-                    <svg viewBox="0 0 480 360" className={styles.heroPlaceholderArt}>
-                      <defs>
-                        <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#0f5ec9" stopOpacity="1" />
-                          <stop offset="100%" stopColor="#0b2c67" stopOpacity="1" />
-                        </linearGradient>
-                      </defs>
-                      <rect width="480" height="360" fill="url(#heroGradient)" />
-                      <circle cx="150" cy="120" r="54" fill="rgba(255,255,255,0.16)" />
-                      <circle cx="320" cy="110" r="42" fill="rgba(255,255,255,0.12)" />
-                      <circle cx="260" cy="220" r="36" fill="rgba(255,255,255,0.1)" />
-                      <path
-                        d="M 90 260 Q 240 190 390 260"
-                        stroke="rgba(255,255,255,0.22)"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeLinecap="round"
-                      />
-                      <text
-                        x="240"
-                        y="302"
-                        fontFamily="'Segoe UI', sans-serif"
-                        fontSize="40"
-                        fill="rgba(255,255,255,0.35)"
-                        textAnchor="middle"
-                        fontWeight="600"
-                      >
-                        🦷
-                      </text>
-                    </svg>
-                  </div>
+                  <div className={styles.heroPlaceholder} aria-hidden="true" />
                 )}
               </div>
 
@@ -295,80 +266,54 @@ function Blog() {
               <div className={styles.latestGrid}>
                 {latestPosts.map((post) => {
                   const cardDate = post.published || "Date to be announced";
-                  const cardCategory = post.category || "News";
+                  const hasCardImage = Boolean(post.imageDataUrl);
 
                   return (
                     <article key={post.slug} className={styles.latestCard}>
                       <Link to={`/blog/${post.slug}`} className={styles.cardInner}>
                         <div className={styles.cardImageWrapper}>
-                          {post.imageDataUrl ? (
-                            <img
-                              src={post.imageDataUrl}
-                              alt={post.title}
-                              className={styles.cardImage}
-                            />
+                          {hasCardImage ? (
+                            <>
+                              <img
+                                src={post.imageDataUrl}
+                                alt={post.title}
+                                className={styles.cardImage}
+                              />
+
+                              <span className={styles.cardCategory}>
+                                {post.category || "News"}
+                              </span>
+
+                              {(post.manualUrl || post.referenceUrl) && (
+                                <div className={styles.cardReferenceBadges}>
+                                  {post.manualUrl && (
+                                    <a
+                                      href={post.manualUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={styles.cardReferenceBadge}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      📄
+                                    </a>
+                                  )}
+
+                                  {post.referenceUrl && (
+                                    <a
+                                      href={post.referenceUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={styles.cardReferenceBadge}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      🔗
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <div className={styles.cardPlaceholder} aria-hidden="true">
-                              <svg viewBox="0 0 340 220" className={styles.cardPlaceholderArt}>
-                                <defs>
-                                  <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#0d4dab" stopOpacity="1" />
-                                    <stop offset="100%" stopColor="#0a3275" stopOpacity="1" />
-                                  </linearGradient>
-                                </defs>
-                                <rect width="340" height="220" fill="url(#cardGradient)" />
-                                <circle cx="170" cy="90" r="42" fill="rgba(255,255,255,0.18)" />
-                                <circle cx="120" cy="150" r="28" fill="rgba(255,255,255,0.14)" />
-                                <circle cx="220" cy="150" r="28" fill="rgba(255,255,255,0.14)" />
-                                <path
-                                  d="M 80 170 Q 170 140 260 170"
-                                  stroke="rgba(255,255,255,0.2)"
-                                  strokeWidth="4"
-                                  fill="none"
-                                />
-                                <text
-                                  x="170"
-                                  y="196"
-                                  fontFamily="'Segoe UI', sans-serif"
-                                  fontSize="28"
-                                  fill="rgba(255,255,255,0.3)"
-                                  textAnchor="middle"
-                                  fontWeight="600"
-                                >
-                                  🦷
-                                </text>
-                              </svg>
-                            </div>
-                          )}
-
-                          <span className={styles.cardCategory}>{cardCategory}</span>
-
-                          {(post.manualUrl || post.referenceUrl) && (
-                            <div className={styles.cardReferenceBadges}>
-                              {post.manualUrl && (
-                                <a
-                                  href={post.manualUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={styles.cardReferenceBadge}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  📄
-                                </a>
-                              )}
-
-                              {post.referenceUrl && (
-                                <a
-                                  href={post.referenceUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={styles.cardReferenceBadge}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  🔗
-                                </a>
-                              )}
-                            </div>
+                            <div className={styles.cardPlaceholder} aria-hidden="true" />
                           )}
                         </div>
 
