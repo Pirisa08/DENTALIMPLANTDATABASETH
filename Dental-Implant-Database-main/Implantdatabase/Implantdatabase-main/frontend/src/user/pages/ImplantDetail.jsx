@@ -27,6 +27,7 @@ export default function ImplantDetail() {
   const slugKey = (slug || "").toLowerCase();
   const { implants: mergedImplants, loading } = useMergedImplants();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const displayImplant = useMemo(() => {
     return (
@@ -47,6 +48,13 @@ export default function ImplantDetail() {
 
   const safeSelectedImage =
     implantImages[selectedImage] || implantImages[0] || null;
+
+  // Get image message fields from displayImplant
+  const imageMessages = [
+    displayImplant?.image1Message || displayImplant?.image1_message || "",
+    displayImplant?.image2Message || displayImplant?.image2_message || "",
+    displayImplant?.image3Message || displayImplant?.image3_message || "",
+  ];
 
   const brandName =
     (displayImplant?.brand && String(displayImplant.brand)) ||
@@ -108,7 +116,12 @@ export default function ImplantDetail() {
       <section className={styles.top}>
         <div className={styles.imageSection}>
           <div className={styles.mainImageContainer}>
-            <div className={styles.mainImage}>
+            <div
+              className={styles.mainImage}
+              style={{ position: "relative", cursor: safeSelectedImage ? "pointer" : "default" }}
+              onClick={() => safeSelectedImage && setShowOverlay(true)}
+              title={imageMessages[selectedImage] || undefined}
+            >
               {safeSelectedImage?.dataUrl ? (
                 <img
                   src={safeSelectedImage.dataUrl}
@@ -118,7 +131,57 @@ export default function ImplantDetail() {
               ) : (
                 <span className={styles.imageLabel}>{displayImplant.name}</span>
               )}
+              {/* Overlay trigger icon */}
+              {safeSelectedImage && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 16,
+                    background: "rgba(0,0,0,0.5)",
+                    color: "#fff",
+                    borderRadius: 8,
+                    padding: "2px 10px",
+                    fontSize: 13,
+                    pointerEvents: "none",
+                  }}
+                >
+                  Info
+                </span>
+              )}
             </div>
+            {/* Overlay for image message */}
+            {showOverlay && (
+              <div
+                className={styles.imageOverlayBg}
+                onClick={() => setShowOverlay(false)}
+              >
+                <div
+                  className={styles.imageOverlayBox}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <button
+                    className={styles.imageOverlayClose}
+                    onClick={() => setShowOverlay(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                  <div className={styles.imageOverlayTitle}>
+                    Image Information
+                  </div>
+                  <div className={styles.imageOverlayMsg}>
+                    <span className={styles.imageOverlayMsgLabel}>Current message:</span>
+                    <br />
+                    {imageMessages[selectedImage] ? (
+                      <span className={styles.imageOverlayMsgText}>{imageMessages[selectedImage]}</span>
+                    ) : (
+                      <span className={styles.imageOverlayMsgEmpty}>(No message provided)</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {implantImages.length > 0 && (

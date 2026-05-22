@@ -573,7 +573,8 @@ const appendImageToFormData = (formData, key, value, fallbackName) => {
 
 const appendNonImageFields = (formData, data = {}) => {
   Object.entries(data || {}).forEach(([key, value]) => {
-    if (key.startsWith("image")) return;
+    // Only skip image file fields, not image message fields
+    if ((key === "image1" || key === "image2" || key === "image3")) return;
 
     if (value === null || value === undefined) {
       formData.append(key, "");

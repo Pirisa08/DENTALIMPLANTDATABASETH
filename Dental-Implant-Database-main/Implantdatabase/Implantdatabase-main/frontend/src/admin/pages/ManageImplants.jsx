@@ -335,7 +335,6 @@ export default function ManageImplants() {
           <div>Image</div>
           <div>Title</div>
           <div>Company / Level</div>
-          <div>Source</div>
           <div>Date</div>
           <div>Status</div>
           <div className="headActions">Actions</div>
@@ -407,15 +406,10 @@ export default function ManageImplants() {
                   <div className="rowSubText">Brand: {brandText}</div>
                 </div>
 
+
                 <div className="rowMetaCol">
                   <div className="rowMetaMain">{companyName}</div>
                   <div className="rowMetaSub">{levelName}</div>
-                </div>
-
-                <div className="rowSourceCol">
-                  <span className={`sourceBadge ${isMaster ? "master" : "custom"}`}>
-                    {isMaster ? "MASTER" : "NEW"}
-                  </span>
                 </div>
 
                 <div className="rowDateCol">

@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Home.module.css";
-import { implantsAPI } from "../../services/api.js";
+import { implantsAPI, blogsAPI } from "../../services/api.js";
 
-/* ===== Modern Waves ===== */
 function ModernWaves() {
   return (
     <div className={styles.waveContainer}>
@@ -32,11 +31,13 @@ function ModernWaves() {
 }
 
 const IMPLANTS_KEY = "admin_implants_v1";
+const BLOGS_KEY = "admin_blogs_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
+const BLOGS_UPDATED_EVENT = "blogs:updated";
 
-function readLocalImplants() {
+function readLocalItems(key) {
   try {
-    const raw = localStorage.getItem(IMPLANTS_KEY);
+    const raw = localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -67,6 +68,15 @@ function normalizeImplants(items) {
     }));
 }
 
+function normalizeBlogs(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items.filter(Boolean).filter((item) => {
+    const status = item?.status || item?.blog_status || "Active";
+    return status === "Active" || status === "active" || status === "published";
+  });
+}
+
 function buildBrands(implants = []) {
   const map = new Map();
 
@@ -74,12 +84,9 @@ function buildBrands(implants = []) {
     const brand = String(item?.brand || "").trim();
     if (!brand) return;
 
-    const company = String(item?.company || "Unknown Company").trim() || "Unknown Company";
-
     if (!map.has(brand)) {
       map.set(brand, {
         brand,
-        company,
         count: 1,
       });
     } else {
@@ -92,8 +99,13 @@ function buildBrands(implants = []) {
 
 export default function Home() {
   const [implants, setImplants] = useState(() =>
-    normalizeImplants(readLocalImplants())
+    normalizeImplants(readLocalItems(IMPLANTS_KEY))
   );
+
+  const [blogs, setBlogs] = useState(() =>
+    normalizeBlogs(readLocalItems(BLOGS_KEY))
+  );
+
   const [loading, setLoading] = useState(implants.length === 0);
   const [error, setError] = useState("");
 
@@ -112,69 +124,121 @@ export default function Home() {
 
         if (normalized.length > 0) {
           setImplants(normalized);
+
           try {
             localStorage.setItem(IMPLANTS_KEY, JSON.stringify(apiData));
           } catch {
             // ignore localStorage write errors
           }
         } else {
-          setImplants(normalizeImplants(readLocalImplants()));
+          setImplants(normalizeImplants(readLocalItems(IMPLANTS_KEY)));
         }
       } catch (err) {
         console.error("Failed to load implants on home page:", err);
         if (!isMounted) return;
-        setImplants(normalizeImplants(readLocalImplants()));
+
+        setImplants(normalizeImplants(readLocalItems(IMPLANTS_KEY)));
         setError("Unable to load implant data.");
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    loadImplants();
+    const loadBlogs = async () => {
+      try {
+        const apiData = await blogsAPI.getAll();
+        const normalized = normalizeBlogs(apiData);
 
-    const refreshLocal = () => {
-      setImplants(normalizeImplants(readLocalImplants()));
+        if (!isMounted) return;
+
+        setBlogs(normalized);
+
+        try {
+          localStorage.setItem(BLOGS_KEY, JSON.stringify(apiData));
+        } catch {
+          // ignore localStorage write errors
+        }
+      } catch (err) {
+        console.error("Failed to load blogs on home page:", err);
+        if (!isMounted) return;
+
+        setBlogs(normalizeBlogs(readLocalItems(BLOGS_KEY)));
+      }
     };
 
-    window.addEventListener("storage", refreshLocal);
-    window.addEventListener(IMPLANTS_UPDATED_EVENT, refreshLocal);
+    loadImplants();
+    loadBlogs();
+
+    const refreshImplantsLocal = () => {
+      setImplants(normalizeImplants(readLocalItems(IMPLANTS_KEY)));
+    };
+
+    const refreshBlogsLocal = () => {
+      setBlogs(normalizeBlogs(readLocalItems(BLOGS_KEY)));
+    };
+
+    window.addEventListener("storage", refreshImplantsLocal);
+    window.addEventListener("storage", refreshBlogsLocal);
+    window.addEventListener(IMPLANTS_UPDATED_EVENT, refreshImplantsLocal);
+    window.addEventListener(BLOGS_UPDATED_EVENT, refreshBlogsLocal);
 
     return () => {
       isMounted = false;
-      window.removeEventListener("storage", refreshLocal);
-      window.removeEventListener(IMPLANTS_UPDATED_EVENT, refreshLocal);
+      window.removeEventListener("storage", refreshImplantsLocal);
+      window.removeEventListener("storage", refreshBlogsLocal);
+      window.removeEventListener(IMPLANTS_UPDATED_EVENT, refreshImplantsLocal);
+      window.removeEventListener(BLOGS_UPDATED_EVENT, refreshBlogsLocal);
     };
   }, []);
 
   const brandsData = useMemo(() => buildBrands(implants), [implants]);
   const totalImplants = implants.length;
   const totalBrands = brandsData.length;
+  const totalBlogs = blogs.length;
 
   const topBrands = useMemo(() => {
     return [...brandsData]
       .sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand))
-      .slice(0, 5);
+      .slice(0, 12);
   }, [brandsData]);
+
+  const implantFeatures = [
+    {
+      title: "Implant Identification",
+      text: "Browse implant systems by brand and access structured product information.",
+    },
+    {
+      title: "Organized Database",
+      text: "A clean implant database designed for fast searching and simple review.",
+    },
+    {
+      title: "Brand Exploration",
+      text: "Quickly explore available implant brands from one minimal interface.",
+    },
+  ];
 
   return (
     <div className={styles.homeContainer}>
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
-          <span className={styles.badgeText}>Professional Dental Database</span>
+          <span className={styles.badgeText}>Dental Implant Database</span>
 
           <h1>
-            Precision Data for <br />
-            <span>Implant Dentistry.</span>
+            Identify and Explore <br />
+            <span>Dental Implant Systems.</span>
           </h1>
 
           <p className={styles.heroSubtitle}>
-            Access implant systems, compare brands, and explore structured clinical
-            information in one connected platform.
+            A clean implant database for browsing dental implant brands,
+            reviewing system information, and finding structured product records
+            with a simple professional interface.
           </p>
 
-          <Link to="/implants" className={styles.viewAllBtn}>
-            Start Exploration
-          </Link>
+          <div className={styles.heroActions}>
+            <Link to="/implants" className={styles.viewAllBtn}>
+              Explore Implant Database
+            </Link>
+          </div>
         </div>
 
         <ModernWaves />
@@ -189,18 +253,57 @@ export default function Home() {
 
           <div className={styles.statItem}>
             <div className={styles.statNumber}>{totalImplants}+</div>
-            <div className={styles.statLabel}>Verified Systems</div>
+            <div className={styles.statLabel}>Implant Systems</div>
           </div>
 
           <div className={styles.statItem}>
-            <div className={styles.statNumber}>100%</div>
-            <div className={styles.statLabel}>Structured Data</div>
+            <div className={styles.statNumber}>{totalBlogs}+</div>
+            <div className={styles.statLabel}>Blog Articles</div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.introSection}>
+        <div className={styles.introGrid}>
+          <div className={styles.introContent}>
+            <span className={styles.smallLabel}>Implant Data Platform</span>
+            <h2>Search implant information with clarity.</h2>
+            <p>
+              This platform helps users browse dental implant systems through a
+              simple database structure. Implant records are organized by brand
+              to make product exploration easier, cleaner, and more efficient.
+            </p>
           </div>
 
-          <div className={styles.statItem}>
-            <div className={styles.statNumber}>Live</div>
-            <div className={styles.statLabel}>Database Ready</div>
+          <div className={styles.introCard}>
+            <div className={styles.cardIcon}>AI</div>
+            <h3>Implant Database</h3>
+            <p>
+              Built for implant brand discovery, system review, and structured
+              dental implant data presentation.
+            </p>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.featureSection}>
+        <div className={styles.sectionCenter}>
+          <span className={styles.smallLabel}>Core Features</span>
+          <h2>Focused on implant brands and systems.</h2>
+          <p>
+            A minimal website experience for browsing implant brands, comparing
+            available systems, and reviewing important implant records.
+          </p>
+        </div>
+
+        <div className={styles.featureGrid}>
+          {implantFeatures.map((item) => (
+            <div className={styles.featureCard} key={item.title}>
+              <div className={styles.featureIcon}>✦</div>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -208,36 +311,32 @@ export default function Home() {
         <div className={styles.brandPanel}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2>Explore Brands</h2>
+              <span className={styles.smallLabel}>Explore Brands</span>
+              <h2>Dental implant brands</h2>
 
               {loading && <p>Loading implant brands...</p>}
               {!loading && error && <p>{error}</p>}
               {!loading && !error && (
                 <p>
-                  Browse leading implant brands and explore available systems in the
+                  Select an implant brand to browse related systems in the
                   database.
                 </p>
               )}
             </div>
 
             <Link to="/implants" className={styles.viewAllText}>
-              View All Brands →
+              View All →
             </Link>
           </div>
 
-          <div className={styles.brandGrid}>
+          <div className={styles.brandShowcase}>
             {topBrands.map((brandItem) => (
               <Link
                 key={brandItem.brand}
                 to={`/implants?brand=${encodeURIComponent(brandItem.brand)}`}
-                className={styles.brandCard}
+                className={styles.brandShowcaseCard}
               >
-                <div className={styles.brandName}>{brandItem.brand}</div>
-                <div className={styles.brandCompany}>{brandItem.company}</div>
-                <div className={styles.brandSummary}>
-                  {brandItem.count} implant systems available in the database
-                </div>
-                <div className={styles.brandBtn}>Explore</div>
+                <span>{brandItem.brand}</span>
               </Link>
             ))}
 
@@ -249,4 +348,4 @@ export default function Home() {
       </section>
     </div>
   );
-} 
+}

@@ -47,21 +47,13 @@ export default function Footer() {
           </div>
 
           <div className={styles.footerColumn}>
-            <h3 className={styles.columnTitle}>Database</h3>
-            <ul className={styles.footerLinks}>
-              <li>
-                <Link to="/implants">Implant Systems</Link>
-              </li>
-              <li>
-                <Link to="/implants">Brands</Link>
-              </li>
-              <li>
-                <Link to="/implants">Companies</Link>
-              </li>
-              <li>
-                <Link to="/implants">Reference Data</Link>
-              </li>
-            </ul>
+            <h3 className={styles.columnTitle}>Powered By</h3>
+
+            <div className={styles.poweredInfo}>
+              <p>School of Applied Digital Technology</p>
+              <p>School of Dentistry</p>
+              <p>Mae Fah Luang University</p>
+            </div>
           </div>
 
           <div className={styles.footerColumn}>

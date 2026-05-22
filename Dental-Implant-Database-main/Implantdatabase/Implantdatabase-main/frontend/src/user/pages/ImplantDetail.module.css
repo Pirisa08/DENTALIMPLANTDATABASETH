@@ -1,3 +1,72 @@
+
+.imageOverlayBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageOverlayBox {
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px 28px 24px 28px;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.imageOverlayClose {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+}
+
+.imageOverlayTitle {
+  font-weight: 700;
+  font-size: 1.18rem;
+  margin-bottom: 10px;
+  color: #1d4ed8;
+  letter-spacing: 0.01em;
+}
+
+.imageOverlayMsg {
+  font-size: 1rem;
+  color: #1e293b;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.imageOverlayMsgLabel {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.imageOverlayMsgText {
+  color: #22304c;
+  font-weight: 500;
+  font-size: 1.08em;
+}
+
+.imageOverlayMsgEmpty {
+  color: #888;
+  font-style: italic;
+}
 :global(body.night-mode) .relatedEyebrow,
 :global(body.night-mode) .relatedTitle {
   color: #ffffff !important;

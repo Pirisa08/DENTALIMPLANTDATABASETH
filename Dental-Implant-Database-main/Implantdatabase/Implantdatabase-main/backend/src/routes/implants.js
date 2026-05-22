@@ -75,6 +75,9 @@ const normalizeImplantPayload = (incoming = {}) => {
     'bodyShape',
     'apexShape',
     'officialDistributor',
+    'image1Message',
+    'image2Message',
+    'image3Message',
   ].forEach((key) => {
     if (typeof data[key] === 'string') {
       data[key] = data[key].trim();
@@ -229,10 +232,16 @@ const mapMasterImplant = (row) => ({
     : null,
 });
 
-const mapCustomImplant = (row) => ({
-  ...row.toJSON(),
-  source: 'custom',
-});
+const mapCustomImplant = (row) => {
+  const obj = row.toJSON();
+  return {
+    ...obj,
+    image1Message: obj.image1Message || obj.image1_message || '',
+    image2Message: obj.image2Message || obj.image2_message || '',
+    image3Message: obj.image3Message || obj.image3_message || '',
+    source: 'custom',
+  };
+};
 
 const sortByCreatedDesc = (a, b) => {
   const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -316,12 +325,15 @@ router.post('/', uploadImplantImages, async (req, res) => {
       bodyData.image3 = `/uploads/implants/${req.files.image3[0].filename}`;
     }
 
-    const implant = await Implant.create(bodyData);
+    // Support image message fields
+    bodyData.image1Message = req.body.image1Message || req.body.image1_message || '';
+    bodyData.image2Message = req.body.image2Message || req.body.image2_message || '';
+    bodyData.image3Message = req.body.image3Message || req.body.image3_message || '';
 
+    const implant = await Implant.create(bodyData);
     const withRelations = await Implant.findByPk(implant.id, {
       include: ['company', 'level', 'country'],
     });
-
     return res
       .status(201)
       .json(withRelations ? mapCustomImplant(withRelations) : implant);
@@ -485,6 +497,11 @@ router.put('/:id', uploadImplantImages, async (req, res) => {
       if (implant.image3) deleteImplantImages([implant.image3]);
       bodyData.image3 = null;
     }
+
+    // Support image message fields
+    bodyData.image1Message = req.body.image1Message || req.body.image1_message || '';
+    bodyData.image2Message = req.body.image2Message || req.body.image2_message || '';
+    bodyData.image3Message = req.body.image3Message || req.body.image3_message || '';
 
     await implant.update(bodyData);
 

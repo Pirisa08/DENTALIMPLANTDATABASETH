@@ -15,7 +15,8 @@
 :global(body.night-mode) .copyright,
 :global(body.night-mode) .legalLinks a,
 :global(body.night-mode) .contactItem p,
-:global(body.night-mode) .contactLabel {
+:global(body.night-mode) .contactLabel,
+:global(body.night-mode) .poweredInfo p {
   color: #c9d7ef !important;
 }
 
@@ -42,7 +43,7 @@
 }
 
 .footerMain {
-  padding: 56px 40px 34px;
+  padding: 48px 36px 30px;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -141,6 +142,20 @@
 .footerLinks a:hover {
   color: #ffffff;
   transform: translateX(2px);
+}
+
+/* Powered By */
+.poweredInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.poweredInfo p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.93rem;
+  line-height: 1.65;
 }
 
 /* Contact */

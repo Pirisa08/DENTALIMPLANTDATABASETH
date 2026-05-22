@@ -69,6 +69,9 @@ export default function NewImplant() {
     officialDistributor: "",
     distributorId: null,
     status: "Active",
+    image1Message: "",
+    image2Message: "",
+    image3Message: "",
   });
 
   const [currentLabels, setCurrentLabels] = useState({
@@ -265,6 +268,9 @@ export default function NewImplant() {
               officialDistributor: apiImplant.officialDistributor || "",
               distributorId: toNumberOrNull(apiImplant.distributorId),
               status: apiImplant.status || "Active",
+              image1Message: apiImplant.image1Message || "",
+              image2Message: apiImplant.image2Message || "",
+              image3Message: apiImplant.image3Message || "",
             });
 
             setCurrentLabels({
@@ -378,43 +384,13 @@ export default function NewImplant() {
     );
   }, [masterData.countries, form.countryId, currentLabels.countryName]);
 
+  // Show all brands, with company name in parentheses for clarity
   const filteredBrands = useMemo(() => {
-    const allBrands = masterData.brands || [];
-    const companyFiltered = form.companyId
-      ? allBrands.filter(
-          (b) =>
-            Number(b.companyId) === Number(form.companyId) &&
-            b.status !== "Inactive"
-        )
-      : allBrands;
-
-    if (
-      form.brandId &&
-      !companyFiltered.some((b) => Number(b.id) === Number(form.brandId))
-    ) {
-      return [
-        ...companyFiltered,
-        {
-          id: form.brandId,
-          name:
-            currentLabels.brandName ||
-            form.brand ||
-            `Current (${form.brandId})`,
-          companyId: form.companyId,
-          status: "Active",
-          __current: true,
-        },
-      ];
-    }
-
-    return companyFiltered;
-  }, [
-    form.companyId,
-    form.brandId,
-    form.brand,
-    currentLabels.brandName,
-    masterData.brands,
-  ]);
+    return (masterData.brands || []).map((item) => ({
+      ...item,
+      label: item.companyName ? `${item.name} (${item.companyName})` : item.name,
+    }));
+  }, [masterData.brands]);
 
   const withCurrentTextIdOption = (list, currentId, currentName) => {
     const safe = Array.isArray(list) ? list : [];
@@ -863,6 +839,9 @@ export default function NewImplant() {
           : imageFiles.image3
           ? imageFiles.image3
           : undefined,
+        image1Message: form.image1Message,
+        image2Message: form.image2Message,
+        image3Message: form.image3Message,
       };
 
       const apiResult = isEdit
@@ -923,7 +902,7 @@ export default function NewImplant() {
         <div className="imgCard">
           {["image1", "image2", "image3"].map((key, idx) => {
             const current = imagePreviews[key];
-
+            const msgKey = `${key}Message`;
             return (
               <div className="imgField" key={key}>
                 <div
@@ -980,6 +959,14 @@ export default function NewImplant() {
                   accept="image/*"
                   onChange={(e) => onPickImage(key, e)}
                   hidden
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder={`Image ${idx + 1} message (optional)`}
+                  value={form[msgKey] || ""}
+                  onChange={e => setField(msgKey, e.target.value)}
+                  style={{ marginTop: 6, fontSize: 13 }}
                 />
               </div>
             );

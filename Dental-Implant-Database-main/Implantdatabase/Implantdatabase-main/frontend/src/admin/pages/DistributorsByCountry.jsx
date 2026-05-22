@@ -150,11 +150,12 @@ export default function DistributorsByCountry() {
               <div className="nameCell">{x.name}</div>
               <div className="statusCell">
                 <button
-                  className={`pill status ${x.status === "Active" ? "on" : "off"}`}
+                  className={`statusPill ${x.status === "Active" ? "on" : "off"}`}
                   onClick={() => toggleStatus(x.id, x.status)}
                   title={x.status === "Active" ? "Click to close" : "Click to open"}
                 >
-                  {x.status === "Active" ? "● Open" : "● Closed"}
+                  <span className="statusDot" />
+                  {x.status === "Active" ? "Open" : "Closed"}
                 </button>
               </div>
               <div className="actionsCol">
