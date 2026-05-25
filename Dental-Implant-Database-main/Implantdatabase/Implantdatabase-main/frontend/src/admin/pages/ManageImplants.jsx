@@ -48,18 +48,27 @@ export default function ManageImplants() {
   }, []);
 
   useEffect(() => {
-    loadData();
+  loadData();
 
-    const handleImplantsUpdated = () => {
+  const handleImplantsUpdated = (e) => {
+    if (e && e.detail && e.detail.implant) {
+      setRows((prev) => {
+        // ลบ implant เดิมออกก่อน (ถ้ามี)
+        const filtered = prev.filter((r) => String(r.id) !== String(e.detail.implant.id));
+        // ใส่ implant ใหม่ไว้บนสุด
+        return [e.detail.implant, ...filtered];
+      });
+    } else {
       loadData();
-    };
+    }
+  };
 
-    window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
+  window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
 
-    return () => {
-      window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
-    };
-  }, [loadData]);
+  return () => {
+    window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
+  };
+}, [loadData]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || "");

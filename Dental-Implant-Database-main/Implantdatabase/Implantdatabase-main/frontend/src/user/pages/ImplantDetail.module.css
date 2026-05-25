@@ -234,9 +234,13 @@
 .actualImage {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  border-radius: 22px;
-  padding: 10px;
+  object-fit: cover;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  display: block;
+  box-shadow: none;
+  transition: background 0.2s;
 }
 
 .imageBadge {
@@ -295,6 +299,19 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: transparent;
+  border-radius: 0;
+  display: block;
+  box-shadow: none;
+  padding: 0;
+  transition: background 0.2s;
+}
+:global(body.night-mode) .actualImage {
+  background: transparent !important;
+}
+
+:global(body.night-mode) .thumbnailImage {
+  background: transparent !important;
 }
 
 .infoSection {

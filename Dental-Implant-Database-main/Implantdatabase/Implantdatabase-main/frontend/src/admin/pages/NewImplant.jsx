@@ -121,7 +121,6 @@ export default function NewImplant() {
     saveMaster(nextMaster);
     setMasterLocal(nextMaster);
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event(MASTER_DATA_UPDATED_EVENT));
     return nextMaster;
   };
 
@@ -865,7 +864,10 @@ export default function NewImplant() {
         : [apiResult, ...implants];
 
       localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-      window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
+      // ส่ง custom event พร้อม implant ที่เพิ่ม/แก้ไข
+      window.dispatchEvent(
+        new CustomEvent(IMPLANTS_UPDATED_EVENT, { detail: { implant: apiResult } })
+      );
       navigate("/admin/implants");
     } catch (err) {
       console.error("Save failed:", err);

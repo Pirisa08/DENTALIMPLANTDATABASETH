@@ -22,12 +22,14 @@ const toDisplayText = (value) => {
   return String(value);
 };
 
+
 export default function ImplantDetail() {
   const { slug } = useParams();
   const slugKey = (slug || "").toLowerCase();
   const { implants: mergedImplants, loading } = useMergedImplants();
   const [selectedImage, setSelectedImage] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState(null);
 
   const displayImplant = useMemo(() => {
     return (
@@ -46,8 +48,11 @@ export default function ImplantDetail() {
     setSelectedImage(0);
   }, [displayImplant?.slug, displayImplant?.id]);
 
-  const safeSelectedImage =
-    implantImages[selectedImage] || implantImages[0] || null;
+
+  // Show hovered image if any, otherwise show selected
+  const displayImageIndex =
+    hoveredImage !== null && hoveredImage !== undefined ? hoveredImage : selectedImage;
+  const safeSelectedImage = implantImages[displayImageIndex] || implantImages[0] || null;
 
   // Get image message fields from displayImplant
   const imageMessages = [
@@ -185,7 +190,9 @@ export default function ImplantDetail() {
           </div>
 
           {implantImages.length > 0 && (
-            <div className={styles.thumbnails}>
+            <div className={styles.thumbnails}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
               {implantImages.map((img, index) => (
                 <button
                   key={img.id || index}
@@ -194,6 +201,10 @@ export default function ImplantDetail() {
                     selectedImage === index ? styles.thumbnailActive : ""
                   }`}
                   onClick={() => setSelectedImage(index)}
+                  onMouseEnter={() => setHoveredImage(index)}
+                  onFocus={() => setHoveredImage(index)}
+                  onMouseLeave={() => setHoveredImage(null)}
+                  tabIndex={0}
                 >
                   <img
                     src={img.dataUrl}

@@ -99,7 +99,6 @@ const Contact = () => {
                                 <div className={styles.infoContent}>
                                     <h3>Email</h3>
                                     <p>
-                                        <a href="mailto:mwiger@lamduan.mfu.com">mwiger@lamduan.mfu.com</a><br />
                                         <a href="mailto:support@dentaldb.com">support@dentaldb.com</a>
                                     </p>
                                 </div>
@@ -137,30 +136,15 @@ const Contact = () => {
                         <div className={styles.socialLinks}>
                             <h3>Follow Us</h3>
                             <div className={styles.socialIcons}>
-                                <a href="https://facebook.com" target="_blank" rel="noreferrer" className={styles.socialIcon} aria-label="Facebook">
+                               
+                                
+                                <a href="https://dentistry.mfu.ac.th/en/dentistry-home.html" target="_blank" rel="noreferrer" className={styles.socialIcon} aria-label="Google">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v5h3v-5h2.2l.8-3H14v-1.5c0-.6.4-1 1-1H17V8h-2z" />
+                                        <path d="M21.35 11.1H12.18v2.92h5.32c-.23 1.22-1.39 3.59-5.32 3.59-3.2 0-5.81-2.65-5.81-5.91s2.61-5.91 5.81-5.91c1.82 0 3.04.72 3.74 1.34l2.55-2.48C17.13 3.6 14.89 2.5 12.18 2.5 6.7 2.5 2.5 6.7 2.5 12s4.2 9.5 9.68 9.5c5.57 0 9.23-3.91 9.23-9.41 0-.63-.07-1.11-.16-1.59z" />
+                                        <path d="M3.69 7.14l2.5 1.83C7.13 7.97 8.5 6.5 12.18 6.5c1.82 0 3.04.72 3.74 1.34l2.55-2.48C17.13 3.6 14.89 2.5 12.18 2.5c-3.68 0-6.05 2.47-7.49 4.64z" />
                                     </svg>
                                 </a>
-                                <a href="https://twitter.com" target="_blank" rel="noreferrer" className={styles.socialIcon} aria-label="Twitter">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M23 3a10.9 10.9 0 0 1-3.1 1.5A4.48 4.48 0 0 0 12 7.5v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.1-.8A7.72 7.72 0 0 0 23 3z" />
-                                    </svg>
-                                </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className={styles.socialIcon} aria-label="LinkedIn">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V9h4v2" />
-                                        <rect x="2" y="9" width="4" height="12" />
-                                        <circle cx="4" cy="4" r="2" />
-                                    </svg>
-                                </a>
-                                <a href="https://instagram.com" target="_blank" rel="noreferrer" className={styles.socialIcon} aria-label="Instagram">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="5" />
-                                        <circle cx="12" cy="12" r="4" />
-                                        <circle cx="17.5" cy="6.5" r="0.8" />
-                                    </svg>
-                                </a>
+                                
                             </div>
                         </div>
                     </div>
@@ -251,7 +235,7 @@ const Contact = () => {
 
                             <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
                                 <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
-                                <span className={styles.submitIcon}>→</span>
+                                
                             </button>
                         </form>
                     </div>

@@ -221,7 +221,7 @@ export default function Home() {
     <div className={styles.homeContainer}>
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
-          <span className={styles.badgeText}>Dental Implant Database</span>
+          <span className={styles.badgeText}>Dental Implant Database MFU</span>
 
           <h1>
             Identify and Explore <br />
@@ -325,7 +325,7 @@ export default function Home() {
             </div>
 
             <Link to="/implants" className={styles.viewAllText}>
-              View All →
+              View All 
             </Link>
           </div>
 
