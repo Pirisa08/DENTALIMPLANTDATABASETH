@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { getInitialNightMode, setNightMode } from "../nightModeUtils";
 import FilterSidebar from "./FilterSidebar";
 import styles from "./Navbar.module.css";
-import mfuLogo from "../../assets/logo_mfu.jpg";
 
 const emptyFilters = {
   company: [],
@@ -87,7 +86,7 @@ export default function Navbar() {
         >
           <div className={styles.brandIcon}>
             <img
-              src={mfuLogo}
+              src="/logo_mfu.jpg"
               alt="Mae Fah Luang University logo"
               className={styles.brandLogoImg}
             />

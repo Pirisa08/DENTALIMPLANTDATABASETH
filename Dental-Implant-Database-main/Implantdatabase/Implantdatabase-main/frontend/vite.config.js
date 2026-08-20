@@ -11,12 +11,12 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8900',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8900',
         changeOrigin: true,
         secure: false,
       },
@@ -24,8 +24,8 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': [
         "default-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 ws://localhost:3000 ws://127.0.0.1:3000 https://fonts.googleapis.com https://images.unsplash.com",
-        "img-src 'self' data: blob: https: http://localhost:5000 http://127.0.0.1:5000",
+        "connect-src 'self' http://localhost:8900 http://127.0.0.1:8900 ws://localhost:3000 ws://127.0.0.1:3000 https://fonts.googleapis.com https://images.unsplash.com",
+        "img-src 'self' data: blob: https: http://localhost:8900 http://127.0.0.1:8900",
         "font-src 'self' https://fonts.gstatic.com data:",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       ].join('; ')

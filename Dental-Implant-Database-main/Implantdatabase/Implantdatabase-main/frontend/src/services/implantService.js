@@ -3,7 +3,7 @@
  * Supports image uploads via FormData
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8900/api';
 
 /**
  * Get auth token from localStorage
@@ -336,7 +336,7 @@ export const getImageUrl = (imagePath) => {
   
   // Relative path from backend
   if (imagePath.startsWith('/uploads/')) {
-    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8900';
     return `${baseUrl}${imagePath}`;
   }
   

@@ -20,38 +20,46 @@ import profileRoutes from './routes/profile.js';
 import { Blog } from './models/index.js';
 
 
-
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+const app = express(); 
+const PORT = process.env.PORT || 8900;
 
 // =========================
 // Allowed origins
 // =========================
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
+  'http://localhost:8900', 
+  'http://localhost:8901',
   'http://localhost:5173',
   'http://localhost:5174',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
+  'http://127.0.0.1:8900',
+  'http://127.0.0.1:8901',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
   'http://26.176.134.115:3000',
   'http://26.176.134.115:3001',
   'http://26.176.134.115:5173',
   'http://26.176.134.115:5174',
+  'https://database.ai-implantid.com',
+
 ];
 
 // เช็ค origin แบบยืดหยุ่นขึ้นสำหรับ dev
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
 
-  if (allowedOrigins.includes(origin)) return true;
+  // ตัด / ท้าย url ออกก่อนเปรียบเทียบ
+  const cleanOrigin = origin.replace(/\/$/, '');
+  const allowed = allowedOrigins.map(o => o.replace(/\/$/, ''));
+
+  // log origin ที่เข้ามา
+  console.log('[CORS] Request from origin:', origin);
+
+  if (allowed.includes(cleanOrigin)) return true;
 
   try {
     const url = new URL(origin);

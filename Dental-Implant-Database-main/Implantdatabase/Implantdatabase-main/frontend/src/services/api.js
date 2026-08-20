@@ -145,7 +145,7 @@ const apiCall = async (endpoint, options = {}) => {
     response = await fetch(url, fetchOptions);
   } catch (err) {
     throw new Error(
-      `Cannot connect to backend at ${API_URL}. Please start server on port 5000.`
+      `Cannot connect to backend at ${API_URL}. Please start server on port 8900.`
     );
   }
 

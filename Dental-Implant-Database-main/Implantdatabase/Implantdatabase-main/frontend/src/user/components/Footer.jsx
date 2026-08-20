@@ -10,7 +10,7 @@ export default function Footer() {
           <div className={styles.footerColumn}>
             <div className={styles.brandBlock}>
               <img
-                src="/src/assets/logo_mfu.jpg"
+                src="/logo_mfu.jpg"
                 alt="MFU Logo"
                 className={styles.brandLogo}
               />

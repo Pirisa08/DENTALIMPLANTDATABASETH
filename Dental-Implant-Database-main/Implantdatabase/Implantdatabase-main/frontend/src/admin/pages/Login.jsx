@@ -50,7 +50,7 @@ export default function Login() {
         <div className="loginBrandPanel">
           <div className="brandCenterWrap">
             <img
-            src="/src/assets/logo_mfu.jpg"
+            src="/logo_mfu.jpg"
             alt="MFU Logo"
             className="brandLogoImage"
             />
