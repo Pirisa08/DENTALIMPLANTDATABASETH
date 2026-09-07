@@ -15,6 +15,14 @@ const IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 const MASTER_DATA_UPDATED_EVENT = "master-data:updated";
 
+const ImageUploadIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="phSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
 const toNumberOrNull = (value) => {
   if (value === undefined || value === null || value === "") return null;
   const num = Number(value);
@@ -607,7 +615,7 @@ export default function NewImplant() {
 
       setField(fieldMap[type], Number(created.id));
     } catch (err) {
-      alert(`Failed to add ${labelMap[type]}: ${err.message}`);
+      alert(formatAddOptionError(err, labelMap[type]));
     }
   };
 
@@ -655,8 +663,22 @@ export default function NewImplant() {
       setField("brand", brandItem.name);
       setCurrentLabels((prev) => ({ ...prev, brandName: brandItem.name }));
     } catch (err) {
-      alert(`Failed to add Brand: ${err.message}`);
+      alert(formatAddOptionError(err, "Brand"));
     }
+  };
+
+  const formatAddOptionError = (err, label) => {
+    const message = err?.message || "";
+
+    if (
+      /(^|[^0-9])409([^0-9]|$)|already exists|duplicate|unique|ข้อมูลที่ป้อนมีอยู่แล้ว/i.test(
+        message
+      )
+    ) {
+      return "ข้อมูลที่ป้อนมีอยู่แล้ว";
+    }
+
+    return `Failed to add ${label}: ${message || "Unknown error"}`;
   };
 
   const addTextMasterOption = async ({
@@ -698,7 +720,7 @@ export default function NewImplant() {
       setField(idFieldName, item.id);
       setField(textFieldName, item.name);
     } catch (err) {
-      alert(`Failed to add ${label}: ${err.message}`);
+      alert(formatAddOptionError(err, label));
     }
   };
 
@@ -923,8 +945,11 @@ export default function NewImplant() {
                     />
                   ) : (
                     <div className="placeholder">
-                      <div className="phIcon">🖼️</div>
-                      <div className="phText">Add image {idx + 1}</div>
+                      <div className="phIcon">
+                        <ImageUploadIcon />
+                      </div>
+                      <div className="phText">Image {idx + 1}</div>
+                      <div className="phSubText">Add photo</div>
                     </div>
                   )}
 

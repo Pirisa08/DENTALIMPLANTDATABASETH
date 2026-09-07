@@ -15,6 +15,42 @@ const MASTER_TYPES = [
   { key: "countries", label: "Countries" },
 ];
 
+const ImplantIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="statSvg">
+    <path d="M8.7 3.5c1.1 0 2 .5 2.7 1.2.4.4.8.4 1.2 0 .7-.7 1.6-1.2 2.7-1.2 2.3 0 4 1.8 4 4.2 0 1.4-.5 2.7-1.2 3.8-.6.9-.9 1.9-1 3l-.3 3.2c-.2 1.8-1.4 3.1-2.9 3.1-1 0-1.6-.7-1.8-1.7l-.4-2.2c-.1-.6-.4-.9-.7-.9s-.6.3-.7.9l-.4 2.2c-.2 1-1 1.7-1.9 1.7-1.5 0-2.7-1.3-2.9-3.1l-.3-3.2c-.1-1.1-.4-2.1-1-3-.7-1.1-1.2-2.4-1.2-3.8 0-2.4 1.8-4.2 4.1-4.2Z" />
+    <path d="M8 6.2c1.2 0 1.9.7 2.5 1.2.9.8 2.1.8 3 0 .6-.5 1.3-1.2 2.5-1.2" />
+  </svg>
+);
+
+const BlogIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="statSvg">
+    <path d="M6 3.5h8.2L19 8.3v12.2H6V3.5Z" />
+    <path d="M14 3.7v5h5" />
+    <path d="M8.8 12h6.4M8.8 15h6.4M8.8 18h4.6" />
+  </svg>
+);
+
+const MasterDataIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="statSvg">
+    <path d="M3.8 6.5h5l1.8 2h9.6v10.8H3.8V6.5Z" />
+    <path d="M6.5 12.2h11M6.5 15.2h11" />
+  </svg>
+);
+
+const ImagePlaceholderIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="thumbSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
+
 const getNameById = (master, type, id) => {
   if (!id) return "";
   const list = master?.[type] || [];
@@ -224,7 +260,9 @@ export default function Dashboard() {
           onClick={() => navigate("/admin/implants")}
           style={{ cursor: "pointer" }}
         >
-          <div className="statIcon">🦷</div>
+          <div className="statIcon">
+            <ImplantIcon />
+          </div>
           <div>
             <div className="statNum">{implantsCount}</div>
             <div className="statLabel">Implants</div>
@@ -236,7 +274,9 @@ export default function Dashboard() {
           onClick={() => navigate("/admin/blog")}
           style={{ cursor: "pointer" }}
         >
-          <div className="statIcon">📝</div>
+          <div className="statIcon">
+            <BlogIcon />
+          </div>
           <div>
             <div className="statNum">{blogsCount}</div>
             <div className="statLabel">Blogs</div>
@@ -248,7 +288,9 @@ export default function Dashboard() {
           onClick={() => navigate("/admin/master")}
           style={{ cursor: "pointer" }}
         >
-          <div className="statIcon">🗂️</div>
+          <div className="statIcon">
+            <MasterDataIcon />
+          </div>
           <div>
             <div className="statNum">{masterCounts.total}</div>
             <div className="statLabel">Master Data</div>
@@ -296,7 +338,11 @@ export default function Dashboard() {
                           borderRadius: "8px",
                         }}
                       />
-                    ) : null}
+                    ) : (
+                      <span className="thumbPlaceholder" title="No image">
+                        <ImagePlaceholderIcon />
+                      </span>
+                    )}
                   </div>
 
                   <div className="rowText">
@@ -354,6 +400,10 @@ export default function Dashboard() {
                 onClick={() => setImplantPage((p) => Math.max(1, p - 1))}
                 disabled={implantPage === 1}
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
                   padding: "8px 20px",
                   borderRadius: "999px",
                   border: "none",
@@ -372,7 +422,8 @@ export default function Dashboard() {
                   transition: "all 0.2s",
                 }}
               >
-                ← Previous
+                <PaginationArrow direction="prev" />
+                <span>Previous</span>
               </button>
 
               <span
@@ -392,6 +443,10 @@ export default function Dashboard() {
                 }
                 disabled={implantPage === implantTotalPages}
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
                   padding: "8px 20px",
                   borderRadius: "999px",
                   border: "none",
@@ -414,7 +469,8 @@ export default function Dashboard() {
                   transition: "all 0.2s",
                 }}
               >
-                Next →
+                <span>Next</span>
+                <PaginationArrow direction="next" />
               </button>
             </div>
           )}
@@ -537,6 +593,10 @@ export default function Dashboard() {
               onClick={() => setBlogPage((p) => Math.max(1, p - 1))}
               disabled={blogPage === 1}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
                 padding: "8px 20px",
                 borderRadius: "999px",
                 border: "none",
@@ -555,7 +615,8 @@ export default function Dashboard() {
                 transition: "all 0.2s",
               }}
             >
-              ← Previous
+              <PaginationArrow direction="prev" />
+              <span>Previous</span>
             </button>
 
             <span
@@ -575,6 +636,10 @@ export default function Dashboard() {
               }
               disabled={blogPage === blogTotalPages}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
                 padding: "8px 20px",
                 borderRadius: "999px",
                 border: "none",
@@ -594,7 +659,8 @@ export default function Dashboard() {
                 transition: "all 0.2s",
               }}
             >
-              Next →
+              <span>Next</span>
+              <PaginationArrow direction="next" />
             </button>
           </div>
         )}

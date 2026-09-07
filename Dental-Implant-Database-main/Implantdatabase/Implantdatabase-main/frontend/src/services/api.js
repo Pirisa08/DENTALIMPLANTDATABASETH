@@ -153,9 +153,16 @@ const apiCall = async (endpoint, options = {}) => {
 
   if (!response.ok) {
     const errorText = await response.text();
+    const isDuplicateError =
+      response.status === 409 ||
+      /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText);
 
     if (response.status === 401) {
       throw new Error("Unauthorized");
+    }
+
+    if (isDuplicateError) {
+      throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
     }
 
     throw new Error(
@@ -626,6 +633,12 @@ export const implantsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (
+        response.status === 409 ||
+        /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText)
+      ) {
+        throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
+      }
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
@@ -657,6 +670,12 @@ export const implantsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (
+        response.status === 409 ||
+        /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText)
+      ) {
+        throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
+      }
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 

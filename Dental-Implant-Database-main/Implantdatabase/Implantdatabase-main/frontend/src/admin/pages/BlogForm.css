@@ -253,6 +253,92 @@
   min-height: 240px;
 }
 
+.bfRichEditor{
+  background: #ffffff;
+  border: 1px solid #cfd8ea;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.bfEditorToolbar{
+  border: 0;
+  border-bottom: 1px solid #d8e0ee;
+  background: #f8fafc;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  align-items: center;
+}
+
+.bfEditorToolbar button,
+.bfEditorSelect{
+  min-height: 32px;
+  border: 1px solid #d1d9e8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e2f4f;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.bfEditorToolbar button:hover,
+.bfEditorSelect:hover{
+  background: #eef3fb;
+  border-color: #9fb0cc;
+  color: #102a56;
+}
+
+.bfEditorToolbar button.isActive,
+.bfEditorSelect.isActive{
+  background: #102a56;
+  border-color: #102a56;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(16, 42, 86, 0.18);
+}
+
+.bfEditorSelect{
+  min-width: 116px;
+}
+
+.bfEditorSelect:nth-of-type(2){
+  min-width: 150px;
+}
+
+.bfEditorArea{
+  min-height: 300px;
+  border: 0;
+  background: #ffffff;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.8;
+  outline: none;
+  padding: 22px 24px;
+  overflow: auto;
+}
+
+.bfEditorArea:focus{
+  box-shadow: inset 0 0 0 2px rgba(59, 91, 152, 0.16);
+}
+
+.bfEditorArea h2,
+.bfEditorArea h3,
+.bfEditorArea h4{
+  color: #102a56;
+  line-height: 1.35;
+  margin: 20px 0 12px;
+}
+
+.bfEditorArea p{
+  margin: 0 0 12px;
+}
+
 .bfStatusRow{
   display: flex;
   flex-direction: column;
@@ -785,4 +871,129 @@
   .bfWrap .btnCancel{
     height: 40px;
   }
+}
+
+/* Admin typography normalization */
+.bfWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.bfWrap .pageTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.bfWrap .crumb{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.bfWrap .bfCard{
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bfWrap .bfImageTitle,
+.bfWrap .bfLabel{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.bfWrap .bfImageSub,
+.bfWrap .bfPhSub{
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.bfWrap .bfPhTitle{
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bfWrap .bfInput,
+.bfWrap .bfSelect,
+.bfWrap .bfTextarea{
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.bfWrap .bfTextarea{
+  line-height: 1.6;
+}
+
+.bfWrap .bfEditorArea{
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.75;
+}
+
+.bfWrap .bfImageBtn,
+.bfWrap .pill,
+.bfWrap .bfSave,
+.bfWrap .btnSave,
+.bfWrap .btnCancel,
+.bfWrap .statusText{
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Unified admin form status and actions */
+.bfWrap .pill.status{
+  min-width: 104px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bfWrap .pill.status.on{
+  background: #e8f8f0;
+  color: #1f7a3a;
+  border-color: #6fd6a6;
+}
+
+.bfWrap .pill.status.off{
+  background: #fdecec;
+  color: #b91c1c;
+  border-color: #f5a3a3;
+}
+
+.bfWrap .pill.status .statusDot{
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  background: currentColor;
+  opacity: 0.78;
+}
+
+.bfWrap .btnSave,
+.bfWrap .btnCancel{
+  min-height: 40px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bfWrap .btnCancel{
+  background: #ffffff;
+  border-color: #d7e1f3;
+  color: #17305d;
+  box-shadow: none;
 }

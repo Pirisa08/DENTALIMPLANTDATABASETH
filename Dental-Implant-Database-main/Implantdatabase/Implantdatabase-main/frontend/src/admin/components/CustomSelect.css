@@ -1,5 +1,6 @@
 .csWrap { 
   position: relative; 
+  font-family: var(--admin-font);
 }
 
 .csBtn{
@@ -13,7 +14,9 @@
   align-items:center;
   justify-content:space-between;
   cursor:pointer;
-  font-weight: 700;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .csBtn:hover {
@@ -28,12 +31,12 @@
 
 .csPh { 
   color: #6b7a99; 
-  font-weight: 700; 
+  font-weight: 500; 
 }
 
 .csVal { 
   color: #111; 
-  font-weight: 700; 
+  font-weight: 500; 
 }
 
 .csArrow { 
@@ -62,7 +65,8 @@
   padding: 10px 10px;
   border-radius: 10px;
   cursor:pointer;
-  font-weight: 700;
+  font-weight: 500;
+  font-size: 14px;
   color: #fff;
 }
 

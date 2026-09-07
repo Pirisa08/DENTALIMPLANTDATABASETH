@@ -478,3 +478,131 @@
     padding:18px 16px;
   }
 }
+
+/* Admin typography normalization */
+.fbWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.fbWrap .fbTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.fbWrap .fbSummaryLabel,
+.fbWrap .fbFilterLabel,
+.fbWrap .fbItemMeta,
+.fbWrap .fbLocalNotice,
+.fbWrap .fbAdminReplyMeta{
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.fbWrap .fbSummaryValue{
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.fbWrap .fbItemSubject,
+.fbWrap .fbAdminReplyLabel{
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.fbWrap .fbItemMessage,
+.fbWrap .fbAdminReply p,
+.fbWrap .fbReplyForm textarea,
+.fbWrap .fbStatusSelect{
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.fbWrap .fbRefreshBtn,
+.fbWrap .fbReplyToggle,
+.fbWrap .fbReplySubmit,
+.fbWrap .fbFinishedToggle,
+.fbWrap .statusTag{
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.fbWrap .fbTitle{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fbWrap .fbTitleIcon{
+  width: 50px;
+  height: 50px;
+  padding: 9px;
+  border-radius: 14px;
+  background: #eef3fb;
+  color: #263f68;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.fbWrap .fbButtonIcon,
+.fbWrap .fbBannerIcon{
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.fbWrap .fbButtonIcon{
+  width: 17px;
+  height: 17px;
+}
+
+.fbWrap .fbBannerIcon{
+  width: 18px;
+  height: 18px;
+}
+
+.fbWrap .fbRefreshBtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Unified admin feedback status and actions */
+.fbWrap .statusTag{
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.fbWrap .fbRefreshBtn,
+.fbWrap .fbReplyToggle,
+.fbWrap .fbReplySubmit,
+.fbWrap .fbFinishedToggle{
+  min-height: 38px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}

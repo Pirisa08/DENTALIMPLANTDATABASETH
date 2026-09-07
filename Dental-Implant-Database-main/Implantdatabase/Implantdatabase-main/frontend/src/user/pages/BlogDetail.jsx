@@ -75,6 +75,22 @@ const mapAdminBlogToUser = (blog) => {
   };
 };
 
+const EditorialPlaceholder = ({ className = "", title = "Editorial update", category = "News" }) => (
+  <div className={`${styles.editorialPlaceholder} ${className}`} aria-hidden="true">
+    <div className={styles.placeholderMark}>
+      <svg viewBox="0 0 28 28">
+        <path d="M8 4.5h8.2L21 9.3v14.2H8v-19Z" />
+        <path d="M16 4.8v5h5" />
+        <path d="M10.8 14h6.4M10.8 17h6.4M10.8 20h4.2" />
+      </svg>
+    </div>
+    <div className={styles.placeholderCopy}>
+      <span>{category || "News"}</span>
+      <strong>{title || "Editorial update"}</strong>
+    </div>
+  </div>
+);
+
 const readDeletedBlogIds = () => {
   try {
     const raw = localStorage.getItem(DELETED_BLOGS_KEY);
@@ -298,7 +314,15 @@ export default function BlogDetail() {
                     className={styles.featuredImage}
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className={styles.featuredMedia}>
+                  <EditorialPlaceholder
+                    className={styles.featuredPlaceholder}
+                    title={post.title}
+                    category={post.category}
+                  />
+                </div>
+              )}
 
               {(post.manualUrl || post.referenceUrl) && (
                 <section className={styles.resourcesSection}>
@@ -382,12 +406,11 @@ export default function BlogDetail() {
                               className={styles.sidebarThumbImage}
                             />
                           ) : (
-                            <div className={styles.sidebarThumbPlaceholder}>
-                              <div className={styles.sidebarThumbPlaceholderPanel}>
-                                <span className={styles.sidebarThumbBarLong} />
-                                <span className={styles.sidebarThumbBarShort} />
-                              </div>
-                            </div>
+                            <EditorialPlaceholder
+                              className={styles.sidebarThumbPlaceholder}
+                              title={related.title}
+                              category={related.category}
+                            />
                           )}
                         </div>
 

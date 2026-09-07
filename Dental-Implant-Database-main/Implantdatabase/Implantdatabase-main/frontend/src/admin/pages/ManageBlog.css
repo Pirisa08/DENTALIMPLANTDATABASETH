@@ -448,6 +448,10 @@
 }
 
 .paginationBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
   min-height:42px;
   padding:0 18px;
   border-radius:999px;
@@ -481,6 +485,72 @@
   min-width:120px;
   text-align:center;
   font-size: clamp(13px, 1vw, 14px);
+}
+
+.blogWrap .paginationIcon{
+  width:16px;
+  height:16px;
+  flex-shrink:0;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* Unified admin list status and actions */
+.blogWrap .pill.status{
+  min-width:104px;
+  min-height:34px;
+  padding:0 14px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0;
+  text-transform:none;
+}
+
+.blogWrap .pill.status.on{
+  background:#e8f8f0;
+  color:#1f7a3a;
+  border-color:#6fd6a6;
+}
+
+.blogWrap .pill.status.off{
+  background:#fdecec;
+  color:#b91c1c;
+  border-color:#f5a3a3;
+}
+
+.blogWrap .actionsCol .btn{
+  min-width:74px;
+  min-height:38px;
+  padding:0 14px;
+  border-radius:11px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0;
+  text-transform:none;
+}
+
+.blogWrap .actionsCol .btn.edit{
+  box-shadow:0 6px 14px rgba(23,59,130,0.16);
+}
+
+.blogWrap .actionsCol .btn.edit:hover{
+  box-shadow:0 9px 18px rgba(23,59,130,0.20);
+}
+
+.blogWrap .actionsCol .btn.del{
+  box-shadow:0 6px 14px rgba(220,38,38,0.14);
+}
+
+.blogWrap .actionsCol .btn.del:hover{
+  box-shadow:0 9px 18px rgba(220,38,38,0.20);
 }
 
 /* ✅ Responsive Design */
@@ -642,4 +712,143 @@
   .searchBoxBlog input {
     font-size: 11px;
   }
+}
+
+/* Admin typography normalization */
+.blogWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.blogWrap .pageTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.blogWrap .crumb{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.blogWrap .panelBlog,
+.blogWrap .bHead,
+.blogWrap .bRow,
+.blogWrap .cell,
+.blogWrap .searchBoxBlog input{
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.blogWrap .panelTitle{
+  font-size: var(--admin-section-size);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.blogWrap .bHead,
+.blogWrap .titleCell{
+  font-weight: 700;
+}
+
+.blogWrap .dateCell,
+.blogWrap .empty,
+.blogWrap .paginationText{
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.blogWrap .btn,
+.blogWrap .pill,
+.blogWrap .linkBadge,
+.blogWrap .addBtnBlog,
+.blogWrap .paginationBtn{
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.blogWrap .imgPh{
+  background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+  color: #6b7a99;
+  border: 1px solid #d7e1f0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.blogWrap .imgPhSvg{
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.78;
+}
+
+/* Unified admin list status and actions */
+.blogWrap .pill.status{
+  min-width: 104px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.blogWrap .statusDot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background: currentColor;
+  opacity: 0.78;
+  flex-shrink: 0;
+}
+
+.blogWrap .pill.status.on{
+  background: #e8f8f0;
+  color: #1f7a3a;
+  border-color: #6fd6a6;
+}
+
+.blogWrap .pill.status.off{
+  background: #fdecec;
+  color: #b91c1c;
+  border-color: #f5a3a3;
+}
+
+.blogWrap .actionsCol .btn{
+  min-width: 74px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.blogWrap .actionsCol .btn.edit{
+  box-shadow: 0 6px 14px rgba(23,59,130,0.16);
+}
+
+.blogWrap .actionsCol .btn.edit:hover{
+  box-shadow: 0 9px 18px rgba(23,59,130,0.20);
+}
+
+.blogWrap .actionsCol .btn.del{
+  box-shadow: 0 6px 14px rgba(220,38,38,0.14);
+}
+
+.blogWrap .actionsCol .btn.del:hover{
+  box-shadow: 0 9px 18px rgba(220,38,38,0.20);
 }

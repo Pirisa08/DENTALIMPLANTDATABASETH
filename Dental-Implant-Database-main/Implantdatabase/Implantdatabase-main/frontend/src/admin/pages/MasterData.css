@@ -1004,3 +1004,160 @@
   .mdWrap{ padding: 80px 10px 20px 10px; }
   .mdRow{ padding: 14px; }
 }
+
+/* Admin typography normalization */
+.mdWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.mdWrap .pageTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.mdWrap .crumb{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mdWrap .panelMd,
+.mdWrap .formCard,
+.mdWrap .mdHead,
+.mdWrap .mdRow,
+.mdWrap .mdSubRow,
+.mdWrap .mdMenuItem,
+.mdWrap .mdMenuHeader{
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.mdWrap .panelTitle,
+.mdWrap .modalTitle{
+  font-size: var(--admin-section-size);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.mdWrap .mdLabel,
+.mdWrap .mdAccTitle,
+.mdWrap .brandName,
+.mdWrap .nameCell,
+.mdWrap .mdHead{
+  font-weight: 700;
+}
+
+.mdWrap .mdCount,
+.mdWrap .mdAccMeta,
+.mdWrap .brandMeta,
+.mdWrap .totalCell,
+.mdWrap .statusTiny,
+.mdWrap .modalText{
+  font-weight: 500;
+}
+
+.mdWrap .btn,
+.mdWrap .pill,
+.mdWrap .statusPill,
+.mdWrap .addBtnMd,
+.mdWrap .btnSave,
+.mdWrap .btnCancel{
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.mdWrap .paginationBtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mdWrap .paginationIcon{
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Unified admin list status and actions */
+.mdWrap .pill.status,
+.mdWrap .statusPill{
+  min-width: 104px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mdWrap .pill.status.on,
+.mdWrap .statusPill.on{
+  background: #e8f8f0;
+  color: #1f7a3a;
+  border-color: #6fd6a6;
+}
+
+.mdWrap .pill.status.off,
+.mdWrap .statusPill.off{
+  background: #fdecec;
+  color: #b91c1c;
+  border-color: #f5a3a3;
+}
+
+.mdWrap .actionsCol .btn,
+.mdWrap .mdAccActions .btn,
+.mdWrap .mdAccActions .pill{
+  min-width: 74px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mdWrap .actionsCol .btn.edit,
+.mdWrap .mdAccActions .btn.edit{
+  box-shadow: 0 6px 14px rgba(23,59,130,0.16);
+}
+
+.mdWrap .actionsCol .btn.edit:hover,
+.mdWrap .mdAccActions .btn.edit:hover{
+  box-shadow: 0 9px 18px rgba(23,59,130,0.20);
+}
+
+.mdWrap .actionsCol .btn.del,
+.mdWrap .mdAccActions .pill.del{
+  box-shadow: 0 6px 14px rgba(220,38,38,0.14);
+}
+
+.mdWrap .actionsCol .btn.del:hover,
+.mdWrap .mdAccActions .pill.del:hover{
+  box-shadow: 0 9px 18px rgba(220,38,38,0.20);
+}
+
+.mdWrap .mdInput,
+.mdWrap .formInput{
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}

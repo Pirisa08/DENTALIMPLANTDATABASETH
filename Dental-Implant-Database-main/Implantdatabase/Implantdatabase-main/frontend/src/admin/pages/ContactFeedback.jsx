@@ -17,6 +17,35 @@ const STATUS_OPTIONS = [
   { value: 'resolved', label: 'Resolved' },
 ];
 
+const InboxIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="fbTitleIcon">
+    <path d="M4.5 5.5h15v13h-15v-13Z" />
+    <path d="m5 6 7 6.2L19 6" />
+    <path d="M8.5 16h7" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="fbButtonIcon">
+    <path d="M20 7.8v4.5h-4.5" />
+    <path d="M19.2 12.3a7 7 0 1 1-2.1-5" />
+  </svg>
+);
+
+const BannerIcon = ({ type }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="fbBannerIcon">
+    {type === 'error' ? (
+      <>
+        <path d="M12 4.2 3.8 18.6h16.4L12 4.2Z" />
+        <path d="M12 9v4.4" />
+        <path d="M12 16.5h.1" />
+      </>
+    ) : (
+      <path d="M20 6.5 9.4 17.1 4 11.7" />
+    )}
+  </svg>
+);
+
 const formatTimestamp = (value) => {
   if (!value) return '-';
   try {
@@ -159,7 +188,10 @@ export default function ContactFeedback() {
           { label: 'Contact Feedback' },
         ]}
       />
-      <h2 className="fbTitle">📬 Contact Feedback Inbox</h2>
+      <h2 className="fbTitle">
+        <InboxIcon />
+        <span>Contact Feedback Inbox</span>
+      </h2>
 
       <div className="fbSummary">
         <div className="fbSummaryCard">
@@ -182,7 +214,8 @@ export default function ContactFeedback() {
       <div className="fbPanel">
         {activeBanner && (
           <div className={`fbBanner ${activeBanner.type === 'error' ? 'error' : 'success'}`}>
-            {activeBanner.type === 'error' ? '⚠️' : '✓'} {activeBanner.message}
+            <BannerIcon type={activeBanner.type} />
+            <span>{activeBanner.message}</span>
           </div>
         )}
 
@@ -211,7 +244,8 @@ export default function ContactFeedback() {
             onClick={refresh}
             disabled={loading}
           >
-            ⟳ Refresh
+            <RefreshIcon />
+            <span>Refresh</span>
           </button>
         </div>
 

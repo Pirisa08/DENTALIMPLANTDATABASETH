@@ -374,6 +374,10 @@
 }
 
 .paginationBtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   padding: 0 18px;
   border-radius: 999px;
@@ -403,6 +407,82 @@
 .paginationText{
   font-weight: 700;
   color: #374151;
+}
+
+.impWrap .paginationIcon{
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Unified admin list status and actions */
+.impWrap .statusPill{
+  min-width: 104px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.impWrap .statusDot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background: currentColor;
+  opacity: 0.78;
+  flex-shrink: 0;
+}
+
+.impWrap .statusPill.open{
+  background: #e8f8f0;
+  color: #1f7a3a;
+  border-color: #6fd6a6;
+}
+
+.impWrap .statusPill.closed{
+  background: #fdecec;
+  color: #b91c1c;
+  border-color: #f5a3a3;
+}
+
+.impWrap .actionBtn{
+  min-width: 74px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.impWrap .editBtn{
+  box-shadow: 0 6px 14px rgba(23,59,130,0.16);
+}
+
+.impWrap .editBtn:hover{
+  box-shadow: 0 9px 18px rgba(23,59,130,0.20);
+}
+
+.impWrap .deleteBtn{
+  box-shadow: 0 6px 14px rgba(220,38,38,0.14);
+}
+
+.impWrap .deleteBtn:hover{
+  box-shadow: 0 9px 18px rgba(220,38,38,0.20);
 }
 
 @media (max-width: 1200px) {
@@ -483,4 +563,81 @@
   .statusPill{
     width: 100%;
   }
+}
+
+/* Admin typography normalization */
+.impWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.impWrap .pageTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.impWrap .sectionTitle{
+  font-size: var(--admin-section-size);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.impWrap .blogLikeTableHead,
+.impWrap .blogLikeRow,
+.impWrap .rowMetaMain,
+.impWrap .rowSourceCol,
+.impWrap .rowDateCol{
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.impWrap .blogLikeTableHead,
+.impWrap .rowMainTitle,
+.impWrap .rowMetaMain{
+  font-weight: 700;
+}
+
+.impWrap .rowSubText,
+.impWrap .rowMetaSub{
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.impWrap .sourceBadge,
+.impWrap .statusPill,
+.impWrap .actionBtn,
+.impWrap .addBtnImp,
+.impWrap .paginationBtn,
+.impWrap .paginationText{
+  font-family: var(--admin-font);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.impWrap .addBtnImp{
+  font-size: 14px;
+  text-transform: none;
+}
+
+.impWrap .rowImageFallback{
+  background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+  color: #6b7a99;
+  border: 1px solid #d7e1f0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.impWrap .rowImageSvg{
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.78;
 }

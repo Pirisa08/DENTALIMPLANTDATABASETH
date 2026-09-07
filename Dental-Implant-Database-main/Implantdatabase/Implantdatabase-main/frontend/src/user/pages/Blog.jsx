@@ -55,6 +55,22 @@ function mapAdminBlogToUser(blog) {
   };
 }
 
+const EditorialPlaceholder = ({ className = "", iconClassName = "", title = "Editorial update", category = "News" }) => (
+  <div className={`${styles.editorialPlaceholder} ${className}`} aria-hidden="true">
+    <div className={styles.placeholderMark}>
+      <svg viewBox="0 0 28 28" className={iconClassName}>
+        <path d="M8 4.5h8.2L21 9.3v14.2H8v-19Z" />
+        <path d="M16 4.8v5h5" />
+        <path d="M10.8 14h6.4M10.8 17h6.4M10.8 20h4.2" />
+      </svg>
+    </div>
+    <div className={styles.placeholderCopy}>
+      <span>{category || "News"}</span>
+      <strong>{title || "Editorial update"}</strong>
+    </div>
+  </div>
+);
+
 function readDeletedBlogIds() {
   try {
     const raw = localStorage.getItem(DELETED_BLOGS_KEY);
@@ -204,7 +220,11 @@ function Blog() {
                     />
                   </Link>
                 ) : (
-                  <div className={styles.heroPlaceholder} aria-hidden="true" />
+                  <EditorialPlaceholder
+                    className={styles.heroPlaceholder}
+                    title={heroTitle}
+                    category={heroCategory}
+                  />
                 )}
               </div>
 
@@ -313,7 +333,11 @@ function Blog() {
                               )}
                             </>
                           ) : (
-                            <div className={styles.cardPlaceholder} aria-hidden="true" />
+                            <EditorialPlaceholder
+                              className={styles.cardPlaceholder}
+                              title={post.title}
+                              category={post.category}
+                            />
                           )}
                         </div>
 

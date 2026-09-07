@@ -11,6 +11,12 @@ import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI, brandAPI } from "../../services/api.js";
 
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
+
 export default function MasterDataList() {
   const ITEMS_PER_PAGE = 10;
   const [page, setPage] = useState(1);
@@ -1415,7 +1421,8 @@ export default function MasterDataList() {
                   disabled={page === 1}
                   aria-label="Previous Page"
                 >
-                  ← Previous
+                  <PaginationArrow direction="prev" />
+                  <span>Previous</span>
                 </button>
                 <span className="paginationText">
                   Page {page} of {Math.ceil(companies.length / ITEMS_PER_PAGE)}
@@ -1426,7 +1433,8 @@ export default function MasterDataList() {
                   disabled={page === Math.ceil(companies.length / ITEMS_PER_PAGE)}
                   aria-label="Next Page"
                 >
-                  Next →
+                  <span>Next</span>
+                  <PaginationArrow direction="next" />
                 </button>
               </div>
             )}
@@ -1538,7 +1546,8 @@ export default function MasterDataList() {
                   disabled={page === 1}
                   aria-label="Previous Page"
                 >
-                  ← Previous
+                  <PaginationArrow direction="prev" />
+                  <span>Previous</span>
                 </button>
                 <span className="paginationText">
                   Page {page} of {Math.ceil(brands.length / ITEMS_PER_PAGE)}
@@ -1549,7 +1558,8 @@ export default function MasterDataList() {
                   disabled={page === Math.ceil(brands.length / ITEMS_PER_PAGE)}
                   aria-label="Next Page"
                 >
-                  Next →
+                  <span>Next</span>
+                  <PaginationArrow direction="next" />
                 </button>
               </div>
             )}
@@ -1619,7 +1629,8 @@ export default function MasterDataList() {
                 disabled={page === 1}
                 aria-label="Previous Page"
               >
-                ← Previous
+                <PaginationArrow direction="prev" />
+                <span>Previous</span>
               </button>
               <span className="paginationText">
                 Page {page} of {Math.ceil(levels.length / ITEMS_PER_PAGE)}
@@ -1630,7 +1641,8 @@ export default function MasterDataList() {
                 disabled={page === Math.ceil(levels.length / ITEMS_PER_PAGE)}
                 aria-label="Next Page"
               >
-                Next →
+                <span>Next</span>
+                <PaginationArrow direction="next" />
               </button>
             </div>
           )}
@@ -1698,7 +1710,8 @@ export default function MasterDataList() {
                 disabled={page === 1}
                 aria-label="Previous Page"
               >
-                ← Previous
+                <PaginationArrow direction="prev" />
+                <span>Previous</span>
               </button>
               <span className="paginationText">
                 Page {page} of {Math.ceil(countries.length / ITEMS_PER_PAGE)}
@@ -1709,7 +1722,8 @@ export default function MasterDataList() {
                 disabled={page === Math.ceil(countries.length / ITEMS_PER_PAGE)}
                 aria-label="Next Page"
               >
-                Next →
+                <span>Next</span>
+                <PaginationArrow direction="next" />
               </button>
             </div>
           )}

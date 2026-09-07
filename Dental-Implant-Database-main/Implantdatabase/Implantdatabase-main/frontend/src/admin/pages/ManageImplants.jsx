@@ -14,6 +14,20 @@ import {
 
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 
+const ImagePlaceholderIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="rowImageSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
+
 export default function ManageImplants() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -399,13 +413,18 @@ export default function ManageImplants() {
                       <div
                         className="rowImageFallback"
                         style={{ display: "none" }}
+                        title="No image"
                       >
-                        No Image
+                        <ImagePlaceholderIcon />
                       </div>
                     </>
                   ) : (
-                    <div className="rowImageFallback" style={{ display: "flex" }}>
-                      No Image
+                    <div
+                      className="rowImageFallback"
+                      style={{ display: "flex" }}
+                      title="No image"
+                    >
+                      <ImagePlaceholderIcon />
                     </div>
                   )}
                 </div>
@@ -433,6 +452,7 @@ export default function ManageImplants() {
                     onClick={() => toggleStatus(r.id, r.status)}
                     title="Click to toggle status"
                   >
+                    <span className="statusDot" />
                     {r.status === "Active" ? "Open" : "Closed"}
                   </button>
                 </div>
@@ -464,7 +484,8 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              <PaginationArrow direction="prev" />
+              <span>Previous</span>
             </button>
 
             <span className="paginationText">
@@ -476,7 +497,8 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              <span>Next</span>
+              <PaginationArrow direction="next" />
             </button>
           </div>
         )}

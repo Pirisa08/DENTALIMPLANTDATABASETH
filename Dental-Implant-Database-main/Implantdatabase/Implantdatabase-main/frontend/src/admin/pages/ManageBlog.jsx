@@ -16,6 +16,20 @@ const slugify = (str) =>
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 
+const ImagePlaceholderIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="imgPhSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
+
 function toAdminBlog(b) {
   if (!b) return null;
 
@@ -235,7 +249,9 @@ export default function ManageBlog() {
                 {b.imageDataUrl ? (
                   <img src={b.imageDataUrl} alt="blog" />
                 ) : (
-                  <div className="imgPh">No Image</div>
+                  <div className="imgPh" title="No image">
+                    <ImagePlaceholderIcon />
+                  </div>
                 )}
               </div>
 
@@ -277,6 +293,7 @@ export default function ManageBlog() {
                   onClick={() => toggleStatus(b.id)}
                   disabled={actionId === b.id}
                 >
+                  <span className="statusDot" />
                   {b.status === "Active" ? "Open" : "Closed"}
                 </button>
               </div>
@@ -313,7 +330,8 @@ export default function ManageBlog() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              <PaginationArrow direction="prev" />
+              <span>Previous</span>
             </button>
 
             <span className="paginationText">
@@ -325,7 +343,8 @@ export default function ManageBlog() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              <span>Next</span>
+              <PaginationArrow direction="next" />
             </button>
           </div>
         )}
