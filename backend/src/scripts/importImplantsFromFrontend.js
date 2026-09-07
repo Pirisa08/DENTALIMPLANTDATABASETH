@@ -1,6 +1,20 @@
 import dotenv from 'dotenv';
 import sequelize from '../config/database.js';
-import { Company, Country, Level, Implant } from '../models/index.js';
+import {
+  Brand,
+  Company,
+  Country,
+  Level,
+  Implant,
+  OfficialDistributor,
+  RefApexShape,
+  RefBodyShape,
+  RefConnectionShape,
+  RefConnectionType,
+  RefDriverShape,
+  RefHeadShape,
+} from '../models/index.js';
+import CompanyMaster from '../models/CompanyMaster.js';
 import { implants as sourceImplants } from '../../../frontend/src/user/data/implants.js';
 
 dotenv.config();
@@ -19,6 +33,7 @@ function normalizeCountry(country) {
   if (normalized.includes('israel')) return 'Israel';
   if (normalized.includes('france')) return 'France';
   if (normalized.includes('italy')) return 'Italy';
+  if (normalized.includes('katella') || normalized.includes('cypress')) return 'USA';
   const words = country.split(/[\s,/]/).filter(Boolean);
   return words[0] || country;
 }
@@ -34,6 +49,50 @@ async function upsertMaster(Model, name) {
   return record.id;
 }
 
+async function upsertBrand(name, companyName, website) {
+  if (!name) return null;
+
+  const [company] = companyName
+    ? await CompanyMaster.findOrCreate({
+        where: { company_name: companyName.trim() },
+        defaults: { company_name: companyName.trim(), status: 'Active' },
+      })
+    : [null];
+
+  const [brand] = await Brand.findOrCreate({
+    where: { brand_name: name.trim() },
+    defaults: {
+      manufacturer_id: company?.id || null,
+      website: website || null,
+      status: 'Active',
+    },
+  });
+
+  if (
+    company?.id &&
+    (brand.manufacturer_id !== company.id || brand.website !== (website || null))
+  ) {
+    await brand.update({
+      manufacturer_id: company.id,
+      website: website || null,
+      status: 'Active',
+    });
+  }
+
+  return brand.idbrand;
+}
+
+async function upsertDistributor(name, countryId) {
+  if (!name || !countryId) return null;
+
+  const [record] = await OfficialDistributor.findOrCreate({
+    where: { name: name.trim(), countryId },
+    defaults: { name: name.trim(), countryId, status: 'Active' },
+  });
+
+  return record.id;
+}
+
 async function importImplants() {
   await sequelize.sync({ alter: true });
 
@@ -45,6 +104,14 @@ async function importImplants() {
     const levelId = await upsertMaster(Level, item.level);
     const countryName = normalizeCountry(item.country);
     const countryId = await upsertMaster(Country, countryName);
+    await upsertBrand(item.brand, item.company, item.website);
+    await upsertMaster(RefConnectionType, item.connectionType);
+    await upsertMaster(RefConnectionShape, item.connectionShape);
+    await upsertMaster(RefDriverShape, item.screwdriverShape);
+    await upsertMaster(RefHeadShape, item.headShape);
+    await upsertMaster(RefBodyShape, item.bodyShape);
+    await upsertMaster(RefApexShape, item.apexShape);
+    await upsertDistributor(item.officialDistributor, countryId);
 
     const lookupSlug = item.slug?.trim();
     const lookupName = item.name?.trim();
@@ -80,6 +147,21 @@ async function importImplants() {
       await Implant.create(payload);
       created += 1;
     }
+  }
+
+  const usaId = await upsertMaster(Country, 'USA');
+  const legacyCountry = await Country.findOne({ where: { name: 'Headquarters:' } });
+
+  if (legacyCountry && Number(legacyCountry.id) !== Number(usaId)) {
+    await Implant.update(
+      { countryId: usaId },
+      { where: { countryId: legacyCountry.id } }
+    );
+    await OfficialDistributor.update(
+      { countryId: usaId },
+      { where: { countryId: legacyCountry.id } }
+    );
+    await legacyCountry.destroy();
   }
 
   return { created, updated };

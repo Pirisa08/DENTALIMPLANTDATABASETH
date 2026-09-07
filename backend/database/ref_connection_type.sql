@@ -1,4 +1,4 @@
 CREATE TABLE ref_connection_type (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name TEXT NOT NULL
 );

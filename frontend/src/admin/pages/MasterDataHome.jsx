@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MasterData.css";
-import { loadMaster, MASTER_TYPES } from "./masterDataStore.js";
+import { loadMaster, saveMaster, MASTER_TYPES } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
-import { masterDataAPI, brandAPI } from "../../services/api.js";
+import { implantsAPI, masterDataAPI, brandAPI } from "../../services/api.js";
 
 export default function MasterDataHome() {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ export default function MasterDataHome() {
   const [brandCount, setBrandCount] = useState(0);
   const [countryCount, setCountryCount] = useState(0);
   const [distributorCount, setDistributorCount] = useState(0);
+  const [implantCount, setImplantCount] = useState(0);
   const [showAddIntro, setShowAddIntro] = useState(false);
   const [addType, setAddType] = useState(null);
 
@@ -23,19 +24,55 @@ export default function MasterDataHome() {
       setMaster(localMaster);
 
       try {
-        const [companies, brands, countries, distributors] = await Promise.all([
+        const [
+          implants,
+          companies,
+          brands,
+          countries,
+          distributors,
+          connectionTypes,
+          connectionShapes,
+          screwdriverShapes,
+          headShapes,
+          bodyShapes,
+          apexShapes,
+        ] = await Promise.all([
+          implantsAPI.getAll(),
           masterDataAPI.getCompanies(),
           brandAPI.getAll(),
           masterDataAPI.getCountries(),
           masterDataAPI.getDistributors(),
+          masterDataAPI.getConnectionTypes(),
+          masterDataAPI.getConnectionShapes(),
+          masterDataAPI.getScrewdriverShapes(),
+          masterDataAPI.getHeadShapes(),
+          masterDataAPI.getBodyShapes(),
+          masterDataAPI.getApexShapes(),
         ]);
 
+        setImplantCount(Array.isArray(implants) ? implants.length : 0);
+        saveMaster({
+          ...loadMaster(),
+          implant: Array.isArray(implants) ? implants : [],
+          company: Array.isArray(companies) ? companies : [],
+          brand: Array.isArray(brands) ? brands : [],
+          country: Array.isArray(countries) ? countries : [],
+          officialDistributor: Array.isArray(distributors) ? distributors : [],
+          connectionType: Array.isArray(connectionTypes) ? connectionTypes : [],
+          connectionShape: Array.isArray(connectionShapes) ? connectionShapes : [],
+          screwdriverShape: Array.isArray(screwdriverShapes) ? screwdriverShapes : [],
+          headShape: Array.isArray(headShapes) ? headShapes : [],
+          bodyShape: Array.isArray(bodyShapes) ? bodyShapes : [],
+          apexShape: Array.isArray(apexShapes) ? apexShapes : [],
+        });
+        setMaster(loadMaster());
         setCompanyCount(Array.isArray(companies) ? companies.length : 0);
         setBrandCount(Array.isArray(brands) ? brands.length : 0);
         setCountryCount(Array.isArray(countries) ? countries.length : 0);
         setDistributorCount(Array.isArray(distributors) ? distributors.length : 0);
       } catch (err) {
         console.error(err);
+        setImplantCount(Array.isArray(localMaster.implant) ? localMaster.implant.length : 0);
         setCompanyCount(Array.isArray(localMaster.company) ? localMaster.company.length : 0);
         setBrandCount(Array.isArray(localMaster.brand) ? localMaster.brand.length : 0);
         setCountryCount(Array.isArray(localMaster.country) ? localMaster.country.length : 0);
@@ -63,7 +100,9 @@ export default function MasterDataHome() {
     const list = MASTER_TYPES.map((t) => {
       let total = 0;
 
-      if (t.key === "company") {
+      if (t.key === "implant") {
+        total = implantCount;
+      } else if (t.key === "company") {
         total = companyCount;
       } else if (t.key === "brand") {
         total = brandCount;
@@ -80,7 +119,7 @@ export default function MasterDataHome() {
 
     if (!s) return list;
     return list.filter((x) => x.label.toLowerCase().includes(s));
-  }, [q, master, companyCount, brandCount, countryCount, distributorCount]);
+  }, [q, master, companyCount, brandCount, countryCount, distributorCount, implantCount]);
 
   return (
     <div className="mdWrap">

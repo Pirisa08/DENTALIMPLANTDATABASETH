@@ -2,6 +2,7 @@ export const MASTER_KEY = "admin_masterdata_v1";
 export const MASTER_VERSION_KEY = "admin_masterdata_version";
 
 export const MASTER_TYPES = [
+  { key: "implant", label: "Implant" },
   { key: "company", label: "Company" },
   { key: "brand", label: "Brand" },
   { key: "country", label: "Country" },
@@ -47,6 +48,7 @@ const seed = {
   bodyShape: [],
   apexShape: [],
   officialDistributor: [],
+  implant: [],
 };
 
 export function loadMaster() {

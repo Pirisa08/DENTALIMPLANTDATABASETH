@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { loadMaster, MASTER_TYPES } from "../pages/masterDataStore.js";
+import { loadMaster, saveMaster, MASTER_TYPES } from "../pages/masterDataStore.js";
+import { implantsAPI } from "../../services/api.js";
 import "./AdminLayout.css";
 import "../pages/MasterData.css";
 
@@ -132,6 +133,34 @@ export default function AdminLayout() {
       window.removeEventListener("storage", refreshMaster);
       window.removeEventListener("storage", refreshAdminUser);
       window.removeEventListener("admin-user-updated", onAdminUserUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshImplantCount = async () => {
+      try {
+        const implants = await implantsAPI.getAll();
+        if (cancelled) return;
+
+        const nextMaster = {
+          ...loadMaster(),
+          implant: Array.isArray(implants) ? implants : [],
+        };
+        saveMaster(nextMaster);
+        setMaster(nextMaster);
+      } catch (error) {
+        console.error("Error refreshing implant master data:", error);
+      }
+    };
+
+    refreshImplantCount();
+    window.addEventListener("focus", refreshImplantCount);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", refreshImplantCount);
     };
   }, []);
 

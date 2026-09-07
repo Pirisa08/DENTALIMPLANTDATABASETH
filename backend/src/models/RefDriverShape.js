@@ -10,7 +10,7 @@ const RefDriverShape = sequelize.define(
       autoIncrement: true,
     },
     name: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT,
       allowNull: false,
       field: 'driver_shape_name',
     },

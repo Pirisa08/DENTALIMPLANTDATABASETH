@@ -1,11 +1,11 @@
 CREATE TABLE ref_driver_shape (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    driver_shape_name VARCHAR(255) NOT NULL
+    driver_shape_name TEXT NOT NULL
 );
 
 CREATE TABLE ref_head_shape (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name TEXT NOT NULL
 );
 
 CREATE TABLE ref_job_title (

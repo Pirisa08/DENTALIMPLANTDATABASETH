@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./MasterData.css";
 import {
   getTypeLabel,
@@ -9,7 +9,7 @@ import {
 } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
-import { masterDataAPI, brandAPI } from "../../services/api.js";
+import { implantsAPI, masterDataAPI, brandAPI } from "../../services/api.js";
 
 const PaginationArrow = ({ direction }) => (
   <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
@@ -19,6 +19,7 @@ const PaginationArrow = ({ direction }) => (
 
 export default function MasterDataList() {
   const ITEMS_PER_PAGE = 10;
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { type } = useParams();
   const label = getTypeLabel(type);
@@ -39,6 +40,7 @@ export default function MasterDataList() {
   const [headShapes, setHeadShapes] = useState([]);
   const [bodyShapes, setBodyShapes] = useState([]);
   const [apexShapes, setApexShapes] = useState([]);
+  const [implants, setImplants] = useState([]);
 
   const [openCompanies, setOpenCompanies] = useState({});
   const [openBrands, setOpenBrands] = useState({});
@@ -77,6 +79,13 @@ export default function MasterDataList() {
     setCompanies(normalized);
     upsertMasterType("company", normalized);
     setMaster(loadMaster());
+  };
+
+  const loadImplants = async () => {
+    const data = await implantsAPI.getAll();
+    const normalized = Array.isArray(data) ? data : [];
+    setImplants(normalized);
+    syncTypeToLocal("implant", normalized);
   };
 
   const loadBrands = async () => {
@@ -172,7 +181,9 @@ export default function MasterDataList() {
       setError("");
 
       try {
-        if (type === "company") {
+        if (type === "implant") {
+          await loadImplants();
+        } else if (type === "company") {
           await loadCompanies();
         } else if (type === "brand") {
           await Promise.all([loadCompanies(), loadBrands()]);
@@ -358,6 +369,18 @@ export default function MasterDataList() {
       String(x.name || "").toLowerCase().includes(s)
     );
   }, [q, localList]);
+
+  const filteredImplants = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return implants;
+    return implants.filter((item) =>
+      [item.name, item.brand, item.company?.name, item.level?.name, item.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(s)
+    );
+  }, [q, implants]);
 
   const groupedDistributorCountries = useMemo(() => {
     const countrySource =
@@ -1173,6 +1196,38 @@ export default function MasterDataList() {
     }
   };
 
+  const updateImplantStatus = async (id, currentStatus) => {
+    setLoading(true);
+    setError("");
+    try {
+      await implantsAPI.update(id, {
+        status: currentStatus === "Active" ? "Inactive" : "Active",
+      });
+      await loadImplants();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to update implant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteImplant = async (id, name) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await implantsAPI.delete(id);
+      await loadImplants();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to delete implant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mdWrap">
@@ -1264,6 +1319,19 @@ export default function MasterDataList() {
       onToggleStatus: updateConnectionTypeStatus,
       onDelete: deleteConnectionType,
       emptyText: "No connection types found.",
+    });
+  }
+
+  if (type === "implant") {
+    return renderSimpleTable({
+      title: "Implant Data",
+      addLabel: "+ Add Implant",
+      items: filteredImplants,
+      onAdd: () => navigate("/admin/implants/new"),
+      onEdit: (id) => navigate(`/admin/implants/edit/${id}`),
+      onToggleStatus: updateImplantStatus,
+      onDelete: deleteImplant,
+      emptyText: "No implants found.",
     });
   }
 
