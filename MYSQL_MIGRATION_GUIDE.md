@@ -1,11 +1,15 @@
-# MySQL Migration Guide
 
-## เปลี่ยนจาก SQLite ไป MySQL เรียบร้อย ✅
+# MySQL Migration Guide (2026)
 
-### สิ่งที่เปลี่ยนไป:
-- `database.js` - Config เปลี่ยนจาก SQLite เป็น MySQL
-- `package.json` - mysql2 อยู่แล้ว (ไม่ต้องเพิ่มเติม)
-- `.env.example` - มี MySQL config แล้ว
+## ระบบใช้ MySQL เป็นหลัก (SQLite deprecated)
+
+### สิ่งที่เปลี่ยนไป (2026):
+- `database.js` - ใช้ MySQL/Sequelize เป็น default (ไม่มี SQLite แล้ว)
+- `package.json` - mysql2, sequelize, multer, dotenv, cors, jsonwebtoken
+- `.env.example` - ตัวอย่าง config ใหม่ (MySQL, JWT, uploads path)
+- Images stored as files in `/uploads/implants`, `/uploads/blogs` (DB stores URLs, no base64)
+- Static uploads: auto-create dir, auto-delete old images
+- Blogs, master data, feedback: CRUD, admin/user
 
 ---
 
@@ -67,17 +71,17 @@ cp .env.example .env
 # DB_USER=root
 # DB_PASSWORD=your_password
 # DB_NAME=implant_db
+# JWT_SECRET=your_jwt_secret
+# UPLOADS_DIR=uploads
 
 # Install dependencies (ถ้ายังไม่ได้ทำ)
 npm install
 
-# Sync database schema
+# Sync database schema (สร้างตารางทั้งหมด)
 npm run db:sync
 
-# Seed initial data
+# Seed initial data (master, blogs, etc.)
 npm run db:seed
-
-# หรือ seed blogs
 npm run seed:implants
 
 # Start development
@@ -88,12 +92,14 @@ npm run dev
 
 ## MySQL Connection Details
 
-ปัจจุบันตั้งค่าเป็น:
+ตัวอย่าง config ใน `.env`:
 - **Host**: localhost
 - **Port**: 3306 (default)
 - **User**: root
-- **Password**: root (แก้ไขใน .env)
+- **Password**: your_password
 - **Database**: implant_db
+- **JWT_SECRET**: your_jwt_secret
+- **UPLOADS_DIR**: uploads
 
 ---
 
@@ -103,7 +109,8 @@ npm run dev
 npm run dev
 ```
 
-ถ้าเห็น `Server running on http://localhost:5000` = สำเร็จ
+ถ้าเห็น `Server running on http://localhost:5000/api/health` = สำเร็จ
+เช็ค `/uploads/implants` `/uploads/blogs` ถูกสร้างอัตโนมัติ
 
 ---
 
@@ -111,12 +118,17 @@ npm run dev
 
 เปลี่ยนค่าใน `.env` production:
 ```env
-DB_HOST=your_mysql_server.com
+NODE_ENV=development
+PORT=5000
+
+DB_HOST=localhost
 DB_PORT=3306
-DB_USER=prod_user
-DB_PASSWORD=strong_password
-DB_NAME=implant_db_prod
-NODE_ENV=production
+DB_NAME=datadental
+DB_USER=root
+DB_PASSWORD=080448
+
+JWT_SECRET=your-secret-key-here-change-in-production
+JWT_EXPIRE=7d
 ```
 
 ---
@@ -124,7 +136,7 @@ NODE_ENV=production
 ## Troubleshooting
 
 ### Error: "connect ECONNREFUSED"
-- MySQL ยังไม่เปิด → รัน `mysql.server start`
+- MySQL ยังไม่เปิด → รัน `mysql.server start` หรือ `sudo service mysql start`
 
 ### Error: "Access denied for user 'root'@'localhost'"
 - Check password ใน .env ให้ตรง
@@ -132,11 +144,25 @@ NODE_ENV=production
 ### Error: "Unknown database 'implant_db'"
 - สร้าง database ในตัวอย่าง #4 ด้านบน
 
+### Error: "Cannot find uploads directory"
+- uploads/ จะถูกสร้างอัตโนมัติ ถ้า permission ไม่พอ ให้ `chmod 777 uploads` หรือรันด้วยสิทธิ์ admin
+
 ---
 
 ## ข้อดีของ MySQL:
-✅ Scalable - รองรับ millions of records  
-✅ Concurrent users - ไม่มีปัญหา locking  
-✅ Backup & Recovery - ดีกว่า SQLite  
-✅ Production-ready - ใช้ได้สำหรับระบบจริง  
+✅ Scalable - รองรับ millions of records
+✅ Concurrent users - ไม่มีปัญหา locking
+✅ Backup & Recovery - ดีกว่า SQLite
+✅ Production-ready - ใช้ได้สำหรับระบบจริง
+✅ Static uploads - เก็บไฟล์แยก, DB เก็บแค่ URL
+✅ Blogs/master-data/feedback - รองรับ CRUD เต็มรูปแบบ
 ✅ Easy migration - Code ไม่ต้องเปลี่ยน (Sequelize ทำให้ได้)
+
+---
+## 🆕 Major Changes from Previous Version
+- SQLite → MySQL (Sequelize), images now stored as files, DB stores URLs (not base64)
+- Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+- Blogs, master data, feedback: CRUD, admin/user side
+- id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+- JWT, CORS, health check, error handler, troubleshooting docs
+- Documentation, README_BACKEND.md, README_FRONTEND.md, CHECKLIST.md อัปเดตใหม่

@@ -1,71 +1,74 @@
 :global(body.night-mode) .emptyState {
-  background: #232733 !important;
+  background: #172132 !important;
   color: #fff !important;
-  border: 1px solid #353a4a !important;
+  border: 1px solid #24324d !important;
 }
-:global(body.night-mode) .filterTitle {
-  color: #fff !important;
-}
-:global(body.night-mode) .statNumber {
-  color: #fff !important;
-}
+
+:global(body.night-mode) .filterTitle,
+:global(body.night-mode) .statNumber,
 :global(body.night-mode) .statTitle,
-:global(body.night-mode) .statNote {
+:global(body.night-mode) .statNote,
+:global(body.night-mode) .subtitle,
+:global(body.night-mode) .title {
   color: #fff !important;
 }
-:global(body.night-mode) .subtitle {
-  color: #fff !important;
-}
-:global(body.night-mode) .statTitle,
-:global(body.night-mode) .statNote {
-  color: #fff !important;
-}
+
 :global(body.night-mode) .brandCard {
-  background: linear-gradient(180deg, #232733 0%, #181c23 100%) !important;
-  border: 1px solid #353a4a !important;
+  background: linear-gradient(180deg, #182235 0%, #121a29 100%) !important;
+  border: 1px solid #24324d !important;
   color: #fff !important;
-  box-shadow: 0 10px 30px rgba(16, 25, 43, 0.18) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22) !important;
 }
+
 :global(body.night-mode) .brandCard .brandName,
 :global(body.night-mode) .brandCard .brandCompany,
 :global(body.night-mode) .brandCard .brandCount {
   color: #fff !important;
 }
+
 :global(body.night-mode) .brandCard .brandCount {
-  background: #22305a !important;
+  background: #1e3a5f !important;
 }
+
 :global(body.night-mode) .brandCard:hover {
   border-color: #3b82f6 !important;
-  box-shadow: 0 24px 40px rgba(59, 130, 246, 0.18), 0 0 32px 8px rgba(59,130,246,0.18) !important;
+  box-shadow:
+    0 24px 40px rgba(0, 0, 0, 0.28),
+    0 0 24px rgba(59,130,246,0.14) !important;
   outline: 0;
 }
+
 :global(body.night-mode) .page {
-  background: #181c23 !important;
+  background:
+    radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 28%),
+    linear-gradient(180deg, #0b1220 0%, #111827 45%, #0f172a 100%) !important;
   color: #e6e6e6 !important;
 }
 
-:global(body.night-mode) .mainContent {
-  background: transparent !important;
-}
-
+:global(body.night-mode) .mainContent,
 :global(body.night-mode) .container {
   background: transparent !important;
 }
+
 :global(body.night-mode) .sectionHeader {
-  background: #232733 !important;
+  background: linear-gradient(180deg, #171f31 0%, #111827 100%) !important;
   color: #fff !important;
-  border-bottom: 1px solid #353a4a !important;
+  border-bottom: 1px solid #24324d !important;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24) !important;
 }
+
 :global(body.night-mode) .statCard {
-  background: #232733 !important;
-  border: 1px solid #353a4a !important;
+  background: linear-gradient(180deg, #182235 0%, #121a29 100%) !important;
+  border: 1px solid #24324d !important;
   color: #ffe066 !important;
 }
+
 :global(body.night-mode) .filterSidebar {
-  background: #19213a !important;
-  border: 1px solid #22305a !important;
+  background: linear-gradient(180deg, #171f31 0%, #111827 100%) !important;
+  border: 1px solid #24324d !important;
   color: #fff !important;
 }
+
 :global(body.night-mode) .filterSidebar .filterLabel,
 :global(body.night-mode) .filterSidebar .filterOption,
 :global(body.night-mode) .filterSidebar .filterOption label,
@@ -74,14 +77,17 @@
 :global(body.night-mode) .filterSidebar .filterOptionText {
   color: #fff !important;
 }
+
 :global(body.night-mode) .filterSidebar .searchInput {
-  background: #181c23 !important;
+  background: #0f172a !important;
   color: #fff !important;
-  border: 1px solid #353a4a !important;
+  border: 1px solid #2c3c58 !important;
 }
+
 :global(body.night-mode) .filterSidebar .searchInput::placeholder {
   color: #b6c6e3 !important;
 }
+
 .page {
   background: #f3f6fb;
   min-height: 100vh;
@@ -128,10 +134,6 @@
   letter-spacing: 0.015em;
   line-height: 1.1;
 }
-:global(body.night-mode) .title {
-  color: #fff !important;
-}
-
 
 .subtitle {
   margin: 0;
@@ -326,13 +328,11 @@
   -webkit-box-orient: vertical;
 }
 
-/* ===== MAIN CONTENT ===== */
 .mainContent {
   flex: 1;
   min-width: 0;
 }
 
-/* ===== BRAND GRID (หน้าแรก - รายการ brands) ===== */
 .brandGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(234px, 1fr));
@@ -410,7 +410,6 @@
   box-shadow: 0 16px 28px rgba(29, 78, 216, 0.25);
 }
 
-/* ===== EMPTY STATE ===== */
 .emptyState {
   padding: 80px 20px;
   text-align: center;
@@ -441,8 +440,6 @@
   box-shadow: 0 12px 22px rgba(29, 78, 216, 0.28);
 }
 
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 1400px) {
   .brandGrid {
     grid-template-columns: repeat(3, 1fr);
@@ -453,16 +450,16 @@
   .container {
     padding: 0 24px;
   }
-  
+
   .sectionHeader {
     margin: 0 -24px 40px -24px;
     padding: 48px 32px;
   }
-  
+
   .brandGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .filterSidebar {
     width: 250px;
   }
@@ -480,13 +477,13 @@
   .contentWrapper {
     flex-direction: column;
   }
-  
+
   .filterSidebar {
     width: 100%;
     position: static;
     max-height: none;
   }
-  
+
   .brandGrid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -509,19 +506,19 @@
   .headerText {
     gap: 12px;
   }
-  
+
   .title {
     font-size: clamp(26px, 5vw, 34px);
   }
-  
+
   .subtitle {
     font-size: 0.95rem;
   }
-  
+
   .statsPanel {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
-  
+
   .brandGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -532,7 +529,7 @@
   .brandGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .container {
     padding: 0 16px;
   }
@@ -545,4 +542,3 @@
     grid-template-columns: 1fr;
   }
 }
-

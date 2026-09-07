@@ -3,8 +3,8 @@
 ## 🎨 ภาพรวม Frontend
 
 Frontend ประกอบด้วย 2 ส่วนหลัก:
-1. **Admin Panel** - จัดการข้อมูล implants, blogs, master data
-2. **User Interface** - แสดงข้อมูล implants, blogs สำหรับผู้ใช้ทั่วไป
+1. **Admin Panel** - จัดการข้อมูล implants, blogs, master data (รองรับทั้ง custom และ master implant)
+2. **User Interface** - แสดงข้อมูล implants, blogs สำหรับผู้ใช้ทั่วไป (id อาจเป็น master-xxx หรือเลข)
 
 ---
 
@@ -34,13 +34,14 @@ Frontend จะรันที่: `http://localhost:3000`
 
 ## 📁 โครงสร้าง Frontend
 
+
 ### Admin Side (`/admin/*`)
 
 #### Pages:
 - **Login.jsx** - หน้า login (admin@lamduan.mfu.ac.th / ilovedentalverymuch)
 - **Dashboard.jsx** - หน้าแรกของ admin
-- **ManageImplants.jsx** - จัดการ implants (list, edit, delete) ✨ รองรับ thumbnails
-- **NewImplant.jsx** - เพิ่ม/แก้ไข implant ✨ รองรับ image upload
+- **ManageImplants.jsx** - จัดการ implants (list, edit, delete) ✨ รองรับ thumbnails, รองรับ id แบบ master-xxx/custom
+- **NewImplant.jsx** - เพิ่ม/แก้ไข implant ✨ รองรับ image upload, รองรับทั้ง master/custom implant
 - **ManageBlog.jsx** - จัดการบทความ
 - **BlogForm.jsx** - เพิ่ม/แก้ไขบทความ
 - **MasterDataHome.jsx** - จัดการข้อมูลหลัก
@@ -75,16 +76,17 @@ Frontend จะรันที่: `http://localhost:3000`
 - **Breadcrumb.jsx** - Breadcrumb navigation
 
 #### Hooks:
-- **useMergedImplants.js** - Hook สำหรับดึงข้อมูล implants ✨ แปลง URL อัตโนมัติ
+- **useMergedImplants.js** - Hook สำหรับดึงข้อมูล implants ✨ แปลง URL อัตโนมัติ, รองรับ auto-refresh, dedupe, slug/id
 
 #### Utils:
-- **imageHelpers.js** - Helper functions สำหรับจัดการรูปภาพ ✨ ใหม่!
+- **imageHelpers.js** - Helper functions สำหรับจัดการรูปภาพ ✨ ใหม่! (resolveImageUrl, getImplantImages, getImplantThumbnail)
 
 ---
 
 ## 🖼️ Image Upload Features (Admin)
 
-### NewImplant.jsx - เพิ่ม/แก้ไข Implant
+
+### NewImplant.jsx - เพิ่ม/แก้ไข Implant (รองรับ master/custom)
 
 #### Features:
 - ✅ อัพโหลดรูปได้ 3 รูป (image1, image2, image3)
@@ -92,7 +94,7 @@ Frontend จะรันที่: `http://localhost:3000`
 - ✅ Drag-and-drop support (คลิกที่ image box)
 - ✅ ลบรูปได้ด้วยปุ่ม "Remove"
 - ✅ ส่งไฟล์ไป backend ผ่าน FormData
-- ✅ Edit mode: แสดงรูปเก่าที่มีอยู่แล้ว
+- ✅ Edit mode: แสดงรูปเก่าที่มีอยู่แล้ว (รองรับทั้ง master/custom)
 - ✅ Validation: ขนาดไฟล์ไม่เกิน 10MB, รองรับเฉพาะ image/*
 
 #### การใช้งาน:
@@ -101,15 +103,17 @@ Frontend จะรันที่: `http://localhost:3000`
 3. กรอกข้อมูล implant
 4. กด "Create Implant" เพื่อบันทึก
 
-### ManageImplants.jsx - จัดการ Implants
+
+### ManageImplants.jsx - จัดการ Implants (รองรับ master/custom)
 
 #### Features:
 - ✅ แสดง thumbnail รูปแรก (image1)
 - ✅ รองรับทั้ง base64 และ URL จาก backend
 - ✅ Error handling: ถ้ารูปโหลดไม่ได้จะแสดง placeholder
 - ✅ Real-time refresh: กด "⟳ Refresh" เพื่ออัพเดทข้อมูล
-- ✅ Auto-refresh: เมื่อ localStorage มีการเปลี่ยนแปลง
-- ✅ CRUD operations: Edit, Delete, Toggle status
+- ✅ Auto-refresh: เมื่อ localStorage มีการเปลี่ยนแปลง (เช่น implants, blogs, master-data)
+- ✅ CRUD operations: Edit, Delete, Toggle status (Active/Inactive)
+- ✅ รองรับ id แบบ master-xxx และเลข
 
 #### การใช้งาน:
 1. ดูรายการ implants พร้อม thumbnail
@@ -121,7 +125,8 @@ Frontend จะรันที่: `http://localhost:3000`
 
 ## 👁️ Image Display (User Side)
 
-### ImplantDetail.jsx - หน้ารายละเอียด Implant
+
+### ImplantDetail.jsx - หน้ารายละเอียด Implant (รองรับ slug และ id ทั้ง master/custom)
 
 #### Features:
 - ✅ Image gallery: แสดงรูปทั้ง 3 รูป (ถ้ามี)
@@ -129,10 +134,13 @@ Frontend จะรันที่: `http://localhost:3000`
 - ✅ Responsive: รองรับทุกขนาดหน้าจอ
 - ✅ Fallback: แสดง placeholder ถ้าไม่มีรูป
 - ✅ Auto-load: ดึงรูปจาก backend อัตโนมัติ
+- ✅ รองรับ slug และ id ทั้ง master-xxx/custom
 
 #### URL:
 ```
 http://localhost:3000/implants/{slug}
+http://localhost:3000/implants/master-1
+http://localhost:3000/implants/123
 ```
 
 ### ImplantCard.jsx - Card Component
@@ -158,7 +166,7 @@ const baseUrl = getApiBaseUrl(); // "http://localhost:5000"
 ```
 
 #### `resolveImageUrl(imageUrl)`
-แปลง relative path เป็น full URL
+แปลง relative path เป็น full URL (รองรับ id แบบ master-xxx/custom)
 
 ```javascript
 import { resolveImageUrl } from './utils/imageHelpers';
@@ -168,6 +176,9 @@ const url1 = resolveImageUrl('/uploads/implants/image.jpg');
 
 const url2 = resolveImageUrl('data:image/jpeg;base64,...');
 // → "data:image/jpeg;base64,..." (unchanged)
+
+// ตัวอย่าง implant id แบบ master
+const url3 = resolveImageUrl(implant.image1); // รองรับทั้ง /uploads/..., base64, หรือ null
 ```
 
 #### `getImplantImages(implant)`
@@ -199,14 +210,14 @@ const thumb = getImplantThumbnail(implant);
 ## 🔄 Real-time Data Sync
 
 ### Admin Side:
-- ใช้ `localStorage` events เพื่อ sync ระหว่างแท็บ
+- ใช้ `localStorage` events เพื่อ sync ระหว่างแท็บ (implants, blogs, master-data)
 - Auto-refresh เมื่อกลับมาที่แท็บ (focus event)
 - Manual refresh ด้วยปุ่ม "⟳ Refresh"
 
 ### User Side:
 - ใช้ `useMergedImplants` hook
 - ผสมข้อมูลจาก: API + localStorage + seed data
-- Auto-refresh on storage changes
+- Auto-refresh on storage changes (เช่น implants, blogs, master-data)
 
 ---
 
@@ -217,8 +228,8 @@ const thumb = getImplantThumbnail(implant);
 1. **Admin เข้าสู่ระบบ**
    ```
    http://localhost:3000/admin/login
-   Email: admin@lamduan.mfu.ac.th
-   Password: ilovedentalverymuch
+   Email: admindent@lamduan.mfu.ac.th
+   Password: 123456
    ```
 
 2. **ไปที่ Manage Implants**
@@ -243,10 +254,12 @@ const thumb = getImplantThumbnail(implant);
    - แสดง thumbnail ในรายการ
 
 6. **User เห็นข้อมูลใหม่ทันที:**
-   ```
-   http://localhost:3000/implants
-   http://localhost:3000/implants/{slug}
-   ```
+  ```
+  http://localhost:3000/implants
+  http://localhost:3000/implants/{slug}
+  http://localhost:3000/implants/master-1
+  http://localhost:3000/implants/123
+  ```
 
 ---
 
@@ -259,10 +272,10 @@ GET http://localhost:5000/uploads/implants/image.jpg 404
 
 **แก้ไข:**
 1. ตรวจสอบว่า backend รัน และ serve static files:
-   ```javascript
-   app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-   ```
-2. ตรวจสอบว่าไฟล์อยู่ใน `backend/uploads/implants/`
+  ```javascript
+  app.use('/uploads', express.static(...));
+  ```
+2. ตรวจสอบว่าไฟล์อยู่ใน `backend/uploads/implants/` หรือ `backend/uploads/blogs/`
 3. ตรวจสอบ CORS settings ใน backend
 
 ### ปัญหา: CORS error
@@ -274,7 +287,7 @@ Access to fetch at 'http://localhost:5000/api/implants' from origin 'http://loca
 ใน `backend/src/index.js`:
 ```javascript
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: (origin, callback) => { ... }, // รองรับ origin หลายแบบ ดูตัวอย่างใน backend
   credentials: true,
 }));
 ```
@@ -287,7 +300,7 @@ Error: File too large
 **แก้ไข:**
 1. ตรวจสอบขนาดไฟล์ (ต้องไม่เกิน 10MB)
 2. ตรวจสอบ file type (รองรับเฉพาะ: JPEG, PNG, GIF, WebP)
-3. ตรวจสอบ permissions ของ folder `backend/uploads/implants/`
+3. ตรวจสอบ permissions ของ folder `backend/uploads/implants/` หรือ `backend/uploads/blogs/`
 
 ### ปัญหา: แสดงรูปเป็น base64 แทน URL
 **สาเหตุ:** ข้อมูลเก่าใน localStorage ยังเป็น base64
@@ -295,7 +308,7 @@ Error: File too large
 **แก้ไข:**
 1. Clear localStorage: `localStorage.clear()`
 2. Refresh หน้า
-3. ข้อมูลใหม่จะดึงจาก backend และใช้ URL แทน
+3. ข้อมูลใหม่จะดึงจาก backend และใช้ URL แทน (resolveImageUrl รองรับทั้ง base64/URL)
 
 ---
 
@@ -304,11 +317,13 @@ Error: File too large
 ### Backend URL (แนะนำ):
 ```
 /uploads/implants/straumann-1234567890.jpg
+/uploads/implants/xxx.jpg (รองรับทั้ง master/custom)
 ```
 
 ### Full URL:
 ```
 http://localhost:5000/uploads/implants/straumann-1234567890.jpg
+http://localhost:5000/uploads/implants/xxx.jpg
 ```
 
 ### Base64 (เก่า - ยังรองรับอยู่):
@@ -321,28 +336,30 @@ data:image/jpeg;base64,/9j/4AAQSkZJRg...
 ## 🔑 Admin Credentials
 
 ```
-Email: admin@lamduan.mfu.ac.th
-Password: ilovedentalverymuch
+Email: admindent@lamduan.mfu.ac.th
+Password: 123456
 ```
 
 ---
 
 ## 🌐 URLs
 
+
 ### Admin:
 - Login: `http://localhost:3000/admin/login`
 - Dashboard: `http://localhost:3000/admin/dashboard`
 - Implants: `http://localhost:3000/admin/implants`
 - Add Implant: `http://localhost:3000/admin/implants/new`
-- Edit Implant: `http://localhost:3000/admin/implants/edit/:id`
+- Edit Implant: `http://localhost:3000/admin/implants/edit/:id` (id รองรับ master-xxx/custom)
 - Blogs: `http://localhost:3000/admin/blog`
 - Master Data: `http://localhost:3000/admin/master`
 - Feedback: `http://localhost:3000/admin/feedback`
 
+
 ### User:
 - Home: `http://localhost:3000/`
 - Implants: `http://localhost:3000/implants`
-- Implant Detail: `http://localhost:3000/implants/:slug`
+- Implant Detail: `http://localhost:3000/implants/:slug` หรือ `/implants/master-xxx` หรือ `/implants/123`
 - Brand Detail: `http://localhost:3000/implants/brand/:brand`
 - Blog: `http://localhost:3000/blog`
 - Contact: `http://localhost:3000/contact`
@@ -351,13 +368,14 @@ Password: ilovedentalverymuch
 
 ## 🎨 การใช้งาน Image Helpers
 
-### ใน Component:
+### ใน Component (ตัวอย่างการ handle error และ slug/id):
 
 ```jsx
 import { resolveImageUrl, getImplantThumbnail } from '../utils/imageHelpers';
 
 function MyComponent({ implant }) {
   const thumbnail = getImplantThumbnail(implant);
+  const isMaster = String(implant.id || '').startsWith('master-');
   
   return (
     <img 
@@ -366,17 +384,19 @@ function MyComponent({ implant }) {
       onError={(e) => {
         e.target.src = '/placeholder.jpg'; // Fallback
       }}
+      data-id={implant.id}
+      data-source={isMaster ? 'master' : 'custom'}
     />
   );
 }
 ```
 
-### แสดงรูปที่ 1:
+### แสดงรูปที่ 1 (รองรับ master/custom):
 ```jsx
 <img src={resolveImageUrl(implant.image1)} alt={implant.name} />
 ```
 
-### แสดงทุกรูปแบบ gallery:
+### แสดงทุกรูปแบบ gallery (รองรับ master/custom):
 ```jsx
 import { getImplantImages } from '../utils/imageHelpers';
 
@@ -397,11 +417,13 @@ function ImageGallery({ implant }) {
 
 ## 📦 Dependencies
 
+
 ### Main:
 - **React 18** - UI library
 - **React Router DOM** - Routing
 - **Vite** - Build tool
 - **Axios** (optional) - HTTP client
+
 
 ### Styling:
 - **CSS Modules** - Component-scoped CSS
@@ -422,19 +444,21 @@ function ImageGallery({ implant }) {
 
 ## 🎯 Key Features Summary
 
+
 ### ✅ Admin Side:
-1. **Image Upload** - อัพโหลดรูป 3 รูปพร้อมกัน
+1. **Image Upload** - อัพโหลดรูป 3 รูปพร้อมกัน (master/custom)
 2. **Image Preview** - ดูรูปก่อนบันทึก
-3. **Thumbnail Display** - แสดง thumbnail ในรายการ
-4. **Real-time Sync** - อัพเดทข้อมูลทันทีหลัง CRUD
+3. **Thumbnail Display** - แสดง thumbnail ในรายการ (รองรับ master/custom)
+4. **Real-time Sync** - อัพเดทข้อมูลทันทีหลัง CRUD (auto-refresh implants/blogs/master-data)
 5. **Auto Delete** - ลบรูปเก่าอัตโนมัติเมื่อ update/delete
 
+
 ### ✅ User Side:
-1. **Image Gallery** - แสดงรูปทั้ง 3 แบบ slider
+1. **Image Gallery** - แสดงรูปทั้ง 3 แบบ slider (master/custom)
 2. **Responsive Images** - ปรับขนาดตามหน้าจอ
 3. **Lazy Loading** - โหลดรูปแบบ progressive
 4. **Filter & Search** - กรองตาม brand, company, country, etc.
-5. **Brand Linking** - Link ไปยัง brand detail และ implant detail
+5. **Brand Linking** - Link ไปยัง brand detail และ implant detail (รองรับ slug/id)
 
 ---
 

@@ -9,6 +9,27 @@ const ROLE_OPTIONS = ["Admin", "Editor", "Distributor"];
 const JOB_OPTIONS = ["Dentist", "Dental", "Marketing"];
 const LEVEL_OPTIONS = ["1"];
 
+const ProfileTitleIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="pfPageIcon">
+    <path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z" />
+    <path d="M4.8 20.2c.8-3.6 3.5-5.6 7.2-5.6s6.4 2 7.2 5.6" />
+  </svg>
+);
+
+const AvatarPlaceholderIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="pfAvatarIcon">
+    <path d="M12 12.1a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+    <path d="M5 20c.8-3.5 3.4-5.4 7-5.4s6.2 1.9 7 5.4" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="pfEditIcon">
+    <path d="m4.8 16.7-.7 3.2 3.2-.7L18.4 8.1l-2.5-2.5L4.8 16.7Z" />
+    <path d="m14.8 6.7 2.5 2.5" />
+  </svg>
+);
+
 const mapRoleIdToLabel = (roleId, userRole) => {
   if (Number(roleId) === 1 || userRole === "admin") return "Admin";
   if (Number(roleId) === 2) return "Editor";
@@ -193,10 +214,21 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
+  const removeProfileImage = () => {
+    setProfile((prev) => ({
+      ...prev,
+      profileImage: "",
+    }));
+    setError("");
+  };
+
   if (loading) {
     return (
       <div className="pfWrap">
-        <h2 className="pageTitle">👤 My Profile</h2>
+        <h2 className="pageTitle">
+          <ProfileTitleIcon />
+          <span>My Profile</span>
+        </h2>
         <div className="pfCard">Loading profile...</div>
       </div>
     );
@@ -218,13 +250,17 @@ export default function Profile() {
         ]}
       />
 
-      <h2 className="pageTitle">👤 My Profile</h2>
+      <h2 className="pageTitle">
+        <ProfileTitleIcon />
+        <span>My Profile</span>
+      </h2>
 
       <div className="pfCard">
         {error ? <div className="error">{error}</div> : null}
 
         <button className="pfEdit" onClick={() => setEdit(true)} type="button">
-          ✎ <span>Edit</span>
+          <EditIcon />
+          <span>Edit</span>
         </button>
 
         <div className="pfAvatar">
@@ -233,9 +269,7 @@ export default function Profile() {
               <img src={profile.profileImage} alt="profile" className="pfImg" />
             ) : (
             <div className="pfCircle">
-              <span>
-                {profile.fullName?.charAt(0)?.toUpperCase() || "A"}
-                </span>
+              <AvatarPlaceholderIcon />
                 </div>
               )}
 
@@ -249,6 +283,21 @@ export default function Profile() {
             )}
           </label>
         </div>
+
+        {edit && (
+          <div className="pfImageActions">
+            <span className="pfImageHint">Click avatar to upload</span>
+            {profile.profileImage ? (
+              <button
+                className="pfRemoveImage"
+                type="button"
+                onClick={removeProfileImage}
+              >
+                Remove photo
+              </button>
+            ) : null}
+          </div>
+        )}
 
         <div className="pfLabel">Name &nbsp;Surname</div>
         <div className="pfName">{profile.fullName || "-"}</div>
@@ -286,7 +335,7 @@ export default function Profile() {
               <div className="pfField">
                 <div className="pfSmallLabel">Full Name</div>
                 <input
-                  className="pfSelect"
+                  className="pfInput"
                   value={profile.fullName}
                   onChange={(e) =>
                     setProfile((prev) => ({
@@ -301,7 +350,7 @@ export default function Profile() {
               <div className="pfField">
                 <div className="pfSmallLabel">Username</div>
                 <input
-                  className="pfSelect"
+                  className="pfInput"
                   value={profile.username}
                   onChange={(e) =>
                     setProfile((prev) => ({
@@ -318,7 +367,7 @@ export default function Profile() {
               <div className="pfField">
                 <div className="pfSmallLabel">Email</div>
                 <input
-                  className="pfSelect"
+                  className="pfInput"
                   value={profile.email}
                   onChange={(e) =>
                     setProfile((prev) => ({

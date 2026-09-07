@@ -9,6 +9,7 @@ import {
   RefConnectionType,
   RefConnectionShape,
   RefDriverShape,
+  RefHeadShape,
   RefBodyShape,
   RefApexShape,
 } from '../models/index.js';
@@ -33,6 +34,18 @@ const toNullableInt = (value) => {
     return Number.isNaN(value) ? null : value;
   }
 
+  return null;
+};
+
+const toNullableBoolean = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    if (v === 'true' || v === '1') return true;
+    if (v === 'false' || v === '0') return false;
+  }
   return null;
 };
 
@@ -62,6 +75,9 @@ const normalizeImplantPayload = (incoming = {}) => {
     'bodyShape',
     'apexShape',
     'officialDistributor',
+    'image1Message',
+    'image2Message',
+    'image3Message',
   ].forEach((key) => {
     if (typeof data[key] === 'string') {
       data[key] = data[key].trim();
@@ -76,6 +92,76 @@ const normalizeImplantPayload = (incoming = {}) => {
 
   return data;
 };
+
+const buildMasterInclude = () => [
+  {
+    model: Brand,
+    as: 'brandInfo',
+    attributes: ['idbrand', 'brand_name', 'website', 'status'],
+    required: false,
+  },
+  {
+    model: Company,
+    as: 'company',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: Level,
+    as: 'level',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefConnectionType,
+    as: 'connectionTypeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefConnectionShape,
+    as: 'connectionShapeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefDriverShape,
+    as: 'driverShapeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefHeadShape,
+    as: 'headShapeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefBodyShape,
+    as: 'bodyShapeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: RefApexShape,
+    as: 'apexShapeInfo',
+    attributes: ['id', 'name'],
+    required: false,
+  },
+  {
+    model: OfficialDistributor,
+    as: 'officialDistributorInfo',
+    attributes: ['id', 'name', 'countryId'],
+    required: false,
+    include: [
+      {
+        association: 'country',
+        attributes: ['id', 'name'],
+        required: false,
+      },
+    ],
+  },
+];
 
 const toDisplayCompany = (row) =>
   row?.company
@@ -109,19 +195,30 @@ const mapMasterImplant = (row) => ({
     : null,
   companyId: row.company_id || null,
   levelId: row.level_id || null,
-  countryId: null,
-  countryText: '',
+  countryId: row.officialDistributorInfo?.country?.id || null,
+  countryText: row.officialDistributorInfo?.country?.name || '',
   connectionType: row.connectionTypeInfo?.name || null,
   connectionShape: row.connectionShapeInfo?.name || null,
   screwdriverShape: row.driverShapeInfo?.name || null,
-  headShape: null,
+  headShape: row.headShapeInfo?.name || null,
   bodyShape: row.bodyShapeInfo?.name || null,
   apexShape: row.apexShapeInfo?.name || null,
   officialDistributor: row.officialDistributorInfo?.name || null,
+  connectionTypeId: row.connection_type_id || null,
+  connectionShapeId: row.connection_shape_id || null,
+  screwdriverShapeId: row.driver_shape_id || null,
+  headShapeId: row.head_shape_id || null,
+  bodyShapeId: row.body_shape_id || null,
+  apexShapeId: row.apex_shape_id || null,
+  distributorId: row.distributor_id || null,
+  categoryId: row.category_id || null,
+  verified: row.verified ?? null,
   status: row.status || 'Active',
+
   image1: row.image_url || null,
-  image2: null,
-  image3: null,
+  image2: row.image_url_2 || null,
+  image3: row.image_url_3 || null,
+
   createdAt: row.created_at || null,
   updatedAt: row.created_at || null,
   source: 'master',
@@ -135,10 +232,16 @@ const mapMasterImplant = (row) => ({
     : null,
 });
 
-const mapCustomImplant = (row) => ({
-  ...row.toJSON(),
-  source: 'custom',
-});
+const mapCustomImplant = (row) => {
+  const obj = row.toJSON();
+  return {
+    ...obj,
+    image1Message: obj.image1Message || obj.image1_message || '',
+    image2Message: obj.image2Message || obj.image2_message || '',
+    image3Message: obj.image3Message || obj.image3_message || '',
+    source: 'custom',
+  };
+};
 
 const sortByCreatedDesc = (a, b) => {
   const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -151,29 +254,7 @@ router.get('/', async (req, res) => {
   try {
     const [masterRows, customRows] = await Promise.all([
       ImplantMaster.findAll({
-        include: [
-          { model: Brand, as: 'brandInfo', attributes: ['idbrand', 'brand_name', 'website', 'status'], required: false },
-          { model: Company, as: 'company', attributes: ['id', 'name'], required: false },
-          { model: Level, as: 'level', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionType, as: 'connectionTypeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionShape, as: 'connectionShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefDriverShape, as: 'driverShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefBodyShape, as: 'bodyShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefApexShape, as: 'apexShapeInfo', attributes: ['id', 'name'], required: false },
-          {
-            model: OfficialDistributor,
-            as: 'officialDistributorInfo',
-            attributes: ['id', 'name', 'countryId'],
-            required: false,
-            include: [
-              {
-                association: 'country',
-                attributes: ['id', 'name'],
-                required: false,
-              },
-            ],
-          },
-        ],
+        include: buildMasterInclude(),
         order: [['created_at', 'DESC']],
       }),
       Implant.findAll({
@@ -202,29 +283,7 @@ router.get('/:id', async (req, res) => {
       const masterId = rawId.replace('master-', '');
 
       const masterItem = await ImplantMaster.findByPk(masterId, {
-        include: [
-          { model: Brand, as: 'brandInfo', attributes: ['idbrand', 'brand_name', 'website', 'status'], required: false },
-          { model: Company, as: 'company', attributes: ['id', 'name'], required: false },
-          { model: Level, as: 'level', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionType, as: 'connectionTypeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionShape, as: 'connectionShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefDriverShape, as: 'driverShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefBodyShape, as: 'bodyShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefApexShape, as: 'apexShapeInfo', attributes: ['id', 'name'], required: false },
-          {
-            model: OfficialDistributor,
-            as: 'officialDistributorInfo',
-            attributes: ['id', 'name', 'countryId'],
-            required: false,
-            include: [
-              {
-                association: 'country',
-                attributes: ['id', 'name'],
-                required: false,
-              },
-            ],
-          },
-        ],
+        include: buildMasterInclude(),
       });
 
       if (!masterItem) {
@@ -249,7 +308,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// CREATE implant
+// CREATE implant (custom implant only)
 router.post('/', uploadImplantImages, async (req, res) => {
   try {
     const bodyData = normalizeImplantPayload(req.body);
@@ -266,13 +325,18 @@ router.post('/', uploadImplantImages, async (req, res) => {
       bodyData.image3 = `/uploads/implants/${req.files.image3[0].filename}`;
     }
 
-    const implant = await Implant.create(bodyData);
+    // Support image message fields
+    bodyData.image1Message = req.body.image1Message || req.body.image1_message || '';
+    bodyData.image2Message = req.body.image2Message || req.body.image2_message || '';
+    bodyData.image3Message = req.body.image3Message || req.body.image3_message || '';
 
+    const implant = await Implant.create(bodyData);
     const withRelations = await Implant.findByPk(implant.id, {
       include: ['company', 'level', 'country'],
     });
-
-    return res.status(201).json(withRelations ? mapCustomImplant(withRelations) : implant);
+    return res
+      .status(201)
+      .json(withRelations ? mapCustomImplant(withRelations) : implant);
   } catch (err) {
     console.error('Create implant error:', err);
     res.status(400).json({ error: err.message });
@@ -306,41 +370,97 @@ router.put('/:id', uploadImplantImages, async (req, res) => {
         status: normalizeStatus(req.body?.status ?? masterItem.status),
       };
 
-      if (req.body?.companyId !== undefined) updateData.company_id = toNullableInt(req.body.companyId);
-      if (req.body?.levelId !== undefined) updateData.level_id = toNullableInt(req.body.levelId);
-      if (req.body?.brandId !== undefined) updateData.brand_id = toNullableInt(req.body.brandId);
+      if (req.body?.companyId !== undefined) {
+        updateData.company_id = toNullableInt(req.body.companyId);
+      }
 
+      if (req.body?.levelId !== undefined) {
+        updateData.level_id = toNullableInt(req.body.levelId);
+      }
+
+      if (req.body?.brandId !== undefined) {
+        updateData.brand_id = toNullableInt(req.body.brandId);
+      }
+
+      if (req.body?.connectionTypeId !== undefined) {
+        updateData.connection_type_id = toNullableInt(req.body.connectionTypeId);
+      }
+
+      if (req.body?.connectionShapeId !== undefined) {
+        updateData.connection_shape_id = toNullableInt(req.body.connectionShapeId);
+      }
+
+      if (req.body?.screwdriverShapeId !== undefined) {
+        updateData.driver_shape_id = toNullableInt(req.body.screwdriverShapeId);
+      }
+
+      if (req.body?.headShapeId !== undefined) {
+        updateData.head_shape_id = toNullableInt(req.body.headShapeId);
+      }
+
+      if (req.body?.bodyShapeId !== undefined) {
+        updateData.body_shape_id = toNullableInt(req.body.bodyShapeId);
+      }
+
+      if (req.body?.apexShapeId !== undefined) {
+        updateData.apex_shape_id = toNullableInt(req.body.apexShapeId);
+      }
+
+      if (req.body?.distributorId !== undefined) {
+        updateData.distributor_id = toNullableInt(req.body.distributorId);
+      }
+
+      if (req.body?.categoryId !== undefined) {
+        updateData.category_id = toNullableInt(req.body.categoryId);
+      }
+
+      if (req.body?.verified !== undefined) {
+        updateData.verified = toNullableBoolean(req.body.verified);
+      }
+
+      // image1
       if (req.files?.image1?.[0]) {
-        if (masterItem.image_url) deleteImplantImages([masterItem.image_url]);
+        if (masterItem.image_url) {
+          deleteImplantImages([masterItem.image_url]);
+        }
         updateData.image_url = `/uploads/implants/${req.files.image1[0].filename}`;
+      } else if (req.body?.image1 === '') {
+        if (masterItem.image_url) {
+          deleteImplantImages([masterItem.image_url]);
+        }
+        updateData.image_url = null;
+      }
+
+      // image2
+      if (req.files?.image2?.[0]) {
+        if (masterItem.image_url_2) {
+          deleteImplantImages([masterItem.image_url_2]);
+        }
+        updateData.image_url_2 = `/uploads/implants/${req.files.image2[0].filename}`;
+      } else if (req.body?.image2 === '') {
+        if (masterItem.image_url_2) {
+          deleteImplantImages([masterItem.image_url_2]);
+        }
+        updateData.image_url_2 = null;
+      }
+
+      // image3
+      if (req.files?.image3?.[0]) {
+        if (masterItem.image_url_3) {
+          deleteImplantImages([masterItem.image_url_3]);
+        }
+        updateData.image_url_3 = `/uploads/implants/${req.files.image3[0].filename}`;
+      } else if (req.body?.image3 === '') {
+        if (masterItem.image_url_3) {
+          deleteImplantImages([masterItem.image_url_3]);
+        }
+        updateData.image_url_3 = null;
       }
 
       await masterItem.update(updateData);
 
       const refreshed = await ImplantMaster.findByPk(masterId, {
-        include: [
-          { model: Brand, as: 'brandInfo', attributes: ['idbrand', 'brand_name', 'website', 'status'], required: false },
-          { model: Company, as: 'company', attributes: ['id', 'name'], required: false },
-          { model: Level, as: 'level', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionType, as: 'connectionTypeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefConnectionShape, as: 'connectionShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefDriverShape, as: 'driverShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefBodyShape, as: 'bodyShapeInfo', attributes: ['id', 'name'], required: false },
-          { model: RefApexShape, as: 'apexShapeInfo', attributes: ['id', 'name'], required: false },
-          {
-            model: OfficialDistributor,
-            as: 'officialDistributorInfo',
-            attributes: ['id', 'name', 'countryId'],
-            required: false,
-            include: [
-              {
-                association: 'country',
-                attributes: ['id', 'name'],
-                required: false,
-              },
-            ],
-          },
-        ],
+        include: buildMasterInclude(),
       });
 
       return res.json(mapMasterImplant(refreshed));
@@ -357,17 +477,31 @@ router.put('/:id', uploadImplantImages, async (req, res) => {
     if (req.files?.image1?.[0]) {
       if (implant.image1) deleteImplantImages([implant.image1]);
       bodyData.image1 = `/uploads/implants/${req.files.image1[0].filename}`;
+    } else if (req.body?.image1 === '') {
+      if (implant.image1) deleteImplantImages([implant.image1]);
+      bodyData.image1 = null;
     }
 
     if (req.files?.image2?.[0]) {
       if (implant.image2) deleteImplantImages([implant.image2]);
       bodyData.image2 = `/uploads/implants/${req.files.image2[0].filename}`;
+    } else if (req.body?.image2 === '') {
+      if (implant.image2) deleteImplantImages([implant.image2]);
+      bodyData.image2 = null;
     }
 
     if (req.files?.image3?.[0]) {
       if (implant.image3) deleteImplantImages([implant.image3]);
       bodyData.image3 = `/uploads/implants/${req.files.image3[0].filename}`;
+    } else if (req.body?.image3 === '') {
+      if (implant.image3) deleteImplantImages([implant.image3]);
+      bodyData.image3 = null;
     }
+
+    // Support image message fields
+    bodyData.image1Message = req.body.image1Message || req.body.image1_message || '';
+    bodyData.image2Message = req.body.image2Message || req.body.image2_message || '';
+    bodyData.image3Message = req.body.image3Message || req.body.image3_message || '';
 
     await implant.update(bodyData);
 
@@ -395,8 +529,14 @@ router.delete('/:id', async (req, res) => {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      if (masterItem.image_url) {
-        deleteImplantImages([masterItem.image_url]);
+      const masterImagesToDelete = [
+        masterItem.image_url,
+        masterItem.image_url_2,
+        masterItem.image_url_3,
+      ].filter(Boolean);
+
+      if (masterImagesToDelete.length > 0) {
+        deleteImplantImages(masterImagesToDelete);
       }
 
       await masterItem.destroy();

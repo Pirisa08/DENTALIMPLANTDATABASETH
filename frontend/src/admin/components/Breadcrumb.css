@@ -3,9 +3,11 @@
   align-items: center;
   gap: 8px;
   margin: 16px 0 20px 0;
-  font-size: 0.85rem;
-  font-weight: 900;
-  color: #000000;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5c78;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
 }
 
 .breadcrumb .separator {
@@ -20,9 +22,9 @@
   color: #494646;
   cursor: pointer;
   text-decoration: underline;
-  font-size: 0.85rem;
+  font-size: 12px;
   padding: 0 4px;
-  font-weight: 900;
+  font-weight: 600;
   transition: color 0.15s;
 }
 
@@ -33,6 +35,6 @@
 
 .breadcrumbText {
   color: var(--muted);
-  font-weight: 900;
-  font-size: 0.85rem;
+  font-weight: 600;
+  font-size: 12px;
 }

@@ -49,12 +49,12 @@ const formatRole = (role) => {
   return String(role).charAt(0).toUpperCase() + String(role).slice(1);
 };
 
-const getAvatarColor = (username = "") => {
-  const colors = ["#5B7FD1", "#FF7A7A", "#6BCB77", "#F4A261", "#9D4EDD", "#2A9D8F"];
-  const firstChar = String(username || "A").trim().charAt(0).toUpperCase();
-  const code = firstChar.charCodeAt(0) || 65;
-  return colors[code % colors.length];
-};
+const SidebarAvatarIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="avatarSvg">
+    <path d="M12 12.1a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+    <path d="M5 20c.8-3.5 3.4-5.4 7-5.4s6.2 1.9 7 5.4" />
+  </svg>
+);
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -152,10 +152,6 @@ export default function AdminLayout() {
     return adminUser?.name || adminUser?.username || "Min admin";
   }, [adminUser]);
 
-  const displayUsername = useMemo(() => {
-    return adminUser?.username || "admin";
-  }, [adminUser]);
-
   const displayRole = useMemo(() => {
     return formatRole(adminUser?.role);
   }, [adminUser]);
@@ -163,14 +159,6 @@ export default function AdminLayout() {
   const displayAvatar = useMemo(() => {
     return adminUser?.image_url || "";
   }, [adminUser]);
-
-  const avatarLetter = useMemo(() => {
-    return String(displayUsername || "A").trim().charAt(0).toUpperCase() || "A";
-  }, [displayUsername]);
-
-  const avatarColor = useMemo(() => {
-    return getAvatarColor(displayUsername);
-  }, [displayUsername]);
 
   return (
     <div className="adminShell">
@@ -204,11 +192,8 @@ export default function AdminLayout() {
             {displayAvatar ? (
               <img src={displayAvatar} alt="profile" className="avatarImg" />
             ) : (
-              <div
-                className="avatarCircle"
-                style={{ backgroundColor: avatarColor }}
-              >
-                {avatarLetter}
+              <div className="avatarCircle">
+                <SidebarAvatarIcon />
               </div>
             )}
           </div>

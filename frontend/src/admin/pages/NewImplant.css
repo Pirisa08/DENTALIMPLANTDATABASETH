@@ -98,9 +98,49 @@
 
 .imgBtn.danger{ background:#b73232; }
 
-.placeholder{ text-align:center; color: #6b7a99; font-weight:600; padding: 20px; }
-.phIcon{ font-size:38px; margin-bottom:8px; opacity: 0.7; display:block; }
-.phText{ font-size:13px; letter-spacing: 0.3px; display:block; }
+.placeholder{
+  text-align:center;
+  color: #60708f;
+  font-weight:600;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+}
+.phIcon{
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #d7e1f0;
+  color: #60708f;
+  display:grid;
+  place-items:center;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+.phSvg{
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.86;
+}
+.phText{
+  font-size:14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #243756;
+  display:block;
+}
+.phSubText{
+  font-size:12px;
+  font-weight: 500;
+  color: #7b8aa3;
+  display:block;
+}
 
 .twoCol{
   display:grid;
@@ -494,3 +534,111 @@
   box-shadow: 0 4px 12px rgba(47,125,50,0.35);
 }
 
+
+/* Admin typography normalization */
+.newImpWrap{
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+}
+
+.newImpWrap .pageTitle{
+  font-size: var(--admin-title-size);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.newImpWrap .crumb{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.newImpWrap .imgCard,
+.newImpWrap .formCard{
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.newImpWrap .imgLabel,
+.newImpWrap .field .label{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.newImpWrap .input,
+.newImpWrap .select,
+.newImpWrap .cSelectBtn,
+.newImpWrap .cSelectItem,
+.newImpWrap .cSelectAddInput{
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.newImpWrap .input::placeholder,
+.newImpWrap .cSelectPh{
+  font-weight: 400;
+}
+
+.newImpWrap .btnSave,
+.newImpWrap .btnCancel,
+.newImpWrap .saveBtn,
+.newImpWrap .btnAddOption,
+.newImpWrap .cSelectAddBtn{
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.newImpWrap .phIcon{
+  width: 54px;
+  height: 54px;
+  font-size: 0;
+}
+
+.newImpWrap .phText{
+  font-size: 14px;
+}
+
+.newImpWrap .phSubText{
+  font-size: 12px;
+}
+
+/* Unified admin form actions */
+.newImpWrap .btnSave,
+.newImpWrap .btnCancel{
+  min-height: 40px;
+  height: 40px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  border: 1.5px solid transparent;
+}
+
+.newImpWrap .btnSave{
+  background: linear-gradient(180deg, #214796 0%, #173b82 100%);
+  border-color: #173b82;
+  box-shadow: 0 6px 14px rgba(23,59,130,0.14);
+}
+
+.newImpWrap .btnCancel{
+  background: #ffffff;
+  border-color: #d7e1f3;
+  color: #17305d;
+  box-shadow: none;
+}
+
+.newImpWrap .btnSave:hover{
+  box-shadow: 0 9px 18px rgba(23,59,130,0.20);
+}
+
+.newImpWrap .btnCancel:hover{
+  background: #f7f9fd;
+  border-color: #b8c8e6;
+  color: #17305d;
+  box-shadow: none;
+}

@@ -11,7 +11,15 @@ import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI, brandAPI } from "../../services/api.js";
 
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
+
 export default function MasterDataList() {
+  const ITEMS_PER_PAGE = 10;
+  const [page, setPage] = useState(1);
   const { type } = useParams();
   const label = getTypeLabel(type);
 
@@ -207,21 +215,23 @@ export default function MasterDataList() {
 
   const filteredCompanies = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return companies;
-    return companies.filter((x) =>
+    const filtered = !s ? companies : companies.filter((x) =>
       String(x.name || "").toLowerCase().includes(s)
     );
-  }, [q, companies]);
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [q, companies, page]);
 
   const filteredBrands = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return brands;
-    return brands.filter((x) =>
+    const filtered = !s ? brands : brands.filter((x) =>
       `${x.name || ""} ${x.companyName || ""} ${x.website || ""}`
         .toLowerCase()
         .includes(s)
     );
-  }, [q, brands]);
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [q, brands, page]);
 
   const filteredCountries = useMemo(() => {
     const source =
@@ -231,11 +241,12 @@ export default function MasterDataList() {
         ? master.country
         : [];
     const s = q.trim().toLowerCase();
-    if (!s) return source;
-    return source.filter((x) =>
+    const filtered = !s ? source : source.filter((x) =>
       String(x.name || "").toLowerCase().includes(s)
     );
-  }, [q, countries, master]);
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [q, countries, master, page]);
 
   const filteredLevels = useMemo(() => {
     const source =
@@ -245,11 +256,16 @@ export default function MasterDataList() {
         ? master.level
         : [];
     const s = q.trim().toLowerCase();
-    if (!s) return source;
-    return source.filter((x) =>
+    const filtered = !s ? source : source.filter((x) =>
       String(x.name || "").toLowerCase().includes(s)
     );
-  }, [q, levels, master]);
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [q, levels, master, page]);
+  // Reset page to 1 when search or type changes
+  useEffect(() => {
+    setPage(1);
+  }, [q, type]);
 
   const filteredConnectionTypes = useMemo(() => {
     const source =
@@ -1339,6 +1355,7 @@ export default function MasterDataList() {
           {filteredCompanies.length === 0 ? (
             <div className="empty">No companies found</div>
           ) : (
+            <>
             <div className="mdAccordion">
               {filteredCompanies.map((company) => {
                 const isOpen = !!openCompanies[company.id];
@@ -1395,6 +1412,33 @@ export default function MasterDataList() {
                 );
               })}
             </div>
+            {/* Pagination */}
+            {companies.length > ITEMS_PER_PAGE && (
+              <div className="paginationWrap" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,marginTop:16}}>
+                <button
+                  className="paginationBtn"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  aria-label="Previous Page"
+                >
+                  <PaginationArrow direction="prev" />
+                  <span>Previous</span>
+                </button>
+                <span className="paginationText">
+                  Page {page} of {Math.ceil(companies.length / ITEMS_PER_PAGE)}
+                </span>
+                <button
+                  className="paginationBtn"
+                  onClick={() => setPage((p) => Math.min(Math.ceil(companies.length / ITEMS_PER_PAGE), p + 1))}
+                  disabled={page === Math.ceil(companies.length / ITEMS_PER_PAGE)}
+                  aria-label="Next Page"
+                >
+                  <span>Next</span>
+                  <PaginationArrow direction="next" />
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
@@ -1424,6 +1468,7 @@ export default function MasterDataList() {
           {filteredBrands.length === 0 ? (
             <div className="empty">No brands found</div>
           ) : (
+            <>
             <div className="mdAccordion">
               {filteredBrands.map((brand) => {
                 const isOpen = !!openBrands[brand.id];
@@ -1492,6 +1537,33 @@ export default function MasterDataList() {
                 );
               })}
             </div>
+            {/* Pagination */}
+            {brands.length > ITEMS_PER_PAGE && (
+              <div className="paginationWrap" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,marginTop:16}}>
+                <button
+                  className="paginationBtn"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  aria-label="Previous Page"
+                >
+                  <PaginationArrow direction="prev" />
+                  <span>Previous</span>
+                </button>
+                <span className="paginationText">
+                  Page {page} of {Math.ceil(brands.length / ITEMS_PER_PAGE)}
+                </span>
+                <button
+                  className="paginationBtn"
+                  onClick={() => setPage((p) => Math.min(Math.ceil(brands.length / ITEMS_PER_PAGE), p + 1))}
+                  disabled={page === Math.ceil(brands.length / ITEMS_PER_PAGE)}
+                  aria-label="Next Page"
+                >
+                  <span>Next</span>
+                  <PaginationArrow direction="next" />
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
@@ -1499,29 +1571,165 @@ export default function MasterDataList() {
   }
 
   if (type === "level") {
-    return renderSimpleTable({
-      title: `${label} Data`,
-      addLabel: "+ Add Level",
-      items: filteredLevels,
-      onAdd: addLevel,
-      onEdit: editLevel,
-      onToggleStatus: updateLevelStatus,
-      onDelete: deleteLevel,
-      emptyText: "No levels found.",
-    });
+    return (
+      <div className="mdWrap">
+        <AdminSearchBar placeholder={`Search ${label.toLowerCase()}…`} value={q} onChangeQ={setQ} onSearch={setQ} />
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/admin" },
+            { label: "Master Data", href: "/admin/master" },
+            { label: `${label} Data` },
+          ]}
+        />
+        <h2 className="pageTitle">Master Data Management</h2>
+        {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+        <div className="panelMd">
+          <div className="panelHeadRow">
+            <h3 className="panelTitle">{label} Data</h3>
+            <button className="addBtnMd" onClick={addLevel}>+ Add Level</button>
+          </div>
+
+          {filteredLevels.length === 0 ? (
+            <div className="empty">No levels found.</div>
+          ) : (
+            <div className="mdTable">
+              <div className="mdHead detail">
+                <div>ID</div>
+                <div>Name</div>
+                <div>Status</div>
+                <div className="actionsCol">Actions</div>
+              </div>
+              {filteredLevels.map((x, idx) => (
+                <div className="mdRow detail" key={x.id}>
+                  <div>{idx + 1}</div>
+                  <div className="nameCell">{x.name}</div>
+                  <div className="statusCell">
+                    <button
+                      className={`statusPill ${x.status === "Active" ? "on" : "off"}`}
+                      onClick={() => updateLevelStatus(x.id, x.status)}
+                    >
+                      <span className="statusDot" />
+                      {x.status === "Active" ? "Open" : "Closed"}
+                    </button>
+                  </div>
+                  <div className="actionsCol">
+                    <button className="btn edit" onClick={() => editLevel(x.id, x.name, x.status)}>Edit</button>
+                    <button className="btn del" onClick={() => deleteLevel(x.id, x.name)}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {levels.length > ITEMS_PER_PAGE && (
+            <div className="paginationWrap" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,marginTop:16}}>
+              <button
+                className="paginationBtn"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                aria-label="Previous Page"
+              >
+                <PaginationArrow direction="prev" />
+                <span>Previous</span>
+              </button>
+              <span className="paginationText">
+                Page {page} of {Math.ceil(levels.length / ITEMS_PER_PAGE)}
+              </span>
+              <button
+                className="paginationBtn"
+                onClick={() => setPage((p) => Math.min(Math.ceil(levels.length / ITEMS_PER_PAGE), p + 1))}
+                disabled={page === Math.ceil(levels.length / ITEMS_PER_PAGE)}
+                aria-label="Next Page"
+              >
+                <span>Next</span>
+                <PaginationArrow direction="next" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (type === "country") {
-    return renderSimpleTable({
-      title: `${label} Data`,
-      addLabel: "+ Add Country",
-      items: filteredCountries,
-      onAdd: addCountry,
-      onEdit: editCountry,
-      onToggleStatus: updateCountryStatus,
-      onDelete: deleteCountry,
-      emptyText: "No countries found.",
-    });
+    return (
+      <div className="mdWrap">
+        <AdminSearchBar placeholder={`Search ${label.toLowerCase()}…`} value={q} onChangeQ={setQ} onSearch={setQ} />
+        <Breadcrumb
+          items={[
+            { label: "Home", href: "/admin" },
+            { label: "Master Data", href: "/admin/master" },
+            { label: `${label} Data` },
+          ]}
+        />
+        <h2 className="pageTitle">Master Data Management</h2>
+        {error && <div className="empty" style={{ color: "#dc3545" }}>{error}</div>}
+
+        <div className="panelMd">
+          <div className="panelHeadRow">
+            <h3 className="panelTitle">{label} Data</h3>
+            <button className="addBtnMd" onClick={addCountry}>+ Add Country</button>
+          </div>
+
+          {filteredCountries.length === 0 ? (
+            <div className="empty">No countries found.</div>
+          ) : (
+            <div className="mdTable">
+              <div className="mdHead detail">
+                <div>ID</div>
+                <div>Name</div>
+                <div>Status</div>
+                <div className="actionsCol">Actions</div>
+              </div>
+              {filteredCountries.map((x, idx) => (
+                <div className="mdRow detail" key={x.id}>
+                  <div>{idx + 1}</div>
+                  <div className="nameCell">{x.name}</div>
+                  <div className="statusCell">
+                    <button
+                      className={`statusPill ${x.status === "Active" ? "on" : "off"}`}
+                      onClick={() => updateCountryStatus(x.id, x.status)}
+                    >
+                      <span className="statusDot" />
+                      {x.status === "Active" ? "Open" : "Closed"}
+                    </button>
+                  </div>
+                  <div className="actionsCol">
+                    <button className="btn edit" onClick={() => editCountry(x.id, x.name, x.status)}>Edit</button>
+                    <button className="btn del" onClick={() => deleteCountry(x.id, x.name)}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {countries.length > ITEMS_PER_PAGE && (
+            <div className="paginationWrap" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,marginTop:16}}>
+              <button
+                className="paginationBtn"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                aria-label="Previous Page"
+              >
+                <PaginationArrow direction="prev" />
+                <span>Previous</span>
+              </button>
+              <span className="paginationText">
+                Page {page} of {Math.ceil(countries.length / ITEMS_PER_PAGE)}
+              </span>
+              <button
+                className="paginationBtn"
+                onClick={() => setPage((p) => Math.min(Math.ceil(countries.length / ITEMS_PER_PAGE), p + 1))}
+                disabled={page === Math.ceil(countries.length / ITEMS_PER_PAGE)}
+                aria-label="Next Page"
+              >
+                <span>Next</span>
+                <PaginationArrow direction="next" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
 if (type === "officialDistributor") { 

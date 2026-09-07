@@ -1,61 +1,44 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./Login.css";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authAPI } from "../../services/api";
+import "./Login.css";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email, setEmail] = useState("admin@demo.com");
-  const [password, setPassword] = useState("admin123");
-  const [remember, setRemember] = useState(true);
-  const [error, setError] = useState("");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const clearAllTokens = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("token");
-    localStorage.removeItem("admin_user");
-
-    sessionStorage.removeItem("auth_token");
-    sessionStorage.removeItem("admin_token");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("admin_user");
-  };
+  const from = location.state?.from?.pathname || "/admin";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+
+    const cleanIdentifier = identifier.trim();
+    const cleanPassword = password;
+
+    if (!cleanIdentifier || !cleanPassword) {
+      setError("Please enter your email or username and password.");
+      return;
+    }
 
     try {
-      clearAllTokens();
+      setLoading(true);
+      const result = await authAPI.login(cleanIdentifier, cleanPassword);
 
-      const result = await authAPI.login(
-        email.trim().toLowerCase(),
-        password
-      );
-
-      if (!result?.token || !result?.user) {
-        throw new Error("Login response is incomplete");
+      if (!rememberMe) {
+        sessionStorage.setItem("admin_user", JSON.stringify(result?.user || {}));
       }
 
-      if (remember) {
-        localStorage.setItem("auth_token", result.token);
-        localStorage.setItem("admin_token", result.token);
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("admin_user", JSON.stringify(result.user));
-      } else {
-        sessionStorage.setItem("auth_token", result.token);
-        sessionStorage.setItem("admin_token", result.token);
-        sessionStorage.setItem("token", result.token);
-        sessionStorage.setItem("admin_user", JSON.stringify(result.user));
-      }
-
-      navigate("/admin/dashboard", { replace: true });
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err?.message || "Login failed");
+      setError(err?.message || "Unable to sign in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,60 +46,120 @@ export default function Login() {
 
   return (
     <div className="loginPage">
-      <div className="loginCard">
-        <h1 className="title">Login</h1>
-        <p className="subtitle">Login to your admin account.</p>
+      <div className="loginShell">
+        <div className="loginBrandPanel">
+          <div className="brandCenterWrap">
+            <img
+            src="/logo_mfu.jpg"
+            alt="MFU Logo"
+            className="brandLogoImage"
+            />
+            <h1 className="brandTitleMain">MFU Dental</h1>
+            <h2 className="brandTitleSub">IMPLANT DATABASE</h2>
+            <p className="brandEyebrow">Mae Fah Luang University</p>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="form">
-          <label className="label">E-mail Address</label>
-          <input
-            className="input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@demo.com"
-            required
-          />
+        <div className="loginCard">
+          <div className="loginCardHeader">
+            <p className="loginEyebrow">Administrative Access</p>
+            <h2 className="loginHeading">Sign in</h2>
+          </div>
 
-          <label className="label">Password</label>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="admin123"
-            required
-          />
+          <form className="form" onSubmit={handleSubmit}>
+            {error ? <div className="error">{error}</div> : null}
 
-          {error ? <div className="error">{error}</div> : null}
-
-          <div className="row">
-            <label className="checkbox">
+            <div className="fieldGroup">
+              <label className="label" htmlFor="identifier">
+                Email or Username
+              </label>
               <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
+                id="identifier"
+                className="input"
+                type="text"
+                placeholder="Enter your email or username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                autoComplete="username"
               />
-              Remember me
-            </label>
+            </div>
 
-            <button
-              type="button"
-              className="linkBtn"
-              onClick={() => alert("Reset Password ยังไม่ได้เชื่อม")}
-            >
-              Reset Password?
+            <div className="fieldGroup">
+              <label className="label" htmlFor="password">
+                Password
+              </label>
+
+              <div className="passwordWrap">
+                <input
+                  id="password"
+                  className="input passwordInput"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+
+                <button
+                  type="button"
+                  className="togglePasswordBtn"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg
+                      className="passwordIcon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 3l18 18" />
+                      <path d="M10.58 10.58A2 2 0 0012 16a2 2 0 001.42-.58" />
+                      <path d="M9.88 4.24A10.94 10.94 0 0112 4c5 0 9.27 3.11 11 8-0.56 1.57-1.48 3-2.67 4.18" />
+                      <path d="M6.61 6.61C4.62 8 3.16 9.86 2 12c1.73 4.89 6 8 10 8a10.7 10.7 0 004.24-.88" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="passwordIcon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M2 12s3.5-8 10-8 10 8 10 8-3.5 8-10 8-10-8-10-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="row">
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+
+            <button className="signInBtn" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </button>
-          </div>
 
-          <button className="signInBtn" type="submit" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
-          </button>
-
-          <div className="hint">
-            Demo: <b>admin@demo.com</b> / <b>admin123</b>
-          </div>
-        </form>
+            <p className="hint">MFU Dental Database System</p>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -61,6 +61,14 @@ const ImplantMaster = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    image_url_2: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    image_url_3: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM('Active', 'Inactive'),
       allowNull: false,

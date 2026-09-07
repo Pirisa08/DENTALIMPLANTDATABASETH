@@ -1,10 +1,13 @@
+// BrandDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Breadcrumb from "../components/Breadcrumb";
 import ImplantCard from "../components/ImplantCard";
 import styles from "./BrandDetail.module.css";
-import useMergedImplants, { pickImplantImages } from "../hooks/useMergedImplants";
-import { brandAPI, resolveImageUrl } from "../../services/api.js";
+import useMergedImplants, {
+  pickImplantImages,
+} from "../hooks/useMergedImplants";
+import { brandAPI } from "../../services/api.js";
 
 const normalizeText = (value) => String(value || "").trim();
 const normalizeUpper = (value) => normalizeText(value).toUpperCase();
@@ -73,14 +76,10 @@ export default function BrandDetail() {
         const found = (allBrands || []).find(
           (b) => normalizeUpper(b.name || b.brand_name) === normalizedBrandName
         );
-        if (isMounted) {
-          setBrandInfo(found || null);
-        }
+        if (isMounted) setBrandInfo(found || null);
       } catch (err) {
         console.error("Error loading brand info:", err);
-        if (isMounted) {
-          setBrandInfo(null);
-        }
+        if (isMounted) setBrandInfo(null);
       }
     }
 
@@ -97,7 +96,6 @@ export default function BrandDetail() {
 
   const filteredImplants = useMemo(() => {
     if (isCompanyMode) return [];
-
     return activeImplants.filter(
       (item) => normalizeUpper(item.brand) === normalizedBrandName
     );
@@ -151,7 +149,6 @@ export default function BrandDetail() {
                 {pageTitle}
                 {!isCompanyMode && <sup>®</sup>}
               </h1>
-
               {pageSubtitle && (
                 <p className={styles.brandCompany}>{pageSubtitle}</p>
               )}
@@ -225,7 +222,10 @@ export default function BrandDetail() {
                     className={styles.brandWebsite}
                     style={{ display: "block", textDecoration: "none" }}
                   >
-                    <div className={styles.brandMetaCard} style={{ minHeight: 120 }}>
+                    <div
+                      className={styles.brandMetaCard}
+                      style={{ minHeight: 120 }}
+                    >
                       <span className={styles.brandMetaLabel}>{item.brand}</span>
                       <div className={styles.brandMetaValue}>
                         <span className={styles.brandMetaText}>
@@ -243,18 +243,17 @@ export default function BrandDetail() {
             </div>
           ) : (
             <div className={styles.grid}>
-              {filteredImplants.map((it) => {
-                const primaryImage = resolveImageUrl(
-                  pickImplantImages(it).find((img) => img.dataUrl)?.dataUrl || ""
-                );
-                const companyValue = it.company || it.brand;
+              {filteredImplants.map((item) => {
+                const primaryImage =
+                  pickImplantImages(item).find((img) => img.dataUrl)?.dataUrl || "";
+                const companyValue = item.company || item.brand;
 
                 return (
                   <ImplantCard
-                    key={it.slug || it.id}
-                    title={it.name}
+                    key={item.slug || item.id}
+                    title={item.name}
                     company={companyValue}
-                    slug={it.slug}
+                    slug={item.slug}
                     image={primaryImage}
                   />
                 );

@@ -1,98 +1,85 @@
 # Technical Implementation Details
 
-## Architecture Overview
+## Architecture Overview (2026)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    React Frontend (Vite)                     │
-│                    http://localhost:3001                     │
+│                    React Frontend (Vite 18)                 │
+│                      http://localhost:3000                  │
 ├─────────────────────────────────────────────────────────────┤
-│  Admin Panel (NewImplant.jsx)                               │
-│  ├─ Form with 3 image inputs                                │
-│  ├─ Converts images to base64 data URLs (client-side)      │
-│  ├─ Sends FormData to backend                              │
-│  └─ Syncs response to localStorage                         │
+│  Admin Panel (NewImplant.jsx, ManageImplants.jsx, etc.)     │
+│  ├─ Form with 3 image inputs (master/custom, id master-xxx) │
+│  ├─ Sends FormData (files) to backend                       │
+│  ├─ Uses resolveImageUrl, auto-refresh, localStorage sync   │
+│  └─ CRUD for implants, blogs, master data, feedback         │
 └──────────────┬──────────────────────────────────────────────┘
                │ HTTP POST/PUT multipart/form-data
                │
 ┌──────────────▼──────────────────────────────────────────────┐
-│                Express.js Backend                            │
-│                http://localhost:5000                        │
+│                Express.js Backend (Node.js)                 │
+│              http://localhost:5000/api/health               │
 ├─────────────────────────────────────────────────────────────┤
-│  POST /api/implants                                         │
+│  POST /api/implants (multer, static uploads, MySQL)         │
 │  ├─ Multer middleware extracts files                        │
-│  ├─ Converts image buffers to base64 data URLs              │
-│  ├─ Saves to database                                       │
-│  └─ Returns implant object with images                     │
-│                                                              │
-│  PUT /api/implants/:id                                      │
-│  └─ Same as POST for updates                               │
-│                                                              │
-│  GET /api/implants                                          │
-│  └─ Returns all implants with base64 images                │
+│  ├─ Saves files to /uploads/implants                        │
+│  ├─ Stores image URLs in MySQL (no base64)                  │
+│  └─ Returns implant object with image URLs                  │
+│  ...                                                        │
+│  CRUD: /api/blogs, /api/master-data, /api/feedback          │
+│  Static file serving: /uploads/implants, /uploads/blogs      │
+│  JWT, CORS, health check, error handler                     │
 └──────────────┬──────────────────────────────────────────────┘
-               │ SQLite queries
+               │ Sequelize queries
                │
 ┌──────────────▼──────────────────────────────────────────────┐
-│              SQLite Database                                │
-│              implant_db.sqlite                              │
+│              MySQL Database (Sequelize ORM)                 │
 ├─────────────────────────────────────────────────────────────┤
-│  Table: implants                                            │
-│  ├─ id (PRIMARY KEY)                                        │
-│  ├─ name (VARCHAR)                                          │
-│  ├─ brand (VARCHAR)                                         │
-│  ├─ image1 (TEXT LONG) - base64 data URL                   │
-│  ├─ image2 (TEXT LONG) - base64 data URL                   │
-│  ├─ image3 (TEXT LONG) - base64 data URL                   │
+│  Tables: implants, implant_master, blogs, companies, etc.   │
+│  ├─ id, name, brand, ...                                    │
+│  ├─ image1Url, image2Url, image3Url (file URLs)             │
 │  └─ ... other fields                                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Image Processing Flow
+## Image Processing Flow (2026)
 
 ### Upload Flow
 ```
-User selects image (JPG/PNG/etc)
-    ↓
-FileReader.readAsDataURL()
-    ↓
-Base64 string stored in React state (form.image1/2/3)
-    ↓
+User selects image (JPG/PNG/GIF/WebP, ≤10MB)
+  ↓
+FormData appends files (no base64)
+  ↓
 User clicks Save
-    ↓
-dataUrlToFile() converts base64 back to File object
-    ↓
-Append to FormData with other fields
-    ↓
+  ↓
 POST /api/implants (multipart/form-data)
-    ↓
+  ↓
 Backend: multer extracts files
-    ↓
-Convert file buffer → base64 data URL
-    ↓
-Save to SQLite: INSERT INTO implants (image1, image2, image3) ...
-    ↓
-Return implant object to frontend
-    ↓
-Frontend stores in localStorage
-    ↓
+  ↓
+Save files to /uploads/implants
+  ↓
+Store image URLs in MySQL (image1Url, image2Url, image3Url)
+  ↓
+Return implant object (with image URLs) to frontend
+  ↓
+Frontend stores in localStorage (auto-refresh)
+  ↓
 Display confirmation
 ```
 
 ### Retrieval Flow
 ```
 User views implant detail page
-    ↓
+  ↓
 GET /api/implants or GET /api/implants/:id
-    ↓
-Backend retrieves base64 data URLs from database
-    ↓
-Return implant object with image1, image2, image3
-    ↓
-Frontend receives base64 data URLs
-    ↓
-<img src="data:image/jpeg;base64,..." />
-    ↓
+  ↓
+Backend retrieves image URLs from database
+  ↓
+Return implant object with image1Url, image2Url, image3Url
+  ↓
+Frontend receives image URLs
+  ↓
+<img src="/uploads/implants/xxx.jpg" />
+  ↓
 Browser renders images directly
 ```
 
@@ -169,9 +156,9 @@ Browser renders images directly
   "apexShape": "Tapered",
   "officialDistributor": "Distributor Name",
   "status": "Active",
-  "image1": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
-  "image2": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
-  "image3": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+  "image1Url": "/uploads/implants/xxx1.jpg",
+  "image2Url": "/uploads/implants/xxx2.jpg",
+  "image3Url": "/uploads/implants/xxx3.jpg",
   "createdAt": "2024-01-31T10:00:00.000Z",
   "updatedAt": "2024-01-31T10:00:00.000Z"
 }
@@ -235,10 +222,10 @@ try {
 ```javascript
 // Multer configuration in routes/implants.js
 fileFilter: (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.match(/^image\/(jpeg|png|gif|webp)$/)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'), false);
+    cb(new Error('Only JPEG, PNG, GIF, WebP allowed'), false);
   }
 },
 limits: {
@@ -309,17 +296,20 @@ ORDER BY createdAt DESC
 
 ### Development Setup
 ```
-Database: SQLite (implant_db.sqlite)
+Database: MySQL (Sequelize, .env config)
 Port: 5000 (Backend), 3001 (Frontend)
 CORS: Enabled for localhost
+Static uploads: /uploads/implants, /uploads/blogs
+JWT: Enabled for authentication (optional)
 ```
 
 ### Production Setup
 ```
-Database: MySQL/PostgreSQL recommended
+Database: MySQL (recommended)
 Port: 80/443 (HTTPS)
 CORS: Restricted to domain
-Image Storage: AWS S3 / Azure Blob recommended
+Image Storage: /uploads/implants, /uploads/blogs (or S3/Azure Blob)
+JWT: Required for authentication
 ```
 
 ## Testing Scenarios
@@ -335,7 +325,7 @@ Image Storage: AWS S3 / Azure Blob recommended
 
 ## Future Enhancements
 
-1. **Image Compression**: Reduce base64 size
+1. **Image Compression**: Reduce file size
 2. **Image Optimization**: Auto-optimize dimensions
 3. **CDN Integration**: Faster image delivery
 4. **Thumbnail Generation**: Auto-create thumbnails
@@ -343,3 +333,14 @@ Image Storage: AWS S3 / Azure Blob recommended
 6. **Batch Upload**: Multiple implants at once
 7. **Drag & Drop**: Improved UX
 8. **Progress Bar**: Show upload progress
+9. **External Storage**: S3/Azure Blob for images
+10. **Advanced Auth**: JWT, roles, permissions
+
+---
+## 🆕 Major Changes from Previous Version
+- SQLite → MySQL (Sequelize), images now stored as files, DB stores URLs (not base64)
+- Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+- Blogs, master data, feedback: CRUD, admin/user side
+- id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+- JWT, CORS, health check, error handler, troubleshooting docs
+- Documentation, README_BACKEND.md, README_FRONTEND.md, CHECKLIST.md อัปเดตใหม่

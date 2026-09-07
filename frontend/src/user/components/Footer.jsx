@@ -1,106 +1,97 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styles from './Footer.module.css';
+import React from "react";
+import { Link } from "react-router-dom";
+import styles from "./Footer.module.css";
 
-const Footer = () => {
-    const currentYear = new Date().getFullYear();
-    
-    return (
-        <footer className={styles.footer}>
-            <div className={styles.footerMain}>
-                <div className={styles.footerGrid}>
-                    {/* About Section */}
-                    <div className={styles.footerColumn}>
-                        <h3 className={styles.footerTitle}>Dental Implant Database</h3>
-                        <p className={styles.footerDesc}>
-                            A comprehensive professional database for dental implant systems, 
-                            providing detailed information on leading brands and manufacturers worldwide.
-                        </p>
-                        <div className={styles.socialLinks}>
-                            <a href="#" className={styles.socialIcon} aria-label="Facebook">
-                                <span>📘</span>
-                            </a>
-                            <a href="#" className={styles.socialIcon} aria-label="Twitter">
-                                <span>🐦</span>
-                            </a>
-                            <a href="#" className={styles.socialIcon} aria-label="LinkedIn">
-                                <span>💼</span>
-                            </a>
-                            <a href="#" className={styles.socialIcon} aria-label="Instagram">
-                                <span>📷</span>
-                            </a>
-                        </div>
-                    </div>
+export default function Footer() {
+  return (
+    <footer className={styles.footer}>
+      <div className={styles.footerMain}>
+        <div className={styles.footerGrid}>
+          <div className={styles.footerColumn}>
+            <div className={styles.brandBlock}>
+              <img
+                src="/logo_mfu.jpg"
+                alt="MFU Logo"
+                className={styles.brandLogo}
+              />
 
-                    {/* Quick Links */}
-                    <div className={styles.footerColumn}>
-                        <h4 className={styles.columnTitle}>Quick Links</h4>
-                        <ul className={styles.footerLinks}>
-                            <li><Link to="/">Home</Link></li>
-                            <li><Link to="/implants">Implant Database</Link></li>
-                            <li><Link to="/blog">Blog & Resources</Link></li>
-                            <li><Link to="/contact">Contact Us</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Resources */}
-                    <div className={styles.footerColumn}>
-                        <h4 className={styles.columnTitle}>Resources</h4>
-                        <ul className={styles.footerLinks}>
-                            <li><a href="#">Documentation</a></li>
-                            <li><a href="#">Research Papers</a></li>
-                            <li><a href="#">Clinical Guidelines</a></li>
-                            <li><a href="#">FAQs</a></li>
-                        </ul>
-                    </div>
-
-                    {/* Contact Info */}
-                    <div className={styles.footerColumn}>
-                        <h4 className={styles.columnTitle}>Contact Information</h4>
-                        <div className={styles.contactInfo}>
-                            <div className={styles.contactItem}>
-                                <span className={styles.contactIcon}>📍</span>
-                                <div>
-                                    <strong>Address</strong>
-                                    <p>Mae Fah Luang University<br/>Chiang Rai, Thailand</p>
-                                </div>
-                            </div>
-                            <div className={styles.contactItem}>
-                                <span className={styles.contactIcon}>✉️</span>
-                                <div>
-                                    <strong>Email</strong>
-                                    <p>mwiger@lamduan.mfu.com</p>
-                                </div>
-                            </div>
-                            <div className={styles.contactItem}>
-                                <span className={styles.contactIcon}>📞</span>
-                                <div>
-                                    <strong>Phone</strong>
-                                    <p>+66 87 547-6401</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <div className={styles.brandText}>
+                <h2 className={styles.footerTitle}>MFU Dental</h2>
+                <p className={styles.footerSubTitle}>IMPLANT DATABASE</p>
+              </div>
             </div>
 
-            {/* Footer Bottom */}
-            <div className={styles.footerBottom}>
-                <div className={styles.footerBottomContent}>
-                    <p className={styles.copyright}>
-                        © {currentYear} Dental Implant Database. All rights reserved.
-                    </p>
-                    <div className={styles.legalLinks}>
-                        <a href="#">Privacy Policy</a>
-                        <span className={styles.divider}>|</span>
-                        <a href="#">Terms of Service</a>
-                        <span className={styles.divider}>|</span>
-                        <a href="#">Cookie Policy</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    );
-};
+            <p className={styles.footerDesc}>
+              A reference platform for dental implant information, brand
+              organization, and clinical system cataloguing under Mae Fah Luang
+              University.
+            </p>
+          </div>
 
-export default Footer;
+          <div className={styles.footerColumn}>
+            <h3 className={styles.columnTitle}>Navigation</h3>
+            <ul className={styles.footerLinks}>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/blog">Blog</Link>
+              </li>
+              <li>
+                <Link to="/implants">Implants</Link>
+              </li>
+              <li>
+                <Link to="/contact">Contact Us</Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className={styles.footerColumn}>
+            <h3 className={styles.columnTitle}>Powered By</h3>
+
+            <div className={styles.poweredInfo}>
+              <p>School of Applied Digital Technology</p>
+              <p>School of Dentistry</p>
+              <p>Mae Fah Luang University</p>
+            </div>
+          </div>
+
+          <div className={styles.footerColumn}>
+            <h3 className={styles.columnTitle}>Contact</h3>
+
+            <div className={styles.contactInfo}>
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Institution</span>
+                <p>Mae Fah Luang University</p>
+              </div>
+
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>System</span>
+                <p>MFU Dental Implant Database</p>
+              </div>
+
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Purpose</span>
+                <p>Educational and reference use</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.footerBottom}>
+        <div className={styles.footerBottomContent}>
+          <p className={styles.copyright}>
+            © 2025 MFU Dental Implant Database. All rights reserved.
+          </p>
+
+          <div className={styles.legalLinks}>
+            <Link to="/">Home</Link>
+            <span className={styles.divider}>|</span>
+            <Link to="/contact">Contact</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

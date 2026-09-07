@@ -1,7 +1,23 @@
 import express from 'express';
 import { Feedback } from '../models/index.js';
+import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
+
+dotenv.config();
 
 const router = express.Router();
+
+const mailUser = process.env.MAIL_USER;
+const mailPass = process.env.MAIL_PASS;
+const transporter = mailUser && mailPass
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: mailUser,
+        pass: mailPass,
+      },
+    })
+  : null;
 
 const VALID_STATUSES = ['new', 'in_progress', 'resolved'];
 
@@ -90,6 +106,21 @@ router.post('/:id/reply', async (req, res) => {
     entry.respondedAt = new Date();
     entry.status = 'resolved';
     await entry.save();
+
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: mailUser,
+          to: entry.email,
+          subject: `Official Reply from MFU Dental Implant Database Team : ${entry.subject}`,
+          text: `Dear ${entry.name},\n\nThank you for contacting MFU Dental Implant Database team.\n\nThis is an official reply from ${entry.responder}.\n\n${entry.adminReply}\n\nIf you need any further assistance, please feel free to contact us again.\n\nSincerely,\nImplant Database Team\nMae Fah Luang University`,
+        });
+      } catch (mailErr) {
+        console.error('❌ ส่งอีเมลตอบกลับไม่สำเร็จ สาเหตุ:', mailErr);
+      }
+    } else {
+      console.warn('MAIL_USER หรือ MAIL_PASS ยังไม่ถูกตั้งค่า จึงข้ามการส่งอีเมลตอบกลับ');
+    }
 
     res.json(entry);
   } catch (err) {

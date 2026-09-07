@@ -15,6 +15,20 @@ const IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 const MASTER_DATA_UPDATED_EVENT = "master-data:updated";
 
+const ImageUploadIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="phSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
+const toNumberOrNull = (value) => {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+};
+
 export default function NewImplant() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -40,6 +54,7 @@ export default function NewImplant() {
   const [form, setForm] = useState({
     name: "",
     brand: "",
+    brandId: null,
     slug: "",
     companyId: null,
     levelId: null,
@@ -48,13 +63,37 @@ export default function NewImplant() {
     website: "",
     brandDescription: "",
     connectionType: "",
+    connectionTypeId: null,
     connectionShape: "",
+    connectionShapeId: null,
     screwdriverShape: "",
+    screwdriverShapeId: null,
     headShape: "",
+    headShapeId: null,
     bodyShape: "",
+    bodyShapeId: null,
     apexShape: "",
+    apexShapeId: null,
     officialDistributor: "",
+    distributorId: null,
     status: "Active",
+    image1Message: "",
+    image2Message: "",
+    image3Message: "",
+  });
+
+  const [currentLabels, setCurrentLabels] = useState({
+    companyName: "",
+    levelName: "",
+    countryName: "",
+    brandName: "",
+    connectionTypeName: "",
+    connectionShapeName: "",
+    screwdriverShapeName: "",
+    headShapeName: "",
+    bodyShapeName: "",
+    apexShapeName: "",
+    distributorName: "",
   });
 
   const [imageFiles, setImageFiles] = useState({
@@ -67,6 +106,12 @@ export default function NewImplant() {
     image1: "",
     image2: "",
     image3: "",
+  });
+
+  const [removedImages, setRemovedImages] = useState({
+    image1: false,
+    image2: false,
+    image3: false,
   });
 
   const [loading, setLoading] = useState(true);
@@ -84,14 +129,17 @@ export default function NewImplant() {
     saveMaster(nextMaster);
     setMasterLocal(nextMaster);
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event(MASTER_DATA_UPDATED_EVENT));
     return nextMaster;
   };
 
   const sanitizeFkList = (arr) =>
     Array.isArray(arr)
       ? arr.filter(
-          (item) => item && item.id && item.name && item.status !== "Inactive"
+          (item) =>
+            item &&
+            (item.id || item.idcompany || item.idlevel || item.idcountry) &&
+            item.name &&
+            item.status !== "Inactive"
         )
       : [];
 
@@ -114,9 +162,13 @@ export default function NewImplant() {
 
   const sanitizeTextList = (arr) =>
     Array.isArray(arr)
-      ? arr.filter(
-          (item) => item && item.name && item.status !== "Inactive"
-        )
+      ? arr
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            status: item.status || "Active",
+          }))
+          .filter((item) => item && item.name && item.status !== "Inactive")
       : [];
 
   const loadAllMasterData = async () => {
@@ -194,27 +246,75 @@ export default function NewImplant() {
             setForm({
               name: apiImplant.name || "",
               brand: apiImplant.brand || "",
+              brandId: toNumberOrNull(apiImplant.brandId),
               slug: apiImplant.slug || "",
-              companyId: apiImplant.companyId || null,
-              levelId: apiImplant.levelId || null,
-              countryId: apiImplant.countryId || null,
+              companyId: toNumberOrNull(
+                apiImplant.companyId || apiImplant.company?.id
+              ),
+              levelId: toNumberOrNull(
+                apiImplant.levelId || apiImplant.level?.id
+              ),
+              countryId: toNumberOrNull(
+                apiImplant.countryId || apiImplant.country?.id
+              ),
               countryText: apiImplant.countryText || "",
               website: apiImplant.website || "",
               brandDescription: apiImplant.brandDescription || "",
               connectionType: apiImplant.connectionType || "",
+              connectionTypeId: toNumberOrNull(apiImplant.connectionTypeId),
               connectionShape: apiImplant.connectionShape || "",
+              connectionShapeId: toNumberOrNull(apiImplant.connectionShapeId),
               screwdriverShape: apiImplant.screwdriverShape || "",
+              screwdriverShapeId: toNumberOrNull(apiImplant.screwdriverShapeId),
               headShape: apiImplant.headShape || "",
+              headShapeId: toNumberOrNull(apiImplant.headShapeId),
               bodyShape: apiImplant.bodyShape || "",
+              bodyShapeId: toNumberOrNull(apiImplant.bodyShapeId),
               apexShape: apiImplant.apexShape || "",
+              apexShapeId: toNumberOrNull(apiImplant.apexShapeId),
               officialDistributor: apiImplant.officialDistributor || "",
+              distributorId: toNumberOrNull(apiImplant.distributorId),
               status: apiImplant.status || "Active",
+              image1Message: apiImplant.image1Message || "",
+              image2Message: apiImplant.image2Message || "",
+              image3Message: apiImplant.image3Message || "",
+            });
+
+            setCurrentLabels({
+              companyName: apiImplant.company?.name || "",
+              levelName: apiImplant.level?.name || "",
+              countryName: apiImplant.country?.name || "",
+              brandName: apiImplant.brand || "",
+              connectionTypeName: apiImplant.connectionType || "",
+              connectionShapeName: apiImplant.connectionShape || "",
+              screwdriverShapeName: apiImplant.screwdriverShape || "",
+              headShapeName: apiImplant.headShape || "",
+              bodyShapeName: apiImplant.bodyShape || "",
+              apexShapeName: apiImplant.apexShape || "",
+              distributorName: apiImplant.officialDistributor || "",
             });
 
             setImagePreviews({
-              image1: resolveImageUrl(apiImplant.image1),
+              image1: resolveImageUrl(
+                apiImplant.image1 ||
+                  apiImplant.image_url ||
+                  apiImplant.image ||
+                  apiImplant.imageDataUrl
+              ),
               image2: resolveImageUrl(apiImplant.image2),
               image3: resolveImageUrl(apiImplant.image3),
+            });
+
+            setImageFiles({
+              image1: null,
+              image2: null,
+              image3: null,
+            });
+
+            setRemovedImages({
+              image1: false,
+              image2: false,
+              image3: false,
             });
           }
         }
@@ -227,6 +327,17 @@ export default function NewImplant() {
     }
 
     load();
+
+    return () => {
+      setImagePreviews((prev) => {
+        Object.values(prev).forEach((src) => {
+          if (typeof src === "string" && src.startsWith("blob:")) {
+            URL.revokeObjectURL(src);
+          }
+        });
+        return prev;
+      });
+    };
   }, [id, isEdit]);
 
   const setField = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
@@ -235,47 +346,160 @@ export default function NewImplant() {
     return (
       form.name.trim() &&
       Number(form.companyId) > 0 &&
-      Number(form.levelId) > 0 &&
-      (Number(form.countryId) > 0 || form.countryText.trim())
+      Number(form.levelId) > 0
     );
   }, [form]);
 
-  const filteredBrands = useMemo(() => {
-    if (!form.companyId || !masterData.brands) return [];
-    return masterData.brands.filter(
-      (b) =>
-        Number(b.companyId) === Number(form.companyId) &&
-        b.status !== "Inactive"
-    );
-  }, [form.companyId, masterData.brands]);
+  const withCurrentIdOption = (list, currentId, currentName) => {
+    const safe = Array.isArray(list) ? list : [];
+    if (!currentId) return safe;
 
-  const connectionTypes = useMemo(
-    () => masterData.connectionTypes || [],
-    [masterData.connectionTypes]
+    const exists = safe.some((item) => Number(item.id) === Number(currentId));
+    if (exists) return safe;
+
+    return [
+      ...safe,
+      {
+        id: currentId,
+        name: currentName || `Current (${currentId})`,
+        __current: true,
+      },
+    ];
+  };
+
+  const companyOptions = useMemo(() => {
+    return withCurrentIdOption(
+      masterData.companies,
+      form.companyId,
+      currentLabels.companyName
+    );
+  }, [masterData.companies, form.companyId, currentLabels.companyName]);
+
+  const levelOptions = useMemo(() => {
+    return withCurrentIdOption(
+      masterData.levels,
+      form.levelId,
+      currentLabels.levelName
+    );
+  }, [masterData.levels, form.levelId, currentLabels.levelName]);
+
+  const countryOptions = useMemo(() => {
+    return withCurrentIdOption(
+      masterData.countries,
+      form.countryId,
+      currentLabels.countryName
+    );
+  }, [masterData.countries, form.countryId, currentLabels.countryName]);
+
+  // Show all brands, with company name in parentheses for clarity
+  const filteredBrands = useMemo(() => {
+    return (masterData.brands || []).map((item) => ({
+      ...item,
+      label: item.companyName ? `${item.name} (${item.companyName})` : item.name,
+    }));
+  }, [masterData.brands]);
+
+  const withCurrentTextIdOption = (list, currentId, currentName) => {
+    const safe = Array.isArray(list) ? list : [];
+    if (!currentId) return safe;
+
+    const exists = safe.some((item) => Number(item.id) === Number(currentId));
+    if (exists) return safe;
+
+    return [
+      ...safe,
+      {
+        id: currentId,
+        name: currentName || `Current (${currentId})`,
+        __current: true,
+      },
+    ];
+  };
+
+  const connectionTypeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.connectionTypes,
+        form.connectionTypeId,
+        currentLabels.connectionTypeName
+      ),
+    [
+      masterData.connectionTypes,
+      form.connectionTypeId,
+      currentLabels.connectionTypeName,
+    ]
   );
-  const connectionShapes = useMemo(
-    () => masterData.connectionShapes || [],
-    [masterData.connectionShapes]
+
+  const connectionShapeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.connectionShapes,
+        form.connectionShapeId,
+        currentLabels.connectionShapeName
+      ),
+    [
+      masterData.connectionShapes,
+      form.connectionShapeId,
+      currentLabels.connectionShapeName,
+    ]
   );
-  const screwdriverShapes = useMemo(
-    () => masterData.screwdriverShapes || [],
-    [masterData.screwdriverShapes]
+
+  const screwdriverShapeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.screwdriverShapes,
+        form.screwdriverShapeId,
+        currentLabels.screwdriverShapeName
+      ),
+    [
+      masterData.screwdriverShapes,
+      form.screwdriverShapeId,
+      currentLabels.screwdriverShapeName,
+    ]
   );
-  const headShapes = useMemo(
-    () => masterData.headShapes || [],
-    [masterData.headShapes]
+
+  const headShapeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.headShapes,
+        form.headShapeId,
+        currentLabels.headShapeName
+      ),
+    [masterData.headShapes, form.headShapeId, currentLabels.headShapeName]
   );
-  const bodyShapes = useMemo(
-    () => masterData.bodyShapes || [],
-    [masterData.bodyShapes]
+
+  const bodyShapeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.bodyShapes,
+        form.bodyShapeId,
+        currentLabels.bodyShapeName
+      ),
+    [masterData.bodyShapes, form.bodyShapeId, currentLabels.bodyShapeName]
   );
-  const apexShapes = useMemo(
-    () => masterData.apexShapes || [],
-    [masterData.apexShapes]
+
+  const apexShapeOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.apexShapes,
+        form.apexShapeId,
+        currentLabels.apexShapeName
+      ),
+    [masterData.apexShapes, form.apexShapeId, currentLabels.apexShapeName]
   );
-  const officialDistributors = useMemo(
-    () => masterData.officialDistributors || [],
-    [masterData.officialDistributors]
+
+  const officialDistributorOptions = useMemo(
+    () =>
+      withCurrentTextIdOption(
+        masterData.officialDistributors,
+        form.distributorId,
+        currentLabels.distributorName
+      ),
+    [
+      masterData.officialDistributors,
+      form.distributorId,
+      currentLabels.distributorName,
+    ]
   );
 
   const onPickImage = (key, e) => {
@@ -287,11 +511,21 @@ export default function NewImplant() {
       [key]: file,
     }));
 
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreviews((prev) => ({
+    setRemovedImages((prev) => ({
       ...prev,
-      [key]: previewUrl,
+      [key]: false,
     }));
+
+    setImagePreviews((prev) => {
+      const next = { ...prev };
+
+      if (next[key] && next[key].startsWith("blob:")) {
+        URL.revokeObjectURL(next[key]);
+      }
+
+      next[key] = URL.createObjectURL(file);
+      return next;
+    });
   };
 
   const openPicker = (key) => {
@@ -305,10 +539,21 @@ export default function NewImplant() {
       [key]: null,
     }));
 
-    setImagePreviews((prev) => ({
+    setRemovedImages((prev) => ({
       ...prev,
-      [key]: "",
+      [key]: true,
     }));
+
+    setImagePreviews((prev) => {
+      const next = { ...prev };
+
+      if (next[key] && next[key].startsWith("blob:")) {
+        URL.revokeObjectURL(next[key]);
+      }
+
+      next[key] = "";
+      return next;
+    });
 
     const input = fileInputs.current[key];
     if (input) input.value = "";
@@ -369,9 +614,8 @@ export default function NewImplant() {
       });
 
       setField(fieldMap[type], Number(created.id));
-      alert(`Added ${labelMap[type]} successfully`);
     } catch (err) {
-      alert(`Failed to add ${labelMap[type]}: ${err.message}`);
+      alert(formatAddOptionError(err, labelMap[type]));
     }
   };
 
@@ -415,18 +659,34 @@ export default function NewImplant() {
         brand: [brandItem, ...((loadMaster()?.brand) || [])],
       });
 
+      setField("brandId", brandItem.id);
       setField("brand", brandItem.name);
-      alert(`Added Brand "${brandItem.name}" successfully`);
+      setCurrentLabels((prev) => ({ ...prev, brandName: brandItem.name }));
     } catch (err) {
-      alert(`Failed to add Brand: ${err.message}`);
+      alert(formatAddOptionError(err, "Brand"));
     }
+  };
+
+  const formatAddOptionError = (err, label) => {
+    const message = err?.message || "";
+
+    if (
+      /(^|[^0-9])409([^0-9]|$)|already exists|duplicate|unique|ข้อมูลที่ป้อนมีอยู่แล้ว/i.test(
+        message
+      )
+    ) {
+      return "ข้อมูลที่ป้อนมีอยู่แล้ว";
+    }
+
+    return `Failed to add ${label}: ${message || "Unknown error"}`;
   };
 
   const addTextMasterOption = async ({
     label,
     stateKey,
     localKey,
-    fieldName,
+    idFieldName,
+    textFieldName,
     createApi,
   }) => {
     const value = window.prompt(`Enter new ${label} name:`);
@@ -457,10 +717,10 @@ export default function NewImplant() {
         [localKey]: [item, ...((loadMaster()?.[localKey]) || [])],
       });
 
-      setField(fieldName, item.name);
-      alert(`Added ${label} successfully`);
+      setField(idFieldName, item.id);
+      setField(textFieldName, item.name);
     } catch (err) {
-      alert(`Failed to add ${label}: ${err.message}`);
+      alert(formatAddOptionError(err, label));
     }
   };
 
@@ -469,7 +729,8 @@ export default function NewImplant() {
       label: "Connection Type",
       stateKey: "connectionTypes",
       localKey: "connectionType",
-      fieldName: "connectionType",
+      idFieldName: "connectionTypeId",
+      textFieldName: "connectionType",
       createApi: masterDataAPI.createConnectionType,
     });
 
@@ -478,7 +739,8 @@ export default function NewImplant() {
       label: "Connection Shape",
       stateKey: "connectionShapes",
       localKey: "connectionShape",
-      fieldName: "connectionShape",
+      idFieldName: "connectionShapeId",
+      textFieldName: "connectionShape",
       createApi: masterDataAPI.createConnectionShape,
     });
 
@@ -487,7 +749,8 @@ export default function NewImplant() {
       label: "Screwdriver Shape",
       stateKey: "screwdriverShapes",
       localKey: "screwdriverShape",
-      fieldName: "screwdriverShape",
+      idFieldName: "screwdriverShapeId",
+      textFieldName: "screwdriverShape",
       createApi: masterDataAPI.createScrewdriverShape,
     });
 
@@ -496,7 +759,8 @@ export default function NewImplant() {
       label: "Head Shape",
       stateKey: "headShapes",
       localKey: "headShape",
-      fieldName: "headShape",
+      idFieldName: "headShapeId",
+      textFieldName: "headShape",
       createApi: masterDataAPI.createHeadShape,
     });
 
@@ -505,7 +769,8 @@ export default function NewImplant() {
       label: "Body Shape",
       stateKey: "bodyShapes",
       localKey: "bodyShape",
-      fieldName: "bodyShape",
+      idFieldName: "bodyShapeId",
+      textFieldName: "bodyShape",
       createApi: masterDataAPI.createBodyShape,
     });
 
@@ -514,7 +779,8 @@ export default function NewImplant() {
       label: "Apex Shape",
       stateKey: "apexShapes",
       localKey: "apexShape",
-      fieldName: "apexShape",
+      idFieldName: "apexShapeId",
+      textFieldName: "apexShape",
       createApi: masterDataAPI.createApexShape,
     });
 
@@ -523,43 +789,39 @@ export default function NewImplant() {
       label: "Official Distributor",
       stateKey: "officialDistributors",
       localKey: "officialDistributor",
-      fieldName: "officialDistributor",
+      idFieldName: "distributorId",
+      textFieldName: "officialDistributor",
       createApi: masterDataAPI.createDistributor,
     });
 
   const save = async () => {
-    if (isMasterEdit) {
-      setSaveError("Master implant edit is still locked in this form");
-      return;
-    }
-
     if (!canSave) {
       setSaveError("Please fill all required fields");
       return;
     }
 
-    const validCompany = masterData.companies.some(
+    const validCompany = companyOptions.some(
       (c) => Number(c.id) === Number(form.companyId)
     );
-    const validLevel = masterData.levels.some(
+    const validLevel = levelOptions.some(
       (l) => Number(l.id) === Number(form.levelId)
     );
     const validCountry =
       !form.countryId ||
-      masterData.countries.some((c) => Number(c.id) === Number(form.countryId));
+      countryOptions.some((c) => Number(c.id) === Number(form.countryId));
 
     if (!validCompany) {
-      setSaveError("Selected Company does not exist in companies table");
+      setSaveError("Selected Company does not exist");
       return;
     }
 
     if (!validLevel) {
-      setSaveError("Selected Level does not exist in levels table");
+      setSaveError("Selected Level does not exist");
       return;
     }
 
     if (!validCountry) {
-      setSaveError("Selected Country does not exist in countries table");
+      setSaveError("Selected Country does not exist");
       return;
     }
 
@@ -569,12 +831,38 @@ export default function NewImplant() {
 
       const payload = {
         ...form,
-        companyId: Number(form.companyId),
-        levelId: Number(form.levelId),
-        countryId: form.countryId ? Number(form.countryId) : null,
-        image1: imageFiles.image1,
-        image2: imageFiles.image2,
-        image3: imageFiles.image3,
+        companyId: toNumberOrNull(form.companyId),
+        levelId: toNumberOrNull(form.levelId),
+        countryId: toNumberOrNull(form.countryId),
+        brandId: toNumberOrNull(form.brandId),
+        connectionTypeId: toNumberOrNull(form.connectionTypeId),
+        connectionShapeId: toNumberOrNull(form.connectionShapeId),
+        screwdriverShapeId: toNumberOrNull(form.screwdriverShapeId),
+        headShapeId: toNumberOrNull(form.headShapeId),
+        bodyShapeId: toNumberOrNull(form.bodyShapeId),
+        apexShapeId: toNumberOrNull(form.apexShapeId),
+        distributorId: toNumberOrNull(form.distributorId),
+
+        // สำคัญ: ถ้าไม่ได้แตะรูปเดิม ให้เป็น undefined
+        // จะได้ไม่ถูก api.js แปลงเป็น "" แล้วลบรูปทิ้ง
+        image1: removedImages.image1
+          ? ""
+          : imageFiles.image1
+          ? imageFiles.image1
+          : undefined,
+        image2: removedImages.image2
+          ? ""
+          : imageFiles.image2
+          ? imageFiles.image2
+          : undefined,
+        image3: removedImages.image3
+          ? ""
+          : imageFiles.image3
+          ? imageFiles.image3
+          : undefined,
+        image1Message: form.image1Message,
+        image2Message: form.image2Message,
+        image3Message: form.image3Message,
       };
 
       const apiResult = isEdit
@@ -598,7 +886,10 @@ export default function NewImplant() {
         : [apiResult, ...implants];
 
       localStorage.setItem(IMPLANTS_KEY, JSON.stringify(updated));
-      window.dispatchEvent(new Event(IMPLANTS_UPDATED_EVENT));
+      // ส่ง custom event พร้อม implant ที่เพิ่ม/แก้ไข
+      window.dispatchEvent(
+        new CustomEvent(IMPLANTS_UPDATED_EVENT, { detail: { implant: apiResult } })
+      );
       navigate("/admin/implants");
     } catch (err) {
       console.error("Save failed:", err);
@@ -624,20 +915,18 @@ export default function NewImplant() {
 
       <h2 className="pageTitle">
         {isEdit ? "Edit" : "New"} Implant
-        {isMasterEdit ? " (Master locked)" : ""}
+        {isMasterEdit ? " (Master editable)" : ""}
       </h2>
 
-      {saveError && (
-        <div className="saveWarning" role="alert">
-          {saveError}
-        </div>
-      )}
+      <div style={{marginBottom: 10, color: '#b73232', fontWeight: 700, fontSize: 13}}> Fields marked with an asterisk (*) are required.</div>
+
+      {saveError && <div className="saveWarning">{saveError}</div>}
 
       <div className="newGrid">
         <div className="imgCard">
           {["image1", "image2", "image3"].map((key, idx) => {
             const current = imagePreviews[key];
-
+            const msgKey = `${key}Message`;
             return (
               <div className="imgField" key={key}>
                 <div
@@ -650,11 +939,17 @@ export default function NewImplant() {
                       className="preview"
                       src={current}
                       alt={`preview ${idx + 1}`}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                   ) : (
                     <div className="placeholder">
-                      <div className="phIcon">🖼️</div>
-                      <div className="phText">Add image {idx + 1}</div>
+                      <div className="phIcon">
+                        <ImageUploadIcon />
+                      </div>
+                      <div className="phText">Image {idx + 1}</div>
+                      <div className="phSubText">Add photo</div>
                     </div>
                   )}
 
@@ -692,6 +987,14 @@ export default function NewImplant() {
                   onChange={(e) => onPickImage(key, e)}
                   hidden
                 />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder={`Image ${idx + 1} message (optional)`}
+                  value={form[msgKey] || ""}
+                  onChange={e => setField(msgKey, e.target.value)}
+                  style={{ marginTop: 6, fontSize: 13 }}
+                />
               </div>
             );
           })}
@@ -699,7 +1002,7 @@ export default function NewImplant() {
 
         <div className="formCard">
           <div className="twoCol">
-            <Field label="Name">
+            <Field label={<><span>Name</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.name}
@@ -708,18 +1011,29 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Brand">
+            <Field label={<><span>Brand</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               {form.companyId ? (
                 <div className="selectRow">
                   <select
                     className="input"
-                    value={form.brand || ""}
-                    onChange={(e) => setField("brand", e.target.value)}
+                    value={form.brandId || ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? Number(e.target.value) : null;
+                      const found = filteredBrands.find(
+                        (b) => Number(b.id) === Number(value)
+                      );
+                      setField("brandId", value);
+                      setField("brand", found?.name || "");
+                      setCurrentLabels((prev) => ({
+                        ...prev,
+                        brandName: found?.name || prev.brandName,
+                      }));
+                    }}
                   >
                     <option value="">Choose Brand</option>
                     {filteredBrands.map((b) => (
-                      <option key={b.id} value={b.name}>
-                        {b.name}
+                      <option key={b.id} value={b.id}>
+                        {b.__current ? `Current: ${b.name}` : b.name}
                       </option>
                     ))}
                   </select>
@@ -736,7 +1050,7 @@ export default function NewImplant() {
               )}
             </Field>
 
-            <Field label="Slug">
+            <Field label={<><span>Slug</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.slug}
@@ -745,22 +1059,27 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Level">
+            <Field label={<><span>Level</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
                   value={form.levelId || ""}
-                  onChange={(e) =>
-                    setField(
-                      "levelId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    setField("levelId", value);
+                    const found = levelOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      levelName: found?.name || prev.levelName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Level</option>
-                  {masterData.levels.map((l) => (
+                  {levelOptions.map((l) => (
                     <option key={l.id} value={l.id}>
-                      {l.name}
+                      {l.__current ? `Current: ${l.name}` : l.name}
                     </option>
                   ))}
                 </select>
@@ -774,22 +1093,29 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Company">
+            <Field label={<><span>Company</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
                   value={form.companyId || ""}
-                  onChange={(e) =>
-                    setField(
-                      "companyId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    setField("companyId", value);
+                    setField("brandId", null);
+                    setField("brand", "");
+                    const found = companyOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      companyName: found?.name || prev.companyName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Company</option>
-                  {masterData.companies.map((c) => (
+                  {companyOptions.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.__current ? `Current: ${c.name}` : c.name}
                     </option>
                   ))}
                 </select>
@@ -803,22 +1129,27 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Country (select)">
+            <Field label={<><span>Country (select)</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
                   value={form.countryId || ""}
-                  onChange={(e) =>
-                    setField(
-                      "countryId",
-                      e.target.value ? Number(e.target.value) : null
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    setField("countryId", value);
+                    const found = countryOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      countryName: found?.name || prev.countryName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Country</option>
-                  {masterData.countries.map((c) => (
+                  {countryOptions.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.__current ? `Current: ${c.name}` : c.name}
                     </option>
                   ))}
                 </select>
@@ -832,7 +1163,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Country (text, optional)">
+            <Field label={<><span>Country (text, optional)</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.countryText}
@@ -841,7 +1172,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Website">
+            <Field label={<><span>Website</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <input
                 className="input"
                 value={form.website}
@@ -850,7 +1181,7 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Brand Description">
+            <Field label={<><span>Brand Description</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <textarea
                 className="input"
                 value={form.brandDescription}
@@ -859,17 +1190,29 @@ export default function NewImplant() {
               />
             </Field>
 
-            <Field label="Connection Type">
+            <Field label={<><span>Connection Type</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.connectionType || ""}
-                  onChange={(e) => setField("connectionType", e.target.value)}
+                  value={form.connectionTypeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = connectionTypeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("connectionTypeId", value);
+                    setField("connectionType", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      connectionTypeName:
+                        found?.name || prev.connectionTypeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Connection Type</option>
-                  {connectionTypes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {connectionTypeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -883,17 +1226,29 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Connection Shape">
+            <Field label={<><span>Connection Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.connectionShape || ""}
-                  onChange={(e) => setField("connectionShape", e.target.value)}
+                  value={form.connectionShapeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = connectionShapeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("connectionShapeId", value);
+                    setField("connectionShape", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      connectionShapeName:
+                        found?.name || prev.connectionShapeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Connection Shape</option>
-                  {connectionShapes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {connectionShapeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -907,17 +1262,29 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Screwdriver Shape">
+            <Field label={<><span>Screwdriver Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.screwdriverShape || ""}
-                  onChange={(e) => setField("screwdriverShape", e.target.value)}
+                  value={form.screwdriverShapeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = screwdriverShapeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("screwdriverShapeId", value);
+                    setField("screwdriverShape", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      screwdriverShapeName:
+                        found?.name || prev.screwdriverShapeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Screwdriver Shape</option>
-                  {screwdriverShapes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {screwdriverShapeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -931,17 +1298,28 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Head Shape">
+            <Field label={<><span>Head Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.headShape || ""}
-                  onChange={(e) => setField("headShape", e.target.value)}
+                  value={form.headShapeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = headShapeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("headShapeId", value);
+                    setField("headShape", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      headShapeName: found?.name || prev.headShapeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Head Shape</option>
-                  {headShapes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {headShapeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -955,17 +1333,28 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Body Shape">
+            <Field label={<><span>Body Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.bodyShape || ""}
-                  onChange={(e) => setField("bodyShape", e.target.value)}
+                  value={form.bodyShapeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = bodyShapeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("bodyShapeId", value);
+                    setField("bodyShape", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      bodyShapeName: found?.name || prev.bodyShapeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Body Shape</option>
-                  {bodyShapes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {bodyShapeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -979,17 +1368,28 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Apex Shape">
+            <Field label={<><span>Apex Shape</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.apexShape || ""}
-                  onChange={(e) => setField("apexShape", e.target.value)}
+                  value={form.apexShapeId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = apexShapeOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("apexShapeId", value);
+                    setField("apexShape", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      apexShapeName: found?.name || prev.apexShapeName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Apex Shape</option>
-                  {apexShapes.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {apexShapeOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -1003,19 +1403,28 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Official Distributor">
+            <Field label={<><span>Official Distributor</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <div className="selectRow">
                 <select
                   className="input"
-                  value={form.officialDistributor || ""}
-                  onChange={(e) =>
-                    setField("officialDistributor", e.target.value)
-                  }
+                  value={form.distributorId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? Number(e.target.value) : null;
+                    const found = officialDistributorOptions.find(
+                      (item) => Number(item.id) === Number(value)
+                    );
+                    setField("distributorId", value);
+                    setField("officialDistributor", found?.name || "");
+                    setCurrentLabels((prev) => ({
+                      ...prev,
+                      distributorName: found?.name || prev.distributorName,
+                    }));
+                  }}
                 >
                   <option value="">Choose Distributor</option>
-                  {officialDistributors.map((opt) => (
-                    <option key={opt.id} value={opt.name}>
-                      {opt.name}
+                  {officialDistributorOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.__current ? `Current: ${opt.name}` : opt.name}
                     </option>
                   ))}
                 </select>
@@ -1029,7 +1438,7 @@ export default function NewImplant() {
               </div>
             </Field>
 
-            <Field label="Status">
+            <Field label={<><span>Status</span><span style={{color:'#b73232', fontSize:'1.3em', marginLeft:4, fontWeight:900, textShadow:'0 1px 2px #fff,0 0 2px #b73232'}}> *</span></>}>
               <select
                 className="input"
                 value={form.status}

@@ -34,21 +34,21 @@ NODE_ENV=development
 # MySQL Configuration
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=implant_db
+DB_NAME=datadental
 DB_USER=root
-DB_PASSWORD=your_mysql_password
-
-# JWT Secret
+DB_PASSWORD=080448
+2. รัน SQL script จากไฟล์ `backend/database/schema.sql`
+3. ระบบจะสร้างฐานข้อมูล `datadental` และตารางทั้งหมด (หรือชื่อที่ตั้งใน .env)
 JWT_SECRET=your_secure_random_string
 JWT_EXPIRES_IN=7d
 
 # CORS
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
-
+DB_NAME=datadental
 ### 4. สร้าง Admin User
 
-#### วิธีที่ 1: ใช้ bcrypt hash
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:5174,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:5173,http://127.0.0.1:5174
 ```javascript
 // ใน Node.js console หรือสร้างไฟล์ script
 import bcrypt from 'bcryptjs';
@@ -61,7 +61,8 @@ console.log(hash);
 ```sql
 INSERT INTO users (username, email, password, role, status) 
 VALUES (
-  'admin', 
+│   │   ├── authMiddleware.js    # Auth middleware (เพิ่ม)
+│   │   └── upload.js            # Multer image upload
   'admin@lamduan.mfu.ac.th', 
   '$2a$10$YourHashedPasswordHere', -- แทนที่ด้วย hash จริง
   'admin', 
@@ -78,7 +79,7 @@ npm run dev
 npm start
 ```
 
-Server จะรันที่ `http://localhost:5000`
+Server จะรันที่ `http://localhost:5000/api/health`
 
 ---
 
@@ -106,6 +107,21 @@ backend/
 │   │   ├── masterData.js        # Master data CRUD
 │   │   └── feedback.js          # Contact feedback
 │   └── index.js                 # Express server (UPDATED!)
+**Response:**
+```json
+{
+  "id": "master-1", // หรือ id เป็นเลข (custom)
+  "name": "Straumann BLX",
+  "brand": "Straumann",
+  "image1": "/uploads/implants/straumann-1234567890.jpg",
+  "image2": "/uploads/implants/straumann-1234567891.jpg",
+  "image3": null,
+  "company": { "id": 1, "name": "Straumann" },
+  "level": { "id": 1, "name": "Premium" },
+  "country": { "id": 1, "name": "Switzerland" },
+  "source": "master" // หรือ "custom"
+}
+```
 ├── uploads/
 │   └── implants/                # Uploaded implant images
 ├── database/
@@ -117,7 +133,6 @@ backend/
 ---
 
 ## 🔌 API Endpoints
-
 ### Implants (with Image Upload)
 
 #### GET `/api/implants`
@@ -150,30 +165,16 @@ backend/
 ```
 name: "Straumann BLX"
 brand: "Straumann"
-companyId: 1
-levelId: 1
 countryId: 1
 image1: [File]
 image2: [File]
 image3: [File]
 ```
 
-**Response:**
-```json
-{
   "id": 1,
-  "name": "Straumann BLX",
   "image1": "/uploads/implants/straumann-1234567890.jpg",
   ...
 }
-```
-
-#### PUT `/api/implants/:id`
-แก้ไข implant (รูปภาพใหม่จะแทนที่รูปเก่าอัตโนมัติ)
-
-**Request:** `multipart/form-data` (เหมือน POST)
-
-#### DELETE `/api/implants/:id`
 ลบ implant (รูปภาพจะถูกลบอัตโนมัติด้วย)
 
 ---

@@ -9,20 +9,20 @@
 
 ### Step 1: Start Backend (Terminal 1)
 ```bash
-cd /workspaces/Implantdatabase/backend
-npm start
+cd backend
+npm run dev
 ```
-✅ Wait for: "Server running on port 5000"
+✅ Wait for: "Server running on http://localhost:5000/api/health"
 
 ### Step 2: Start Frontend (Terminal 2)
 ```bash
-cd /workspaces/Implantdatabase/frontend
+cd frontend
 npm run dev
 ```
-✅ Wait for: "Local: http://localhost:3001"
+✅ Wait for: "Local: http://localhost:3000"
 
 ### Step 3: Open Browser
-Go to: **http://localhost:3001/admin**
+Go to: **http://localhost:3000/admin**
 
 ---
 
@@ -30,7 +30,7 @@ Go to: **http://localhost:3001/admin**
 
 ### Method 1: Via Admin Panel (Easy)
 
-1. **Go to Admin**: http://localhost:3001/admin
+1. **Go to Admin**: http://localhost:3000/admin
 2. **Click**: "Implants Management"
 3. **Click**: "+ Add new implant"
 4. **Fill Form**:
@@ -51,13 +51,14 @@ Go to: **http://localhost:3001/admin**
 
 ```bash
 curl -X POST http://localhost:5000/api/implants \
-  -F "name=Test Implant" \
-  -F "companyId=1" \
-  -F "levelId=1" \
-  -F "countryId=1" \
-  -F "image1=@/path/to/image1.jpg" \
-  -F "image2=@/path/to/image2.jpg" \
-  -F "image3=@/path/to/image3.jpg"
+        -F "name=Test Implant" \
+        -F "companyId=1" \
+        -F "levelId=1" \
+        -F "countryId=1" \
+        -F "image1=@/path/to/image1.jpg" \
+        -F "image2=@/path/to/image2.jpg" \
+        -F "image3=@/path/to/image3.jpg"
+# Images will be saved as files, DB stores URLs (no base64)
 ```
 
 ---
@@ -65,7 +66,7 @@ curl -X POST http://localhost:5000/api/implants \
 ## 👁️ Viewing Implants
 
 ### Admin View
-**URL**: http://localhost:3001/admin/implants
+**URL**: http://localhost:3000/admin/implants
 
 Shows:
 - Table of all implants
@@ -74,7 +75,7 @@ Shows:
 - Status toggle
 
 ### User View
-**URL**: http://localhost:3001/implants
+**URL**: http://localhost:3000/implants
 
 Shows:
 - Brand cards
@@ -90,7 +91,6 @@ Shows:
 - ✅ PNG (.png)
 - ✅ GIF (.gif)
 - ✅ WebP (.webp)
-- ✅ SVG (.svg)
 
 ### Size Limits
 - **Per image**: Max 10 MB
@@ -110,26 +110,24 @@ Shows:
 ```
 Admin uploads image
         ↓
-Browser converts to base64
+Sends FormData (files) to backend API
         ↓
-Sends to backend API
+Backend saves files to /uploads/implants, DB stores URLs (no base64)
         ↓
-Backend stores in database
+Frontend saves to localStorage (auto-refresh)
         ↓
-Frontend saves to localStorage
-        ↓
-User side auto-syncs
+User side auto-syncs (gallery, id master-xxx/custom)
 ```
 
 ### View Flow
 ```
 User loads implant detail
         ↓
-Fetches from backend API
+Fetches from backend API (image URLs)
         ↓
 Falls back to localStorage if offline
         ↓
-Displays 3 images with thumbnails
+Displays 3 images with thumbnails (gallery, slider)
 ```
 
 ---
@@ -138,33 +136,33 @@ Displays 3 images with thumbnails
 
 | Page | URL |
 |------|-----|
-| Home | http://localhost:3001 |
-| User Implants | http://localhost:3001/implants |
-| Admin Home | http://localhost:3001/admin |
-| Manage Implants | http://localhost:3001/admin/implants |
-| New Implant | http://localhost:3001/admin/implants/new |
-| Edit Implant | http://localhost:3001/admin/implants/edit/1 |
-| Blog | http://localhost:3001/blogs |
-| Contact | http://localhost:3001/contact |
+| Home | http://localhost:3000 |
+| User Implants | http://localhost:3000/implants |
+| Admin Home | http://localhost:3000/admin |
+| Manage Implants | http://localhost:3000/admin/implants |
+| New Implant | http://localhost:3000/admin/implants/new |
+| Edit Implant | http://localhost:3000/admin/implants/edit/1 |
+| Blog | http://localhost:3000/blogs |
+| Contact | http://localhost:3000/contact |
 
 ---
 
 ## 🛠️ Common Tasks
 
 ### Create Implant
-1. Go to http://localhost:3001/admin/implants/new
+1. Go to http://localhost:3000/admin/implants/new
 2. Fill form
 3. Upload 3 images
 4. Click "Create Implant"
 
 ### Edit Implant
-1. Go to http://localhost:3001/admin/implants
-2. Find implant, click "Edit"
-3. Change any field or images
+1. Go to http://localhost:3000/admin/implants
+2. Find implant, click "Edit" (master/custom, id master-xxx)
+3. Change any field or images (replace/delete, auto-delete old images)
 4. Click "Save Changes"
 
 ### View Implant (User Side)
-1. Go to http://localhost:3001/implants
+1. Go to http://localhost:3000/implants
 2. Click on any implant card
 3. View detail page with all 3 images
 4. Click thumbnails to switch images
@@ -177,11 +175,8 @@ Displays 3 images with thumbnails
 
 ### Clear All Data
 1. Stop backend: Ctrl+C
-2. Delete database:
-   ```bash
-   rm /workspaces/Implantdatabase/backend/implant_db.sqlite
-   ```
-3. Start backend again: `npm start`
+2. Drop MySQL database or run migration reset (see MYSQL_MIGRATION_GUIDE.md)
+3. Start backend again: `npm run dev`
 4. Fresh database created!
 
 ---
@@ -279,7 +274,7 @@ npm run dev
 **Database**: ✅ Ready
 
 ### Next Steps:
-1. Open http://localhost:3001/admin
+1. Open http://localhost:3000/admin
 2. Create a test implant with 3 images
 3. View it on user side
 4. Try editing and deleting
@@ -314,7 +309,7 @@ npm run dev
 ## ❓ FAQ
 
 **Q: Where are images stored?**
-A: SQLite database (`implant_db.sqlite`) as base64-encoded data URLs
+A: Files in `/uploads/implants`, database stores URLs (no base64)
 
 **Q: Can I use my own images?**
 A: Yes! Any JPG, PNG, GIF, WebP, or SVG under 10MB
@@ -343,6 +338,15 @@ For issues, check:
 
 ---
 
-**Version**: 1.0
-**Last Updated**: January 31, 2026
+**Version**: 1.1
+**Last Updated**: April 24, 2026
 **Status**: ✅ Ready to Use
+
+---
+## 🆕 Major Changes from Previous Version
+- SQLite → MySQL (Sequelize), images now stored as files, DB stores URLs (not base64)
+- Static uploads: /uploads/implants, /uploads/blogs (auto-create dir, auto-delete old images)
+- Blogs, master data, feedback: CRUD, admin/user side
+- id รองรับ master-xxx/custom, slug, auto-refresh ทุกหน้า (localStorage sync)
+- JWT, CORS, health check, error handler, troubleshooting docs
+- Documentation, README_BACKEND.md, README_FRONTEND.md, CHECKLIST.md อัปเดตใหม่

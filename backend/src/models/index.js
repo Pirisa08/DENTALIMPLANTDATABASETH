@@ -11,6 +11,7 @@ import Feedback from './Feedback.js';
 import RefConnectionType from './RefConnectionType.js';
 import RefConnectionShape from './RefConnectionShape.js';
 import RefDriverShape from './RefDriverShape.js';
+import RefHeadShape from './RefHeadShape.js';
 import RefBodyShape from './RefBodyShape.js';
 import RefApexShape from './RefApexShape.js';
 import LoginActivity from './LoginActivity.js';
@@ -58,6 +59,12 @@ ImplantMaster.belongsTo(RefDriverShape, {
   as: 'driverShapeInfo',
 });
 
+ImplantMaster.belongsTo(RefHeadShape, {
+  foreignKey: 'head_shape_id',
+  targetKey: 'id',
+  as: 'headShapeInfo',
+});
+
 ImplantMaster.belongsTo(RefBodyShape, {
   foreignKey: 'body_shape_id',
   targetKey: 'id',
@@ -98,6 +105,7 @@ export {
   RefConnectionType,
   RefConnectionShape,
   RefDriverShape,
+  RefHeadShape,
   RefBodyShape,
   RefApexShape,
   LoginActivity,

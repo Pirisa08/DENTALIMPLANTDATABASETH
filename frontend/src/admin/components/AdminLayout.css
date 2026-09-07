@@ -3,6 +3,10 @@
   min-width: 1200px;
   display:flex;
   position: relative;
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+  color: var(--dark2);
 }
 
 /* Overlay for Mobile Sidebar */
@@ -84,6 +88,7 @@
   flex-direction: column;
   border-radius: 16px;
   font-size: 14px;
+  line-height: 1.45;
   transition: transform 0.3s ease;
   position: relative;
   z-index: 999;
@@ -143,10 +148,20 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-weight: 900;
-  font-size: 20px;
-  color: #fff;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.9);
   user-select: none;
+}
+
+.avatarSvg{
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .profileText{
@@ -156,8 +171,8 @@
 
 .profileText .name{
   font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
+  font-size: 14px;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -167,12 +182,15 @@
   font-size: 12px;
   opacity: .8;
   margin-top: 2px;
+  line-height: 1.35;
 }
 
 .menuTitle{
   margin: 18px 10px 10px;
   font-size: 12px;
   opacity: .9;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .nav{
@@ -297,7 +315,7 @@
   border-radius:8px;
   padding:2px 8px;
   font-size:11px;
-  font-weight:900;
+  font-weight:700;
 }
 
 .masterItem.active .masterCount{
@@ -329,7 +347,7 @@
   color: #fff;
   border-radius: 12px;
   padding: 12px 18px;
-  font-weight: 900;
+  font-weight: 700;
   margin-top: 24px;
   font-size: 14px;
 }

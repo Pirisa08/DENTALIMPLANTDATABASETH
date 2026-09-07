@@ -1,10 +1,12 @@
+// ImplantDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Breadcrumb from "../components/Breadcrumb";
 import ImplantCard from "../components/ImplantCard";
 import styles from "./ImplantDetail.module.css";
-import useMergedImplants, { pickImplantImages } from "../hooks/useMergedImplants";
-import { resolveImageUrl } from "../../services/api.js";
+import useMergedImplants, {
+  pickImplantImages,
+} from "../hooks/useMergedImplants";
 
 const toDisplayText = (value) => {
   if (value === 0) return "0";
@@ -20,11 +22,14 @@ const toDisplayText = (value) => {
   return String(value);
 };
 
+
 export default function ImplantDetail() {
   const { slug } = useParams();
   const slugKey = (slug || "").toLowerCase();
   const { implants: mergedImplants, loading } = useMergedImplants();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState(null);
 
   const displayImplant = useMemo(() => {
     return (
@@ -34,18 +39,27 @@ export default function ImplantDetail() {
     );
   }, [mergedImplants, slugKey]);
 
+  const implantImages = useMemo(() => {
+    if (!displayImplant) return [];
+    return pickImplantImages(displayImplant).filter((img) => img.dataUrl);
+  }, [displayImplant]);
+
   useEffect(() => {
     setSelectedImage(0);
   }, [displayImplant?.slug, displayImplant?.id]);
 
-  const implantImages = useMemo(() => {
-    if (!displayImplant) return [];
 
-    return pickImplantImages(displayImplant).map((img) => ({
-      ...img,
-      dataUrl: resolveImageUrl(img.dataUrl),
-    }));
-  }, [displayImplant]);
+  // Show hovered image if any, otherwise show selected
+  const displayImageIndex =
+    hoveredImage !== null && hoveredImage !== undefined ? hoveredImage : selectedImage;
+  const safeSelectedImage = implantImages[displayImageIndex] || implantImages[0] || null;
+
+  // Get image message fields from displayImplant
+  const imageMessages = [
+    displayImplant?.image1Message || displayImplant?.image1_message || "",
+    displayImplant?.image2Message || displayImplant?.image2_message || "",
+    displayImplant?.image3Message || displayImplant?.image3_message || "",
+  ];
 
   const brandName =
     (displayImplant?.brand && String(displayImplant.brand)) ||
@@ -62,8 +76,11 @@ export default function ImplantDetail() {
 
     return (mergedImplants || []).filter((item) => {
       if (!item) return false;
+      if (String(item.status || "").toLowerCase() !== "active") return false;
+
       const sameSlug = (item.slug || "").toLowerCase() === slugKey;
       const sameBrand = String(item.brand || "").toUpperCase() === targetBrand;
+
       return !sameSlug && sameBrand;
     });
   }, [displayImplant, mergedImplants, slugKey]);
@@ -104,40 +121,100 @@ export default function ImplantDetail() {
       <section className={styles.top}>
         <div className={styles.imageSection}>
           <div className={styles.mainImageContainer}>
-            <div className={styles.mainImage}>
-              {implantImages[selectedImage]?.dataUrl ? (
+            <div
+              className={styles.mainImage}
+              style={{ position: "relative", cursor: safeSelectedImage ? "pointer" : "default" }}
+              onClick={() => safeSelectedImage && setShowOverlay(true)}
+              title={imageMessages[selectedImage] || undefined}
+            >
+              {safeSelectedImage?.dataUrl ? (
                 <img
-                  src={implantImages[selectedImage].dataUrl}
+                  src={safeSelectedImage.dataUrl}
                   alt={displayImplant.name}
                   className={styles.actualImage}
                 />
               ) : (
                 <span className={styles.imageLabel}>{displayImplant.name}</span>
               )}
+              {/* Overlay trigger icon */}
+              {safeSelectedImage && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 16,
+                    background: "rgba(0,0,0,0.5)",
+                    color: "#fff",
+                    borderRadius: 8,
+                    padding: "2px 10px",
+                    fontSize: 13,
+                    pointerEvents: "none",
+                  }}
+                >
+                  Info
+                </span>
+              )}
             </div>
+            {/* Overlay for image message */}
+            {showOverlay && (
+              <div
+                className={styles.imageOverlayBg}
+                onClick={() => setShowOverlay(false)}
+              >
+                <div
+                  className={styles.imageOverlayBox}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <button
+                    className={styles.imageOverlayClose}
+                    onClick={() => setShowOverlay(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                  <div className={styles.imageOverlayTitle}>
+                    Image Information
+                  </div>
+                  <div className={styles.imageOverlayMsg}>
+                    <span className={styles.imageOverlayMsgLabel}>Current message:</span>
+                    <br />
+                    {imageMessages[selectedImage] ? (
+                      <span className={styles.imageOverlayMsgText}>{imageMessages[selectedImage]}</span>
+                    ) : (
+                      <span className={styles.imageOverlayMsgEmpty}>(No message provided)</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className={styles.thumbnails}>
-            {implantImages.map((img, index) => (
-              <button
-                key={img.id}
-                className={`${styles.thumbnail} ${
-                  selectedImage === index ? styles.thumbnailActive : ""
-                }`}
-                onClick={() => setSelectedImage(index)}
-              >
-                {img.dataUrl ? (
+          {implantImages.length > 0 && (
+            <div className={styles.thumbnails}
+              onMouseLeave={() => setHoveredImage(null)}
+            >
+              {implantImages.map((img, index) => (
+                <button
+                  key={img.id || index}
+                  type="button"
+                  className={`${styles.thumbnail} ${
+                    selectedImage === index ? styles.thumbnailActive : ""
+                  }`}
+                  onClick={() => setSelectedImage(index)}
+                  onMouseEnter={() => setHoveredImage(index)}
+                  onFocus={() => setHoveredImage(index)}
+                  onMouseLeave={() => setHoveredImage(null)}
+                  tabIndex={0}
+                >
                   <img
                     src={img.dataUrl}
                     alt={`Thumbnail ${index + 1}`}
                     className={styles.thumbnailImage}
                   />
-                ) : (
-                  <span className={styles.thumbnailNumber}>{index + 1}</span>
-                )}
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={styles.infoSection}>
@@ -199,39 +276,38 @@ export default function ImplantDetail() {
         </div>
       </section>
 
-      <section className={styles.other}>
-        <div className={styles.otherHeader}>
+      <section className={styles.relatedSection}>
+        <div className={styles.relatedHeader}>
           <div>
-            <span className={styles.otherEyebrow}>Related Catalogue</span>
-            <h2 className={styles.otherTitle}>More from {brandName}</h2>
+            <span className={styles.relatedEyebrow}>Related Catalogue</span>
+            <h2 className={styles.relatedTitle}>Related Implants</h2>
           </div>
+
           <Link
-            to={`/implants/brand/${encodeURIComponent(
-              displayImplant.brand || ""
-            )}`}
+            to={`/implants/brand/${encodeURIComponent(displayImplant.brand || "")}`}
             className={styles.viewAll}
           >
-            View brand
+            View All
           </Link>
         </div>
 
-        <div className={styles.grid}>
-          {otherImplants.map((it) => {
-            const previewImage = resolveImageUrl(
-              pickImplantImages(it).find((img) => img.dataUrl)?.dataUrl || ""
-            );
-
-            return (
+        {otherImplants.length === 0 ? (
+          <div className={styles.emptyState}>No related implants found.</div>
+        ) : (
+          <div className={styles.relatedGrid}>
+            {otherImplants.slice(0, 4).map((item) => (
               <ImplantCard
-                key={it.slug || it.id}
-                title={it.name}
-                company={toDisplayText(it.company) || it.brand}
-                slug={it.slug}
-                image={previewImage}
+                key={item.slug || item.id}
+                title={item.name}
+                company={item.company || item.brand}
+                slug={item.slug}
+                image={
+                  pickImplantImages(item).find((img) => img.dataUrl)?.dataUrl || ""
+                }
               />
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -240,18 +316,24 @@ export default function ImplantDetail() {
 function Info({ label, value }) {
   return (
     <div className={styles.infoRow}>
-      <span className={styles.infoLabel}>{label}</span>
-      <span className={styles.infoColon}>:</span>
-      <div className={styles.infoValue}>{formatInfoValue(value)}</div>
+      <div className={styles.infoLabel}>{label}</div>
+      <div className={styles.infoColon}>:</div>
+      <div className={styles.infoValue}>{renderInfoValue(value)}</div>
     </div>
   );
 }
 
-function formatInfoValue(raw) {
-  if (raw === 0) return <span>0</span>;
-  if (!raw) return <span>-</span>;
+function renderInfoValue(raw) {
+  if (raw === null || raw === undefined || raw === "") {
+    return <span>-</span>;
+  }
+
   if (typeof raw !== "string") {
-    if (typeof raw === "object" && raw !== null) {
+    if (Array.isArray(raw)) {
+      const items = raw.filter(Boolean);
+      return items.length ? <span>{items.join(", ")}</span> : <span>-</span>;
+    }
+    if (typeof raw === "object") {
       if (raw.name) return <span>{raw.name}</span>;
       if (raw.title) return <span>{raw.title}</span>;
       if (raw.label) return <span>{raw.label}</span>;
@@ -266,7 +348,6 @@ function formatInfoValue(raw) {
   const normalized = trimmed
     .replace(/\s*\n\s*/g, " ")
     .replace(/\s{2,}/g, " ");
-
   const segments = normalized.split("•").map((part) => part.trim());
   const lead = segments.shift();
   const bullets = segments

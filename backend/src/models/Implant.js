@@ -79,14 +79,26 @@ const Implant = sequelize.define('Implant', {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+    image1Message: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
   image2: {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+    image2Message: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
   image3: {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+    image3Message: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

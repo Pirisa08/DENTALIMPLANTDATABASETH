@@ -159,30 +159,32 @@ export default function DistributorForm({ mode = "create" }) {
             />
           </div>
 
-          <div className="formField">
-            <label className="formLabel">Status</label>
-            <div className="statusPick">
-              <label className="check">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={form.status === "Active"}
-                  onChange={() => setField("status", "Active")}
-                />
-                Active
-              </label>
+            <div className="formField">
+              <label className="formLabel">Status</label>
+              <div className="statusPick">
+                <label className="check">
+                  <input
+                    type="radio"
+                    name="status-radio"
+                    value="Active"
+                    checked={form.status === "Active"}
+                    onChange={e => setField("status", e.target.value)}
+                  />
+                  Active
+                </label>
 
-              <label className="check">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={form.status === "Inactive"}
-                  onChange={() => setField("status", "Inactive")}
-                />
-                Inactive
-              </label>
+                <label className="check">
+                  <input
+                    type="radio"
+                    name="status-radio"
+                    value="Inactive"
+                    checked={form.status === "Inactive"}
+                    onChange={e => setField("status", e.target.value)}
+                  />
+                  Inactive
+                </label>
+              </div>
             </div>
-          </div>
 
           <div className="formActions">
             <button className="btnSave" onClick={handleSave} disabled={saving}>

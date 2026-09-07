@@ -1,19 +1,22 @@
+// useMergedImplants.js
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { implantsAPI, resolveImageUrl } from "../../services/api";
 
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 
+const toText = (value) => String(value || "").trim();
+
 const buildImplantKey = (implant) => {
   if (!implant) return "";
 
-  const slug = String(implant.slug || "").trim().toLowerCase();
+  const slug = toText(implant.slug).toLowerCase();
   if (slug) return `slug:${slug}`;
 
-  const id = String(implant.id || "").trim();
+  const id = toText(implant.id);
   if (id) return `id:${id}`;
 
-  const brand = String(implant.brand || "").trim().toLowerCase();
-  const name = String(implant.name || "").trim().toLowerCase();
+  const brand = toText(implant.brand).toLowerCase();
+  const name = toText(implant.name).toLowerCase();
   if (brand && name) return `brandname:${brand}::${name}`;
 
   return "";
@@ -33,18 +36,39 @@ const dedupeImplants = (list) => {
   return Array.from(map.values());
 };
 
+const collectImageCandidates = (implant) => {
+  if (!implant) return [];
+
+  return [
+    implant.image1,
+    implant.image2,
+    implant.image3,
+    implant.image_url,
+    implant.image,
+    implant.imageDataUrl,
+    implant.imageUrl,
+    implant.thumbnail,
+    implant.thumbnailUrl,
+  ].filter(Boolean);
+};
+
 export const pickImplantImages = (implant) => {
-  return [0, 1, 2].map((_, index) => {
-    const key = `image${index + 1}`;
-    return {
-      id: index + 1,
-      dataUrl: resolveImageUrl(implant?.[key]),
-    };
-  });
+  const resolved = collectImageCandidates(implant)
+    .map((value) => resolveImageUrl(value))
+    .filter(Boolean);
+
+  const unique = Array.from(new Set(resolved));
+
+  return [0, 1, 2].map((_, index) => ({
+    id: index + 1,
+    dataUrl: unique[index] || "",
+  }));
 };
 
 const normalizeImplant = (implant) => {
   if (!implant) return null;
+
+  const pickedImages = pickImplantImages(implant);
 
   return {
     ...implant,
@@ -64,9 +88,9 @@ const normalizeImplant = (implant) => {
       (typeof implant?.country === "string" ? implant.country : "") ||
       implant?.countryText ||
       "",
-    image1: resolveImageUrl(implant.image1) || null,
-    image2: resolveImageUrl(implant.image2) || null,
-    image3: resolveImageUrl(implant.image3) || null,
+    image1: pickedImages[0]?.dataUrl || null,
+    image2: pickedImages[1]?.dataUrl || null,
+    image3: pickedImages[2]?.dataUrl || null,
   };
 };
 
@@ -114,7 +138,7 @@ export default function useMergedImplants() {
   const bySlug = useMemo(() => {
     const map = new Map();
     (implants || []).forEach((implant) => {
-      const slug = String(implant.slug || "").trim().toLowerCase();
+      const slug = toText(implant.slug).toLowerCase();
       if (slug) map.set(slug, implant);
     });
     return map;

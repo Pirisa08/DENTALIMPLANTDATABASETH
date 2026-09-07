@@ -5,18 +5,11 @@ const resolveApiUrl = () => {
   }
 
   if (typeof window !== "undefined" && window.location) {
-    const { protocol, hostname, origin } = window.location;
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-
-    if (isLocalhost) {
-      const targetPort = "5000";
-      return `${protocol}//${hostname}:${targetPort}/api`;
-    }
-
+    const { origin } = window.location;
     return `${origin.replace(/\/$/, "")}/api`;
   }
 
-  return "http://localhost:5000/api";
+  return "/api";
 };
 
 const API_URL = resolveApiUrl();
@@ -86,20 +79,38 @@ const getAuthHeaders = () => {
 export const resolveImageUrl = (value) => {
   if (!value) return "";
   if (typeof value !== "string") return "";
-  if (value.startsWith("data:")) return value;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
 
-  const apiRoot = API_URL.replace(/\/api$/, "");
+  const trimmed = value.trim();
+  if (!trimmed) return "";
 
-  if (value.startsWith("/uploads/")) {
-    return `${apiRoot}${value}`;
+  if (trimmed.startsWith("data:")) return trimmed;
+  if (trimmed.startsWith("blob:")) return trimmed;
+  if (trimmed.startsWith("https://")) return trimmed;
+
+  if (
+    trimmed.startsWith("http://localhost:5000/uploads/") ||
+    trimmed.startsWith("http://127.0.0.1:5000/uploads/")
+  ) {
+    try {
+      return new URL(trimmed).pathname;
+    } catch (err) {
+      return trimmed;
+    }
   }
 
-  if (value.startsWith("uploads/")) {
-    return `${apiRoot}/${value}`;
+  if (trimmed.startsWith("/uploads/")) {
+    return trimmed;
   }
 
-  return value;
+  if (trimmed.startsWith("uploads/")) {
+    return `/${trimmed}`;
+  }
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  return `/${trimmed.replace(/^\/+/, "")}`;
 };
 
 const apiCall = async (endpoint, options = {}) => {
@@ -134,7 +145,7 @@ const apiCall = async (endpoint, options = {}) => {
     response = await fetch(url, fetchOptions);
   } catch (err) {
     throw new Error(
-      `Cannot connect to backend at ${API_URL}. Please start server on port 5000.`
+      `Cannot connect to backend at ${API_URL}. Please start server on port 8900.`
     );
   }
 
@@ -142,9 +153,16 @@ const apiCall = async (endpoint, options = {}) => {
 
   if (!response.ok) {
     const errorText = await response.text();
+    const isDuplicateError =
+      response.status === 409 ||
+      /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText);
 
     if (response.status === 401) {
       throw new Error("Unauthorized");
+    }
+
+    if (isDuplicateError) {
+      throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
     }
 
     throw new Error(
@@ -542,8 +560,6 @@ const dataUrlToFile = (dataUrl, filename) => {
 };
 
 const appendImageToFormData = (formData, key, value, fallbackName) => {
-  if (!value) return;
-
   if (value instanceof File) {
     formData.append(key, value);
     return;
@@ -554,7 +570,26 @@ const appendImageToFormData = (formData, key, value, fallbackName) => {
     if (file) {
       formData.append(key, file);
     }
+    return;
   }
+
+  if (value === "" || value === null) {
+    formData.append(key, "");
+  }
+};
+
+const appendNonImageFields = (formData, data = {}) => {
+  Object.entries(data || {}).forEach(([key, value]) => {
+    // Only skip image file fields, not image message fields
+    if ((key === "image1" || key === "image2" || key === "image3")) return;
+
+    if (value === null || value === undefined) {
+      formData.append(key, "");
+      return;
+    }
+
+    formData.append(key, String(value));
+  });
 };
 
 export const implantsAPI = {
@@ -582,13 +617,7 @@ export const implantsAPI = {
     const token = getAuthToken();
     const formData = new FormData();
 
-    Object.entries(data || {}).forEach(([key, value]) => {
-      if (key.startsWith("image")) return;
-      if (value !== null && value !== undefined && value !== "") {
-        formData.append(key, String(value));
-      }
-    });
-
+    appendNonImageFields(formData, data);
     appendImageToFormData(formData, "image1", data?.image1, "image1.jpg");
     appendImageToFormData(formData, "image2", data?.image2, "image2.jpg");
     appendImageToFormData(formData, "image3", data?.image3, "image3.jpg");
@@ -604,6 +633,12 @@ export const implantsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (
+        response.status === 409 ||
+        /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText)
+      ) {
+        throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
+      }
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
@@ -619,13 +654,7 @@ export const implantsAPI = {
     const token = getAuthToken();
     const formData = new FormData();
 
-    Object.entries(data || {}).forEach(([key, value]) => {
-      if (key.startsWith("image")) return;
-      if (value !== null && value !== undefined && value !== "") {
-        formData.append(key, String(value));
-      }
-    });
-
+    appendNonImageFields(formData, data);
     appendImageToFormData(formData, "image1", data?.image1, "image1.jpg");
     appendImageToFormData(formData, "image2", data?.image2, "image2.jpg");
     appendImageToFormData(formData, "image3", data?.image3, "image3.jpg");
@@ -641,6 +670,12 @@ export const implantsAPI = {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (
+        response.status === 409 ||
+        /already\s+exists|duplicate|ER_DUP_ENTRY|unique/i.test(errorText)
+      ) {
+        throw new Error("ข้อมูลที่ป้อนมีอยู่แล้ว");
+      }
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 

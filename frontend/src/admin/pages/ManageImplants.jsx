@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import "./ManageImplants.css";
+const MySwal = withReactContent(Swal);
 import { useNavigate, useLocation } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
@@ -10,6 +13,20 @@ import {
 } from "../../services/api.js";
 
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
+
+const ImagePlaceholderIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="rowImageSvg">
+    <path d="M5 5.5h14v13H5v-13Z" />
+    <path d="m7.5 16 3.4-4 2.5 2.8 1.4-1.6 1.8 2.8" />
+    <path d="M15.7 9.3h.1" />
+  </svg>
+);
+
+const PaginationArrow = ({ direction }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
+    <path d={direction === "prev" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
+  </svg>
+);
 
 export default function ManageImplants() {
   const navigate = useNavigate();
@@ -45,18 +62,27 @@ export default function ManageImplants() {
   }, []);
 
   useEffect(() => {
-    loadData();
+  loadData();
 
-    const handleImplantsUpdated = () => {
+  const handleImplantsUpdated = (e) => {
+    if (e && e.detail && e.detail.implant) {
+      setRows((prev) => {
+        // ลบ implant เดิมออกก่อน (ถ้ามี)
+        const filtered = prev.filter((r) => String(r.id) !== String(e.detail.implant.id));
+        // ใส่ implant ใหม่ไว้บนสุด
+        return [e.detail.implant, ...filtered];
+      });
+    } else {
       loadData();
-    };
+    }
+  };
 
-    window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
+  window.addEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
 
-    return () => {
-      window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
-    };
-  }, [loadData]);
+  return () => {
+    window.removeEventListener(IMPLANTS_UPDATED_EVENT, handleImplantsUpdated);
+  };
+}, [loadData]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || "");
@@ -120,75 +146,75 @@ export default function ManageImplants() {
   };
 
   const filtered = useMemo(() => {
-  const s = q.trim().toLowerCase();
-  if (!s) return rows;
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
 
-  return rows.filter((r) => {
-    const companyName =
-      r?.company?.name ||
-      r?.company ||
-      getName("company", r.companyId) ||
-      "";
+    return rows.filter((r) => {
+      const companyName =
+        r?.company?.name ||
+        r?.company ||
+        getName("company", r.companyId) ||
+        "";
 
-    const levelName =
-      r?.level?.name ||
-      r?.level ||
-      getName("level", r.levelId) ||
-      "";
+      const levelName =
+        r?.level?.name ||
+        r?.level ||
+        getName("level", r.levelId) ||
+        "";
 
-    const countryName =
-      r?.country?.name ||
-      r?.country ||
-      getName("country", r.countryId) ||
-      r?.countryText ||
-      "";
+      const countryName =
+        r?.country?.name ||
+        r?.country ||
+        getName("country", r.countryId) ||
+        r?.countryText ||
+        "";
 
-    const brandName =
-      r?.brand?.name ||
-      r?.brandName ||
-      r?.brand ||
-      "";
+      const brandName =
+        r?.brand?.name ||
+        r?.brandName ||
+        r?.brand ||
+        "";
 
-    const modelName =
-      r?.model?.name ||
-      r?.modelName ||
-      r?.model ||
-      r?.series ||
-      "";
+      const modelName =
+        r?.model?.name ||
+        r?.modelName ||
+        r?.model ||
+        r?.series ||
+        "";
 
-    const connectionTypeName =
-      r?.connectionType?.name ||
-      r?.connectionTypeName ||
-      r?.connection_type ||
-      r?.connectionType ||
-      "";
+      const connectionTypeName =
+        r?.connectionType?.name ||
+        r?.connectionTypeName ||
+        r?.connection_type ||
+        r?.connectionType ||
+        "";
 
-    const connectionShapeName =
-      r?.connectionShape?.name ||
-      r?.connectionShapeName ||
-      r?.connection_shape ||
-      r?.connectionShape ||
-      "";
+      const connectionShapeName =
+        r?.connectionShape?.name ||
+        r?.connectionShapeName ||
+        r?.connection_shape ||
+        r?.connectionShape ||
+        "";
 
-    return [
-      r?.name,
-      r?.title,
-      brandName,
-      modelName,
-      companyName,
-      levelName,
-      countryName,
-      connectionTypeName,
-      connectionShapeName,
-      r?.source,
-      r?.status,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-      .includes(s);
-  });
-}, [q, rows, master]);
+      return [
+        r?.name,
+        r?.title,
+        brandName,
+        modelName,
+        companyName,
+        levelName,
+        countryName,
+        connectionTypeName,
+        connectionShapeName,
+        r?.source,
+        r?.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(s);
+    });
+  }, [q, rows, master]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
 
@@ -221,21 +247,51 @@ export default function ManageImplants() {
   const delImplant = async (id) => {
     const implant = rows.find((r) => String(r.id) === String(id));
     const name = implant ? implant.name : "this implant";
-
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) {
-      return;
-    }
+    const result = await MySwal.fire({
+      title: `<span style='font-size:1.05em;font-weight:800;font-family:inherit;color:#22304c;'>Are you sure you want to delete?</span>`,
+      html: `<div style='font-size:0.98em;font-family:inherit;color:#374151;'>Do you want to delete <b>"${name}"</b>?<br><span style='color:#b91c1c;font-weight:700;font-size:0.95em;'>Once deleted, it cannot be undone!</span></div>`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#3085d6",
+      focusCancel: true,
+      customClass: {
+        popup: 'swal2-imp-popup',
+        title: 'swal2-imp-title',
+        htmlContainer: 'swal2-imp-html',
+        confirmButton: 'swal2-imp-confirm',
+        cancelButton: 'swal2-imp-cancel',
+      },
+    });
+    if (!result.isConfirmed) return;
 
     try {
       await implantsAPI.delete(id);
       setRows((prev) => prev.filter((r) => String(r.id) !== String(id)));
+      await MySwal.fire({
+        icon: "success",
+        title: `<span style='font-size:1em;font-family:inherit;color:#1f7a3a;'>Data deleted successfully</span>`,
+        showConfirmButton: false,
+        timer: 1500,
+        customClass: {
+          popup: 'swal2-imp-popup',
+          title: 'swal2-imp-title',
+        },
+      });
     } catch (err) {
-      alert("Failed to delete: " + (err.message || ""));
+      await MySwal.fire({
+        icon: "error",
+        title: `<span style='font-size:1em;font-family:inherit;color:#b91c1c;'>An error occurred while deleting</span>`,
+        html: `<div style='font-size:0.97em;font-family:inherit;color:#374151;'>${err.message || "Please try again later"}</div>`,
+        customClass: {
+          popup: 'swal2-imp-popup',
+          title: 'swal2-imp-title',
+          htmlContainer: 'swal2-imp-html',
+        },
+      });
     }
-  };
-
-  const refreshData = async () => {
-    await loadData();
   };
 
   const formatDate = (value) => {
@@ -250,6 +306,18 @@ export default function ManageImplants() {
     });
   };
 
+  const getRowImage = (row) => {
+    return resolveImageUrl(
+      row?.image1 ||
+        row?.image2 ||
+        row?.image3 ||
+        row?.image_url ||
+        row?.image ||
+        row?.imageDataUrl ||
+        row?.imageUrl
+    );
+  };
+
   if (loading) {
     return <div className="impWrap">Loading implants…</div>;
   }
@@ -257,11 +325,11 @@ export default function ManageImplants() {
   return (
     <div className="impWrap">
       <AdminSearchBar
-  placeholder="Search implants, brand, model, shape..."
-  value={q}
-  onChangeQ={setQ}
-  onSearch={setQ}
-/>
+        placeholder="Search implants, brand, model, shape..."
+        value={q}
+        onChangeQ={setQ}
+        onSearch={setQ}
+      />
 
       <Breadcrumb
         items={[
@@ -275,14 +343,10 @@ export default function ManageImplants() {
 
         <div className="impTopActions">
           <button
-            className="addBtnImp addBtnGreen"
+            className="addBtnImp"
             onClick={() => navigate("/admin/implants/new")}
           >
             + Add New Implant
-          </button>
-
-          <button className="addBtnImp addBtnBlue" onClick={refreshData}>
-            ↻ Refresh Data
           </button>
         </div>
       </div>
@@ -294,7 +358,6 @@ export default function ManageImplants() {
           <div>Image</div>
           <div>Title</div>
           <div>Company / Level</div>
-          <div>Source</div>
           <div>Date</div>
           <div>Status</div>
           <div className="headActions">Actions</div>
@@ -304,47 +367,66 @@ export default function ManageImplants() {
           <div className="emptyStateCard">
             <div className="emptyTitle">No implants found</div>
             <div className="emptySub">No implant data available yet.</div>
-            <button className="refreshInlineBtn" onClick={refreshData}>
-              Try Refresh
-            </button>
           </div>
         ) : (
           pagedRows.map((r) => {
-            const imageUrl = resolveImageUrl(r?.image1 || r?.imageDataUrl);
+            const imageUrl = getRowImage(r);
             const isMaster = r.source === "master";
 
             const companyName =
-              r?.company?.name || r?.company || getName("company", r.companyId) || "-";
+              r?.company?.name ||
+              r?.company ||
+              getName("company", r.companyId) ||
+              "-";
 
             const levelName =
-              r?.level?.name || r?.level || getName("level", r.levelId) || "-";
+              r?.level?.name ||
+              r?.level ||
+              getName("level", r.levelId) ||
+              "-";
 
             const brandText =
-              r?.brand?.name || r?.brandName || r?.brand || "No brand";
+              r?.brand?.name ||
+              r?.brandName ||
+              r?.brand ||
+              "No brand";
 
             return (
               <div className="blogLikeRow" key={r.id}>
                 <div className="rowImageCol">
                   {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={r.name}
-                      className="rowImage"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        if (e.currentTarget.nextSibling) {
-                          e.currentTarget.nextSibling.style.display = "flex";
-                        }
-                      }}
-                    />
-                  ) : null}
-
-                  <div
-                    className="rowImageFallback"
-                    style={{ display: imageUrl ? "none" : "flex" }}
-                  >
-                    No Image
-                  </div>
+                    <>
+                      <img
+                        src={imageUrl}
+                        alt={r.name || "implant"}
+                        className="rowImage"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.parentElement?.querySelector(
+                            ".rowImageFallback"
+                          );
+                          if (fallback) {
+                            fallback.style.display = "flex";
+                          }
+                        }}
+                      />
+                      <div
+                        className="rowImageFallback"
+                        style={{ display: "none" }}
+                        title="No image"
+                      >
+                        <ImagePlaceholderIcon />
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="rowImageFallback"
+                      style={{ display: "flex" }}
+                      title="No image"
+                    >
+                      <ImagePlaceholderIcon />
+                    </div>
+                  )}
                 </div>
 
                 <div className="rowTitleCol">
@@ -352,26 +434,26 @@ export default function ManageImplants() {
                   <div className="rowSubText">Brand: {brandText}</div>
                 </div>
 
+
                 <div className="rowMetaCol">
                   <div className="rowMetaMain">{companyName}</div>
                   <div className="rowMetaSub">{levelName}</div>
                 </div>
 
-                <div className="rowSourceCol">
-                  <span className={`sourceBadge ${isMaster ? "master" : "custom"}`}>
-                    {isMaster ? "MASTER" : "NEW"}
-                  </span>
+                <div className="rowDateCol">
+                  {formatDate(r.createdAt || r.updatedAt)}
                 </div>
-
-                <div className="rowDateCol">{formatDate(r.createdAt)}</div>
 
                 <div className="rowStatusCol">
                   <button
-                    className={`statusPill ${r.status === "Active" ? "open" : "closed"}`}
+                    className={`statusPill ${
+                      r.status === "Active" ? "open" : "closed"
+                    }`}
                     onClick={() => toggleStatus(r.id, r.status)}
                     title="Click to toggle status"
                   >
-                    {r.status === "Active" ? "OPEN" : "CLOSED"}
+                    <span className="statusDot" />
+                    {r.status === "Active" ? "Open" : "Closed"}
                   </button>
                 </div>
 
@@ -402,7 +484,8 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ← Previous
+              <PaginationArrow direction="prev" />
+              <span>Previous</span>
             </button>
 
             <span className="paginationText">
@@ -414,7 +497,8 @@ export default function ManageImplants() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next →
+              <span>Next</span>
+              <PaginationArrow direction="next" />
             </button>
           </div>
         )}
