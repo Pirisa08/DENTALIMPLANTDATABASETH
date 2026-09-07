@@ -1,0 +1,6 @@
+CREATE TABLE login_activity (
+    login_id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    login_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50)
+);
