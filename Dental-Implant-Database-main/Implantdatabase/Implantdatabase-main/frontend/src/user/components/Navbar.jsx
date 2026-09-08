@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getInitialNightMode, setNightMode } from "../nightModeUtils";
 import FilterSidebar from "./FilterSidebar";
 import styles from "./Navbar.module.css";
@@ -19,9 +19,13 @@ const emptyFilters = {
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchInputRef = useRef(null);
 
   const [nightMode, setNightModeState] = useState(getInitialNightMode());
   const [filterOpen, setFilterOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [filters, setFilters] = useState(emptyFilters);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -29,6 +33,17 @@ export default function Navbar() {
     document.body.classList.toggle("night-mode", nightMode);
     setNightMode(nightMode);
   }, [nightMode]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchOpen]);
 
   const handleToggleNightMode = () => {
     setNightModeState((prev) => !prev);
@@ -58,6 +73,8 @@ export default function Navbar() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setMenuOpen(false);
+    setSearchOpen(false);
     navigate("/implants", {
       state: { searchQuery: searchQuery.trim() },
     });
@@ -136,6 +153,32 @@ export default function Navbar() {
           </NavLink>
         </nav>
 
+        <button
+          className={styles.menuBtn}
+          type="button"
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={menuOpen}
+          onClick={() => {
+            setSearchOpen(false);
+            setMenuOpen((prev) => !prev);
+          }}
+        >
+          <span className={styles.menuIcon} aria-hidden="true">
+            {menuOpen ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M4 12H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M4 17H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            )}
+          </span>
+        </button>
+
         <div className={styles.right}>
           <button
             className={styles.nightModeBtn}
@@ -167,8 +210,23 @@ export default function Navbar() {
             </span>
           </button>
 
-          <form onSubmit={handleSearch} className={styles.searchBox}>
-            <span className={styles.searchIcon}>
+          <form
+            onSubmit={handleSearch}
+            className={`${styles.searchBox} ${searchOpen ? styles.searchOpen : ""}`}
+            onClick={() => {
+              setMenuOpen(false);
+              setSearchOpen(true);
+            }}
+          >
+            <button
+              type="button"
+              className={styles.searchIconBtn}
+              aria-label="Open search"
+              onClick={() => {
+                setMenuOpen(false);
+                setSearchOpen(true);
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle
                   cx="11"
@@ -184,10 +242,11 @@ export default function Navbar() {
                   strokeLinecap="round"
                 />
               </svg>
-            </span>
+            </button>
 
             <input
               className={styles.searchInput}
+              ref={searchInputRef}
               type="text"
               placeholder="Search implants, brands..."
               value={searchQuery}
@@ -195,14 +254,18 @@ export default function Navbar() {
               onKeyDown={handleSearchKeyPress}
             />
 
-            {searchQuery && (
+            {(searchOpen || searchQuery) && (
               <button
                 type="button"
                 className={styles.clearSearch}
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearchQuery("");
+                  setSearchOpen(false);
+                }}
+                aria-label="Close search"
               >
-                ✕
+                ×
               </button>
             )}
           </form>
@@ -214,10 +277,68 @@ export default function Navbar() {
             title="Open filters"
             onClick={() => setFilterOpen(true)}
           >
-            <span className={styles.filterIcon}>☰</span>
+            <span className={styles.filterIcon} aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 6H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M7 12H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
             <span className={styles.filterText}>Filters</span>
           </button>
         </div>
+
+        <nav
+          className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ""}`}
+          aria-label="Mobile Navigation"
+        >
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavItem} ${styles.mobileActive}` : styles.mobileNavItem
+            }
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to="/blog"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavItem} ${styles.mobileActive}` : styles.mobileNavItem
+            }
+          >
+            Blog
+          </NavLink>
+
+          <NavLink
+            to="/implants"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavItem} ${styles.mobileActive}` : styles.mobileNavItem
+            }
+          >
+            Implants
+          </NavLink>
+
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavItem} ${styles.mobileActive}` : styles.mobileNavItem
+            }
+          >
+            Contact
+          </NavLink>
+
+          <button
+            type="button"
+            className={styles.mobileMenuButton}
+            onClick={() => {
+              setMenuOpen(false);
+              setFilterOpen(true);
+            }}
+          >
+            Filter implants
+          </button>
+        </nav>
       </header>
 
       <FilterSidebar

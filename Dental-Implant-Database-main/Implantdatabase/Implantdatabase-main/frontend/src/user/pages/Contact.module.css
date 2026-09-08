@@ -597,3 +597,38 @@
         width: 100%;
     }
 }
+
+@media (max-width: 480px) {
+    .contactContent {
+        padding: 0 16px;
+        margin: 36px auto;
+    }
+
+    .header {
+        padding: 34px 16px;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .headerSubtitle {
+        font-size: 0.96rem;
+    }
+
+    .infoSection,
+    .formSection,
+    .infoCard {
+        border-radius: 12px;
+        padding: 22px 18px;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .infoItem {
+        gap: 12px;
+    }
+}

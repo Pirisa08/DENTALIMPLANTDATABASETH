@@ -27,6 +27,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express(); 
 const PORT = process.env.PORT || 8900;
+const SHOULD_ALTER_DB = process.env.DB_SYNC_ALTER === 'true';
 
 // =========================
 // Allowed origins
@@ -304,7 +305,7 @@ app.post('/api/seed-blogs', async (req, res) => {
 
 app.post('/api/sync-db', async (req, res) => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync(SHOULD_ALTER_DB ? { alter: true } : {});
     return res.json({ message: 'Database synced successfully' });
   } catch (err) {
     return res.status(400).json({ error: err.message });
@@ -357,7 +358,7 @@ async function initDatabase() {
     await sequelize.authenticate();
     console.log('✅ Database connected');
 
-    await sequelize.sync({ alter: true });
+    await sequelize.sync(SHOULD_ALTER_DB ? { alter: true } : {});
     console.log('✅ Database synced');
   } catch (err) {
     console.error('❌ Database init failed:', err.message);

@@ -85,7 +85,9 @@
 .page {
     background: #f4f7fb;
     min-height: 100vh;
-    min-width: 1200px;
+    min-width: 0;
+    width: 100%;
+    overflow-x: clip;
     padding-bottom: 60px;
 }
 
@@ -608,6 +610,26 @@
     .heroSection {
         min-height: 280px;
         padding: 64px 20px;
+    }
+
+    .heroTitle {
+        font-size: clamp(1.8rem, 9vw, 2.35rem);
+    }
+
+    .heroExcerpt {
+        font-size: 0.94rem;
+    }
+
+    .latestSection {
+        padding: 0 16px;
+    }
+
+    .latestGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .cardImageWrapper {
+        height: 220px;
     }
 
     .cardBody {

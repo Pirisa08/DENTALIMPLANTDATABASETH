@@ -22,9 +22,8 @@ export default function Footer() {
             </div>
 
             <p className={styles.footerDesc}>
-              A reference platform for dental implant information, brand
-              organization, and clinical system cataloguing under Mae Fah Luang
-              University.
+              A reference platform for dental implant information by Mae Fah
+              Luang University.
             </p>
           </div>
 

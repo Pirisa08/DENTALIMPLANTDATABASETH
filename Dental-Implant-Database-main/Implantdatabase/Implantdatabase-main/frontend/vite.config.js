@@ -11,12 +11,12 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8900',
+        target: 'http://127.0.0.1:8900',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:8900',
+        target: 'http://127.0.0.1:8900',
         changeOrigin: true,
         secure: false,
       },

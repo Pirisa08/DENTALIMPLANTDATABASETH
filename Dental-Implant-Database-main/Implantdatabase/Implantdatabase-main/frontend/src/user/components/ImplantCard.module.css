@@ -164,3 +164,48 @@
     word-break: break-word;
     margin-top: 2px;
 }
+
+@media (max-width: 640px) {
+    .implantCard {
+        min-height: 0;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 27, 51, 0.09);
+    }
+
+    .implantCard:hover {
+        transform: none;
+        box-shadow: 0 14px 28px rgba(15, 27, 51, 0.12);
+    }
+
+    .cardVisual {
+        min-height: 160px;
+        aspect-ratio: 16 / 10;
+        flex: 0 0 auto;
+    }
+
+    .cardInfo {
+        min-height: 0;
+        padding: 14px 16px 16px;
+        text-align: left;
+    }
+
+    .cardTitle {
+        font-size: 0.98rem;
+        line-height: 1.35;
+        letter-spacing: 0;
+    }
+
+    .cardCompany {
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .placeholderIcon {
+        font-size: 34px;
+    }
+
+    .placeholderLabel {
+        font-size: 0.9rem;
+        letter-spacing: 0;
+    }
+}

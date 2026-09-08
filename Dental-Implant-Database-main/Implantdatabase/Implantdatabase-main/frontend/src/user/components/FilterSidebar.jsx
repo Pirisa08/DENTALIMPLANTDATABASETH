@@ -34,7 +34,6 @@ export default function FilterSidebar({
 
     const updatedFilters = { ...value, [groupKey]: next };
     onChange(updatedFilters);
-    onSearch(updatedFilters);
   };
 
   const clearAll = () => {
@@ -92,7 +91,7 @@ export default function FilterSidebar({
                             checked={checked}
                             onChange={() => toggle(section.key, option)}
                           />
-                          <span>{option}</span>
+                          <span className={styles.itemText}>{option}</span>
                         </label>
                       );
                     })}

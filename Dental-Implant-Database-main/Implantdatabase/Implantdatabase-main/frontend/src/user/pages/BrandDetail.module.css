@@ -127,7 +127,9 @@
 .page {
   background: #f3f6fb;
   min-height: 100vh;
-  min-width: 1200px;
+  min-width: 0;
+  width: 100%;
+  overflow-x: clip;
   padding-bottom: 72px;
 }
 
@@ -458,25 +460,210 @@
 }
 
 @media (max-width: 600px) {
+  .page {
+    padding-bottom: 44px;
+  }
+
   .brandDetailContainer {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .brandHeader {
-    padding: 24px;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+  }
+
+  .brandLogoBox {
+    justify-content: flex-start;
+    align-self: center;
   }
 
   .brandLogoPlaceholder {
-    width: 110px;
-    height: 110px;
-    font-size: 0.82rem;
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    font-size: 0.6rem;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    padding: 8px;
+  }
+
+  .brandInfo {
+    display: contents;
+  }
+
+  .brandInfo > div:first-child {
+    min-width: 0;
+  }
+
+  .brandTitle {
+    font-size: clamp(1.22rem, 5.8vw, 1.58rem);
+    line-height: 1.08;
+    letter-spacing: 0;
+    word-break: break-word;
+  }
+
+  .brandTitle sup {
+    font-size: 0.36em;
+    margin-left: 2px;
+  }
+
+  .brandCompany {
+    margin: 5px 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    letter-spacing: 0;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .brandWebsite {
+    grid-column: 1 / -1;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    box-shadow: 0 10px 18px rgba(29, 78, 216, 0.18);
+  }
+
+  .brandWebsite:hover {
+    transform: none;
+  }
+
+  .brandWebsiteLabel {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    flex: 0 0 auto;
+  }
+
+  .brandWebsiteHost {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+    font-size: 0.74rem;
+    letter-spacing: 0;
+  }
+
+  .brandMeta {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .brandMetaCard {
+    min-height: 0;
+    border-radius: 12px;
+    padding: 12px;
+    gap: 4px;
+  }
+
+  .brandMetaCard:hover {
+    transform: none;
+    box-shadow: 0 14px 24px rgba(30, 64, 175, 0.08);
+  }
+
+  .brandMetaCard:first-child {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .brandMetaLabel {
+    font-size: 0.58rem;
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+  }
+
+  .brandMetaValue {
+    gap: 2px;
+  }
+
+  .brandMetaText {
+    font-size: 0.98rem;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .tabs {
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+
+  .tab {
+    padding: 12px 16px;
   }
 
   .tabContent {
-    padding: 22px;
+    padding: 16px;
+    border-radius: 12px;
+    min-height: 0;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+  }
+
+  .sectionTitle {
+    font-size: 1.05rem;
+    margin-bottom: 14px;
+    letter-spacing: 0;
   }
 
   .grid {
     grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .emptyState {
+    padding: 32px 16px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .brandHeader {
+    grid-template-columns: 64px minmax(0, 1fr);
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .brandLogoPlaceholder {
+    width: 64px;
+    height: 64px;
+    font-size: 0.54rem;
+  }
+
+  .brandTitle {
+    font-size: 1.16rem;
+  }
+
+  .brandMeta {
+    grid-template-columns: 1fr;
+  }
+
+  .brandMetaCard:first-child {
+    display: flex;
+  }
+
+  .brandWebsite {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .brandWebsiteHost {
+    text-align: left;
+    max-width: 100%;
   }
 }
