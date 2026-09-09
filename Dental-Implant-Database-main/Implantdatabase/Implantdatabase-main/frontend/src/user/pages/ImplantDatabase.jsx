@@ -330,8 +330,11 @@ export default function ImplantDatabase() {
 
           <div className={styles.mainContent}>
             {loading ? (
-              <div className={styles.emptyState}>
-                <p>Loading brands...</p>
+              <div className={`${styles.emptyState} ${styles.loadingState}`}>
+                <div className={styles.loadingMark} aria-hidden="true">
+                  <span></span>
+                </div>
+                <p>Loading implant brands...</p>
               </div>
             ) : filteredBrands.length === 0 ? (
               <div className={styles.emptyState}>

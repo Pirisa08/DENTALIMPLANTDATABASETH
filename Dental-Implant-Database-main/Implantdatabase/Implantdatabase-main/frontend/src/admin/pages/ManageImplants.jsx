@@ -28,6 +28,14 @@ const PaginationArrow = ({ direction }) => (
   </svg>
 );
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 export default function ManageImplants() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -248,8 +256,8 @@ export default function ManageImplants() {
     const implant = rows.find((r) => String(r.id) === String(id));
     const name = implant ? implant.name : "this implant";
     const result = await MySwal.fire({
-      title: `<span style='font-size:1.05em;font-weight:800;font-family:inherit;color:#22304c;'>Are you sure you want to delete?</span>`,
-      html: `<div style='font-size:0.98em;font-family:inherit;color:#374151;'>Do you want to delete <b>"${name}"</b>?<br><span style='color:#b91c1c;font-weight:700;font-size:0.95em;'>Once deleted, it cannot be undone!</span></div>`,
+      title: "Are you sure you want to delete?",
+      html: `<div class="swal2-imp-message">Do you want to delete <strong>"${escapeHtml(name)}"</strong>?<br><span>Once deleted, it cannot be undone!</span></div>`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -272,7 +280,7 @@ export default function ManageImplants() {
       setRows((prev) => prev.filter((r) => String(r.id) !== String(id)));
       await MySwal.fire({
         icon: "success",
-        title: `<span style='font-size:1em;font-family:inherit;color:#1f7a3a;'>Data deleted successfully</span>`,
+        title: "Data deleted successfully",
         showConfirmButton: false,
         timer: 1500,
         customClass: {
@@ -283,8 +291,8 @@ export default function ManageImplants() {
     } catch (err) {
       await MySwal.fire({
         icon: "error",
-        title: `<span style='font-size:1em;font-family:inherit;color:#b91c1c;'>An error occurred while deleting</span>`,
-        html: `<div style='font-size:0.97em;font-family:inherit;color:#374151;'>${err.message || "Please try again later"}</div>`,
+        title: "An error occurred while deleting",
+        html: `<div class="swal2-imp-message">${escapeHtml(err.message || "Please try again later")}</div>`,
         customClass: {
           popup: 'swal2-imp-popup',
           title: 'swal2-imp-title',

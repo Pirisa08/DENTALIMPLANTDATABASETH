@@ -113,12 +113,17 @@
 }
 
 :global(body.night-mode) .brandIcon {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(145deg, #1f2937 0%, #0f172a 100%) !important;
+  border-color: rgba(147, 197, 253, 0.18) !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 :global(body.night-mode) .brandLogoImg {
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  filter:
+    drop-shadow(0 1px 2px rgba(255, 255, 255, 0.16))
+    drop-shadow(0 3px 8px rgba(0, 0, 0, 0.28));
 }
 
 .navbar {
@@ -140,7 +145,7 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   cursor: pointer;
   user-select: none;
   transition: transform 0.22s ease;
@@ -187,24 +192,26 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  line-height: 1.05;
+  gap: 5px;
+  line-height: 1.2;
 }
 
 .logoText {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 19px;
+  font-weight: 700;
   color: #0f172a;
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
+  line-height: 1.18;
   transition: color 0.2s ease;
 }
 
 .logoSubText {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: #1d4ed8;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.35px;
+  line-height: 1.35;
   text-transform: uppercase;
-  margin-top: 4px;
   transition: color 0.2s ease;
 }
 
@@ -249,13 +256,14 @@
 .navItem {
   text-decoration: none;
   color: #334155;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   padding: 10px 16px;
   border-radius: 12px;
   transition: all 0.2s ease;
   position: relative;
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
+  line-height: 1.25;
 }
 
 .navItem::after {
@@ -283,7 +291,7 @@
 .active {
   background: rgba(29, 78, 216, 0.08);
   color: #0f172a;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .active::after {
@@ -370,13 +378,15 @@
   outline: none;
   background: transparent;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: #1e293b;
+  letter-spacing: 0;
+  line-height: 1.35;
 }
 
 .searchInput::placeholder {
   color: #94a3b8;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .filterBtn {
@@ -390,8 +400,9 @@
   background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
   color: #ffffff;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
   transition: all 0.28s ease;
   box-shadow: 0 10px 24px rgba(29, 78, 216, 0.22);
 }
@@ -412,7 +423,7 @@
 
 .filterText {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -444,7 +455,7 @@
   }
 
   .brand {
-    gap: 10px;
+    gap: 11px;
     min-width: 0;
     order: 1;
     flex: 1 1 auto;
@@ -514,7 +525,7 @@
     padding: 0 12px;
     color: #334155;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     text-decoration: none;
     background: transparent;
     transition: background 0.18s ease, color 0.18s ease;
@@ -529,9 +540,9 @@
     color: #1d4ed8;
     font: inherit;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
   }
 
   .mobileActive {
@@ -616,13 +627,13 @@
   }
 
   .logoText {
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0;
   }
 
   .logoSubText {
-    font-size: 8px;
-    letter-spacing: 1px;
+    font-size: 8.5px;
+    letter-spacing: 0.9px;
   }
 
   .brandIcon {
@@ -650,7 +661,7 @@
   }
 
   .brand {
-    gap: 9px;
+    gap: 10px;
   }
 
   .brandIcon {
@@ -661,12 +672,12 @@
   }
 
   .logoText {
-    font-size: 14px;
+    font-size: 14.5px;
   }
 
   .logoSubText {
-    font-size: 7px;
-    letter-spacing: 0.7px;
+    font-size: 7.5px;
+    letter-spacing: 0.65px;
   }
 }
 
