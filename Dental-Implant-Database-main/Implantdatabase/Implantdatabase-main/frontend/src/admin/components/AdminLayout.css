@@ -1,0 +1,507 @@
+.adminShell{
+  min-height:100vh;
+  min-width: 1200px;
+  display:flex;
+  position: relative;
+  font-family: var(--admin-font);
+  font-size: var(--admin-body-size);
+  line-height: var(--admin-line-height);
+  color: var(--dark2);
+}
+
+/* Overlay for Mobile Sidebar */
+.sidebarOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebarOverlay.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Hamburger Menu Button */
+.hamburgerBtn {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: #5B7FD1;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.hamburgerBtn:hover {
+  background: #4A6BC0;
+  transform: scale(1.05);
+}
+
+.hamburgerBtn span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: white;
+  margin: 4px 0;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburgerBtn.active span:nth-child(1) {
+  transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburgerBtn.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburgerBtn.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+.sidebar{
+  width: 280px;
+  margin-left: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, var(--dark), var(--dark2));
+  padding: 20px 18px 20px 18px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 999;
+  flex-shrink: 0;
+}
+
+.profile{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.09);
+  font-size: 14px;
+}
+
+.profileBtn{
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.09);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #fff;
+}
+
+.profileBtn:hover{
+  background: rgba(255,255,255,0.12);
+}
+
+.avatar{
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.avatarImg{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarCircle{
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.9);
+  user-select: none;
+}
+
+.avatarSvg{
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profileText{
+  text-align: left;
+  min-width: 0;
+}
+
+.profileText .name{
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileText .role{
+  font-size: 12px;
+  opacity: .8;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.menuTitle{
+  margin: 18px 10px 10px;
+  font-size: 12px;
+  opacity: .9;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.navItem{
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  text-decoration: none;
+  background: transparent;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navItem:hover{
+  background: rgba(255,255,255,0.08);
+}
+
+.navItem.active{
+  background:#ffcc3a;
+  color:#1b2a49;
+  font-weight:700;
+}
+
+.navItem.ghost{
+  background: rgba(255,255,255,0.04);
+}
+
+.masterDropdown{
+  display:flex;
+  flex-direction:column;
+}
+
+.masterToggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.dropIcon{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:rgba(255,255,255,0.12);
+  font-weight:900;
+  font-size:16px;
+}
+
+.masterToggle:hover .dropIcon{
+  background:rgba(255,255,255,0.18);
+}
+
+.masterToggle.active .dropIcon{
+  background:#ffcc3a;
+  color:#1b2a49;
+}
+
+.masterList{
+  margin-top:6px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding-left:12px;
+  border-left:2px solid rgba(255,255,255,0.15);
+  margin-left:8px;
+}
+
+.masterItemRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.masterItem{
+  width:100%;
+  text-align:left;
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  color:#fff;
+  text-decoration:none;
+  background:rgba(255,255,255,0.04);
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  transition: all 0.2s ease;
+}
+
+.masterItem:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+.masterItem.active{
+  background:#ffcc3a;
+  color:#1b2a49;
+  font-weight:700;
+}
+
+.masterLabel{
+  flex:1;
+}
+
+.masterCount{
+  background:rgba(255,255,255,0.15);
+  color:#fff;
+  border-radius:8px;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:700;
+}
+
+.masterItem.active .masterCount{
+  background:#1b2a49;
+  color:#ffcc3a;
+}
+
+.sidebarAddBtn{
+  border:none;
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:900;
+  display:grid;
+  place-items:center;
+}
+
+.sidebarAddBtn:hover{
+  background:rgba(255,255,255,0.15);
+}
+
+.logoutBtn{
+  border: none;
+  cursor: pointer;
+  background: #ff2f2f;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.content{
+  flex:1;
+  padding:16px;
+}
+
+/* ✅ Responsive Sidebar */
+@media (max-width: 1024px){
+  .sidebar{
+    width: 240px;
+    margin-left: 8px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 16px 14px;
+    font-size: 13px;
+  }
+
+  .avatar{
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+
+  .avatarCircle{
+    font-size: 18px;
+  }
+
+  .profileText .name{
+    font-size: 14px;
+  }
+
+  .profileText .role{
+    font-size: 11px;
+  }
+
+  .navItem{
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .logoutBtn{
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .content{
+    padding: 12px;
+  }
+}
+
+/* Mobile & Tablet - Drawer Sidebar */
+@media (max-width: 768px){
+  .hamburgerBtn {
+    display: flex;
+  }
+
+  .sidebar{
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 85vw;
+    max-width: 320px;
+    margin: 0;
+    border-radius: 0 16px 16px 0;
+    transform: translateX(-100%);
+    padding: 80px 18px 20px 18px;
+    box-shadow: none;
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+  }
+
+  .content{
+    margin-left: 0;
+    width: 100%;
+    padding: 80px 12px 12px 12px;
+  }
+
+  .profile,
+  .profileBtn{
+    padding: 12px;
+  }
+
+  .avatar{
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .avatarCircle{
+    font-size: 16px;
+  }
+
+  .menuTitle{
+    margin: 12px 10px 8px;
+    font-size: 11px;
+  }
+
+  .navItem{
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .logoutBtn{
+    margin-top: 16px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px){
+  .hamburgerBtn {
+    width: 44px;
+    height: 44px;
+    top: 16px;
+    left: 16px;
+  }
+
+  .hamburgerBtn span {
+    width: 20px;
+    height: 2.5px;
+  }
+
+  .sidebar{
+    width: 90vw;
+    max-width: none;
+  }
+
+  .content{
+    padding: 72px 10px 10px 10px;
+  }
+
+  .profileText .name{
+    font-size: 13px;
+  }
+
+  .profileText .role{
+    font-size: 10px;
+  }
+
+  .navItem{
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .logoutBtn{
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}

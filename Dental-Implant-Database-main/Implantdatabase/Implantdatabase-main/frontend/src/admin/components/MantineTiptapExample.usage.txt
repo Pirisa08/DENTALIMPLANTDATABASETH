@@ -1,0 +1,4 @@
+// Usage example for MantineTiptapExample in BlogForm or ManageBlog
+// import { MantineTiptapExample } from '../components/MantineTiptapExample';
+//
+// <MantineTiptapExample value={form.content} onChange={val => setField('content', val)} />

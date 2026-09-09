@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Blog Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .success {
+            background: #43e97b;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reset Blog Data & Reload</h1>
+    <p>This will clear localStorage and force reload mockBlogs data with manualUrl and referenceUrl.</p>
+    
+    <button onclick="resetAndReload()">🔄 Clear & Reload Blog Data</button>
+    <button onclick="viewData()">👁️ View Current Data</button>
+    
+    <div id="success" class="success"></div>
+    <pre id="output" style="background: #f5f5f5; padding: 12px; border-radius: 8px; max-height: 400px; overflow: auto;"></pre>
+    
+    <script>
+        function resetAndReload() {
+            // Clear blog data
+            localStorage.removeItem('admin_blogs_v1');
+            localStorage.removeItem('admin_blogs');
+            
+            document.getElementById('success').style.display = 'block';
+            document.getElementById('success').innerHTML = '✅ localStorage cleared! Redirecting to Blog Management...';
+            
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000/admin/blog';
+            }, 1500);
+        }
+        
+        function viewData() {
+            const data = localStorage.getItem('admin_blogs_v1');
+            const output = document.getElementById('output');
+            
+            if (!data) {
+                output.textContent = 'No data in localStorage. Click "Clear & Reload" to load fresh data.';
+            } else {
+                try {
+                    const parsed = JSON.parse(data);
+                    output.textContent = JSON.stringify(parsed, null, 2);
+                } catch (e) {
+                    output.textContent = 'Error parsing data: ' + e.message;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+.csWrap { 
+  position: relative; 
+  font-family: var(--admin-font);
+}
+
+.csBtn{
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(10,30,70,0.10);
+  background: #f3f6ff;
+  padding: 0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.csBtn:hover {
+  background: #f0f4f8;
+}
+
+.csBtn:focus {
+  outline: none;
+  border-color: #6b7a99;
+  background: #fff;
+}
+
+.csPh { 
+  color: #6b7a99; 
+  font-weight: 500; 
+}
+
+.csVal { 
+  color: #111; 
+  font-weight: 500; 
+}
+
+.csArrow { 
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.csMenu{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #6b7a99;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(10,30,70,0.10);
+  padding: 8px;
+  z-index: 50;
+}
+
+.csItem{
+  width:100%;
+  text-align:left;
+  border:none;
+  background: transparent;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor:pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: #fff;
+}
+
+.csItem:hover{
+  background: #bcd0ee;
+  color: #111;
+}
+
+.csItem.selected{
+  background: #bcd0ee;
+  color: #111;
+}
