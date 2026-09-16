@@ -10,6 +10,12 @@ import {
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI, brandAPI } from "../../services/api.js";
+import {
+  adminAlert,
+  adminConfirm,
+  adminForm,
+  adminPrompt,
+} from "../components/adminDialog.js";
 
 const PaginationArrow = ({ direction }) => (
   <svg viewBox="0 0 20 20" aria-hidden="true" className="paginationIcon">
@@ -396,6 +402,29 @@ export default function MasterDataList() {
     setMaster(updated);
   };
 
+  const promptMasterName = ({ action = "Add", label, currentName = "" }) =>
+    adminPrompt({
+      title: `${action} ${label}`,
+      label: `${label} name`,
+      defaultValue: currentName,
+      confirmText: action === "Edit" ? "Save" : "Add",
+    });
+
+  const confirmDeleteItem = (name) =>
+    adminConfirm({
+      title: `Delete "${name}"?`,
+      message: "This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+
+  const showRequiredName = (label) =>
+    adminAlert({
+      title: `${label} name is required`,
+      message: `Please enter a ${label.toLowerCase()} name before saving.`,
+      icon: "warning",
+    });
+
   const toggleLocalStatus = (id) => {
     const next = localList.map((item) =>
       item.id === id
@@ -408,20 +437,26 @@ export default function MasterDataList() {
     updateLocalType(next);
   };
 
-  const deleteLocalItem = (id) => {
-    if (!window.confirm("Delete this item?")) return;
+  const deleteLocalItem = async (id) => {
+    const confirmed = await adminConfirm({
+      title: "Delete this item?",
+      message: "This item will be removed from the local list.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const next = localList.filter((item) => item.id !== id);
     updateLocalType(next);
   };
 
   const addCompany = async () => {
-    const name = window.prompt("Enter new company name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Company" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
-      await masterDataAPI.createCompany({ name: name.trim(), status: "Active" });
+      await masterDataAPI.createCompany({ name, status: "Active" });
       await loadCompanies();
     } catch (err) {
       console.error(err);
@@ -448,7 +483,7 @@ export default function MasterDataList() {
   };
 
   const deleteCompany = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -464,20 +499,26 @@ export default function MasterDataList() {
   };
 
   const addBrand = async () => {
-    const name = window.prompt("Enter new brand name:");
-    if (!name || !name.trim()) return;
+    const values = await adminForm({
+      title: "Add Brand",
+      confirmText: "Add",
+      fields: [
+        { name: "name", label: "Brand name", required: true },
+        { name: "companyId", label: "Company ID", placeholder: "Optional" },
+        { name: "website", label: "Website", placeholder: "https://" },
+      ],
+    });
+    if (!values) return;
 
-    const companyIdText = window.prompt("Enter company ID for this brand (optional):", "");
-    const website = window.prompt("Enter website (optional):", "") || "";
-    const companyId = companyIdText && companyIdText.trim() ? Number(companyIdText) : null;
+    const companyId = values.companyId ? Number(values.companyId) : null;
 
     setLoading(true);
     setError("");
     try {
       await brandAPI.create({
-        name: name.trim(),
+        name: values.name,
         companyId,
-        website,
+        website: values.website,
         status: "Active",
       });
       await loadBrands();
@@ -490,23 +531,22 @@ export default function MasterDataList() {
   };
 
   const editBrand = async (id, currentName, currentStatus, currentWebsite = "") => {
-    const name = window.prompt("Edit brand name:", currentName);
-    if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Brand name is required");
-      return;
-    }
-
-    const website = window.prompt("Edit website:", currentWebsite || "") ?? currentWebsite;
+    const values = await adminForm({
+      title: "Edit Brand",
+      confirmText: "Save",
+      fields: [
+        { name: "name", label: "Brand name", defaultValue: currentName, required: true },
+        { name: "website", label: "Website", defaultValue: currentWebsite || "" },
+      ],
+    });
+    if (!values) return;
 
     setLoading(true);
     setError("");
     try {
       await brandAPI.update(id, {
-        name: trimmed,
-        website,
+        name: values.name,
+        website: values.website,
         status: currentStatus,
       });
       await loadBrands();
@@ -535,7 +575,7 @@ export default function MasterDataList() {
   };
 
   const deleteBrand = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -551,14 +591,14 @@ export default function MasterDataList() {
   };
 
   const addCountry = async () => {
-    const name = window.prompt("Enter new country name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Country" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createCountry({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadCountries();
@@ -571,20 +611,19 @@ export default function MasterDataList() {
   };
 
   const editCountry = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit country name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Country",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Country name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Country");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateCountry(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadCountries();
@@ -613,7 +652,7 @@ export default function MasterDataList() {
   };
 
   const deleteCountry = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -629,14 +668,14 @@ export default function MasterDataList() {
   };
 
   const addLevel = async () => {
-    const name = window.prompt("Enter new level name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Level" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createLevel({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadLevels();
@@ -649,20 +688,19 @@ export default function MasterDataList() {
   };
 
   const editLevel = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit level name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Level",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Level name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Level");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateLevel(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadLevels();
@@ -691,7 +729,7 @@ export default function MasterDataList() {
   };
 
   const deleteLevel = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -707,14 +745,14 @@ export default function MasterDataList() {
   };
 
   const addConnectionType = async () => {
-    const name = window.prompt("Enter new connection type name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Connection Type" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createConnectionType({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadConnectionTypes();
@@ -727,20 +765,19 @@ export default function MasterDataList() {
   };
 
   const editConnectionType = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit connection type name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Connection Type",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Connection type name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Connection Type");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateConnectionType(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadConnectionTypes();
@@ -769,7 +806,7 @@ export default function MasterDataList() {
   };
 
   const deleteConnectionType = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -785,14 +822,14 @@ export default function MasterDataList() {
   };
 
   const addConnectionShape = async () => {
-    const name = window.prompt("Enter new connection shape name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Connection Shape" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createConnectionShape({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadConnectionShapes();
@@ -805,20 +842,19 @@ export default function MasterDataList() {
   };
 
   const editConnectionShape = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit connection shape name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Connection Shape",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Connection shape name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Connection Shape");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateConnectionShape(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadConnectionShapes();
@@ -847,7 +883,7 @@ export default function MasterDataList() {
   };
 
   const deleteConnectionShape = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -863,14 +899,14 @@ export default function MasterDataList() {
   };
 
   const addScrewdriverShape = async () => {
-    const name = window.prompt("Enter new screwdriver shape name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Screwdriver Shape" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createScrewdriverShape({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadScrewdriverShapes();
@@ -883,20 +919,19 @@ export default function MasterDataList() {
   };
 
   const editScrewdriverShape = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit screwdriver shape name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Screwdriver Shape",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Screwdriver shape name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Screwdriver Shape");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateScrewdriverShape(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadScrewdriverShapes();
@@ -925,7 +960,7 @@ export default function MasterDataList() {
   };
 
   const deleteScrewdriverShape = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -941,14 +976,14 @@ export default function MasterDataList() {
   };
 
   const addHeadShape = async () => {
-    const name = window.prompt("Enter new head shape name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Head Shape" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createHeadShape({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadHeadShapes();
@@ -961,20 +996,19 @@ export default function MasterDataList() {
   };
 
   const editHeadShape = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit head shape name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Head Shape",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Head shape name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Head Shape");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateHeadShape(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadHeadShapes();
@@ -1003,7 +1037,7 @@ export default function MasterDataList() {
   };
 
   const deleteHeadShape = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -1019,14 +1053,14 @@ export default function MasterDataList() {
   };
 
   const addBodyShape = async () => {
-    const name = window.prompt("Enter new body shape name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Body Shape" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createBodyShape({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadBodyShapes();
@@ -1039,20 +1073,19 @@ export default function MasterDataList() {
   };
 
   const editBodyShape = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit body shape name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Body Shape",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Body shape name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Body Shape");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateBodyShape(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadBodyShapes();
@@ -1081,7 +1114,7 @@ export default function MasterDataList() {
   };
 
   const deleteBodyShape = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -1097,14 +1130,14 @@ export default function MasterDataList() {
   };
 
   const addApexShape = async () => {
-    const name = window.prompt("Enter new apex shape name:");
-    if (!name || !name.trim()) return;
+    const name = await promptMasterName({ label: "Apex Shape" });
+    if (!name) return;
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.createApexShape({
-        name: name.trim(),
+        name,
         status: "Active",
       });
       await loadApexShapes();
@@ -1117,20 +1150,19 @@ export default function MasterDataList() {
   };
 
   const editApexShape = async (id, currentName, currentStatus) => {
-    const name = window.prompt("Edit apex shape name:", currentName);
+    const name = await promptMasterName({
+      action: "Edit",
+      label: "Apex Shape",
+      currentName,
+    });
     if (name === null) return;
-
-    const trimmed = name.trim();
-    if (!trimmed) {
-      alert("Apex shape name is required");
-      return;
-    }
+    if (!name) return showRequiredName("Apex Shape");
 
     setLoading(true);
     setError("");
     try {
       await masterDataAPI.updateApexShape(id, {
-        name: trimmed,
+        name,
         status: currentStatus,
       });
       await loadApexShapes();
@@ -1159,7 +1191,7 @@ export default function MasterDataList() {
   };
 
   const deleteApexShape = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!(await confirmDeleteItem(name))) return;
 
     setLoading(true);
     setError("");
@@ -1782,12 +1814,12 @@ if (type === "officialDistributor") {
 
                   <div className="mdAccActions">
                     <button
-                      className="btn edit"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                        className="btn edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
                         navigate(`/admin/master/officialDistributor/${x.id}`);
-                      }}
-                    >
+                        }}
+                      >
                       Manage
                     </button>
                     <div className="mdChevron">{isOpen ? "−" : "+"}</div>

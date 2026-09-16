@@ -8,6 +8,7 @@ import {
   blogsAPI,
   resolveImageUrl,
 } from "../../services/api.js";
+import { adminAlert, adminConfirm } from "../components/adminDialog.js";
 
 const MASTER_TYPES = [
   { key: "companies", label: "Companies" },
@@ -206,7 +207,13 @@ export default function Dashboard() {
     const implant = implants.find((x) => x.id === id);
     const name = implant ? implant.name : "this implant";
 
-    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    const confirmed = await adminConfirm({
+      title: `Delete "${name}"?`,
+      message: "This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     try {
       if (implantsAPI.delete) {
@@ -216,7 +223,11 @@ export default function Dashboard() {
       setImplants((prev) => prev.filter((x) => x.id !== id));
       window.dispatchEvent(new Event("implants:updated"));
     } catch (err) {
-      alert("Failed to delete implant: " + (err.message || err));
+      await adminAlert({
+        title: "Unable to delete implant",
+        message: "Failed to delete implant: " + (err.message || err),
+        icon: "error",
+      });
     }
   };
 
@@ -224,11 +235,17 @@ export default function Dashboard() {
     navigate(`/admin/implants/edit/${id}`);
   };
 
-  const deleteBlog = (id) => {
+  const deleteBlog = async (id) => {
     const blog = blogs.find((x) => x.id === id);
     const title = blog ? blog.title : "this blog";
 
-    if (!confirm(`Delete "${title}"? This action cannot be undone.`)) return;
+    const confirmed = await adminConfirm({
+      title: `Delete "${title}"?`,
+      message: "This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setBlogs((prev) => prev.filter((x) => x.id !== id));
   };
 

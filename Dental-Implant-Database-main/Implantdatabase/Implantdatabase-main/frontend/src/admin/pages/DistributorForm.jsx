@@ -4,6 +4,7 @@ import "./MasterData.css";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI } from "../../services/api.js";
 import { loadMaster, saveMaster } from "./masterDataStore.js";
+import { adminAlert } from "../components/adminDialog.js";
 
 export default function DistributorForm({ mode = "create" }) {
   const navigate = useNavigate();
@@ -86,7 +87,11 @@ export default function DistributorForm({ mode = "create" }) {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      alert("Distributor name is required.");
+      await adminAlert({
+        title: "Distributor name is required",
+        message: "Please enter a distributor name before saving.",
+        icon: "warning",
+      });
       return;
     }
 
@@ -112,7 +117,11 @@ export default function DistributorForm({ mode = "create" }) {
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to save distributor");
-      alert(err.message || "Failed to save distributor");
+      await adminAlert({
+        title: "Unable to save distributor",
+        message: err.message || "Failed to save distributor",
+        icon: "error",
+      });
     } finally {
       setSaving(false);
     }

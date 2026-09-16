@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import CustomSelect from "../components/CustomSelect.jsx";
+import { adminAlert } from "../components/adminDialog.js";
 import { blogsAPI } from "../../services/api.js";
+import { buildBlogPreviewPost } from "./blogPreview.js";
 import "./BlogForm.css";
 
 const OPTIONS = {
@@ -364,6 +366,131 @@ function BlogRichTextEditor({ value, onChange }) {
   );
 }
 
+function BlogPreviewModal({ post, mode, onModeChange, onClose }) {
+  return (
+    <div className="bfPreviewOverlay" onClick={onClose}>
+      <section className="bfPreviewModal" onClick={(e) => e.stopPropagation()}>
+        <div className="bfPreviewHeader">
+          <div>
+            <span className="bfPreviewEyebrow">Blog preview</span>
+            <h3>Preview before publishing</h3>
+          </div>
+
+          <button
+            type="button"
+            className="bfPreviewClose"
+            onClick={onClose}
+            aria-label="Close preview"
+            title="Close preview"
+          >
+            x
+          </button>
+        </div>
+
+        <div className="bfPreviewTabs" role="tablist" aria-label="Preview mode">
+          <button
+            type="button"
+            className={mode === "card" ? "active" : ""}
+            onClick={() => onModeChange("card")}
+          >
+            Blog list
+          </button>
+          <button
+            type="button"
+            className={mode === "article" ? "active" : ""}
+            onClick={() => onModeChange("article")}
+          >
+            Full article
+          </button>
+        </div>
+
+        <div className="bfPreviewScroll">
+          {mode === "card" ? (
+            <div className="bfPreviewListFrame">
+              <article className="bfPreviewHeroCard">
+                <div className="bfPreviewHeroMedia">
+                  {post.imageDataUrl ? (
+                    <img src={post.imageDataUrl} alt={post.title} />
+                  ) : (
+                    <div className="bfPreviewImageEmpty">
+                      <span>{post.category}</span>
+                      <strong>{post.title}</strong>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bfPreviewHeroCopy">
+                  <span className="bfPreviewCategory">{post.category}</span>
+                  <span className="bfPreviewDate">{post.published}</span>
+                  <h1>{post.title}</h1>
+                  <p>{post.excerpt}</p>
+                  <span className="bfPreviewReadMore">Read more</span>
+                </div>
+              </article>
+
+              <div className="bfPreviewGrid">
+                {[0, 1, 2].map((item) => (
+                  <article className="bfPreviewSmallCard" key={item}>
+                    <div className="bfPreviewSmallMedia">
+                      {post.imageDataUrl ? (
+                        <img src={post.imageDataUrl} alt="" />
+                      ) : (
+                        <span>{post.category}</span>
+                      )}
+                    </div>
+                    <div className="bfPreviewSmallBody">
+                      <span>{post.published}</span>
+                      <h3>{post.title}</h3>
+                      <p>{post.excerpt}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <article className="bfPreviewArticle">
+              <header className="bfPreviewArticleHeader">
+                <span className="bfPreviewCategory">{post.category}</span>
+                <h1>{post.title}</h1>
+                <div className="bfPreviewMeta">
+                  <span>{post.published}</span>
+                  <span>{post.author}</span>
+                  <span>{post.readTime}</span>
+                  <span>{post.statusLabel}</span>
+                </div>
+                <p>{post.excerpt}</p>
+              </header>
+
+              <div className="bfPreviewArticleMedia">
+                {post.imageDataUrl ? (
+                  <img src={post.imageDataUrl} alt={post.title} />
+                ) : (
+                  <div className="bfPreviewImageEmpty">
+                    <span>{post.category}</span>
+                    <strong>{post.title}</strong>
+                  </div>
+                )}
+              </div>
+
+              {(post.manualUrl || post.referenceUrl) && (
+                <div className="bfPreviewResources">
+                  {post.manualUrl && <span>Documentation</span>}
+                  {post.referenceUrl && <span>Reference</span>}
+                </div>
+              )}
+
+              <section
+                className="bfPreviewContent"
+                dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+              />
+            </article>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function BlogForm({ mode }) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -371,6 +498,8 @@ export default function BlogForm({ mode }) {
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState("article");
 
   const [form, setForm] = useState({
     title: "",
@@ -416,7 +545,11 @@ export default function BlogForm({ mode }) {
         }
       } catch (err) {
         console.error("Unable to load blog:", err);
-        alert(err.message || "Unable to load blog");
+        await adminAlert({
+          title: "Unable to load blog",
+          message: err.message || "Unable to load blog",
+          icon: "error",
+        });
         navigate("/admin/blog");
       } finally {
         if (!ignore) setLoading(false);
@@ -443,6 +576,8 @@ export default function BlogForm({ mode }) {
     );
   }, [form]);
 
+  const previewPost = useMemo(() => buildBlogPreviewPost(form), [form]);
+
   const onPickImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -465,7 +600,11 @@ export default function BlogForm({ mode }) {
 
   const save = async () => {
     if (!canSave) {
-      alert("Please fill all required fields before saving.");
+      await adminAlert({
+        title: "Missing required fields",
+        message: "Please fill all required fields before saving.",
+        icon: "warning",
+      });
       return;
     }
 
@@ -489,16 +628,28 @@ export default function BlogForm({ mode }) {
     try {
       if (mode === "edit") {
         await blogsAPI.update(id, payload);
-        alert("Blog updated successfully");
+        await adminAlert({
+          title: "Blog updated",
+          message: "Blog updated successfully.",
+          icon: "success",
+        });
       } else {
         await blogsAPI.create(payload);
-        alert("Blog created successfully");
+        await adminAlert({
+          title: "Blog created",
+          message: "Blog created successfully.",
+          icon: "success",
+        });
       }
 
       navigate("/admin/blog");
     } catch (err) {
       console.error("Failed to save blog:", err);
-      alert(err.message || "Unable to save blog");
+      await adminAlert({
+        title: "Unable to save blog",
+        message: err.message || "Unable to save blog",
+        icon: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -696,6 +847,14 @@ export default function BlogForm({ mode }) {
           </div>
 
           <div className="formActions" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <button
+              className="btnPreview"
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              disabled={saving}
+            >
+              Preview
+            </button>
             <button className="btnSave" onClick={save} disabled={!canSave || saving}>
               {saving ? "Saving..." : "Save"}
             </button>
@@ -707,6 +866,15 @@ export default function BlogForm({ mode }) {
               Cancel
             </button>
           </div>
+
+          {previewOpen && (
+            <BlogPreviewModal
+              post={previewPost}
+              mode={previewMode}
+              onModeChange={setPreviewMode}
+              onClose={() => setPreviewOpen(false)}
+            />
+          )}
         </>
       )}
     </div>

@@ -38,7 +38,7 @@ Frontend จะรันที่: `http://localhost:3000`
 ### Admin Side (`/admin/*`)
 
 #### Pages:
-- **Login.jsx** - หน้า login (admin@lamduan.mfu.ac.th / ilovedentalverymuch)
+- **Login.jsx** - หน้า login (admindent@lamduan.mfu.ac.th / admindent)
 - **Dashboard.jsx** - หน้าแรกของ admin
 - **ManageImplants.jsx** - จัดการ implants (list, edit, delete) ✨ รองรับ thumbnails, รองรับ id แบบ master-xxx/custom
 - **NewImplant.jsx** - เพิ่ม/แก้ไข implant ✨ รองรับ image upload, รองรับทั้ง master/custom implant

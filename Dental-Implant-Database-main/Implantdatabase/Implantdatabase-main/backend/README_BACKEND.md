@@ -52,7 +52,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:517
 ```javascript
 // ใน Node.js console หรือสร้างไฟล์ script
 import bcrypt from 'bcryptjs';
-const password = 'ilovedentalverymuch';
+const password = 'admindent';
 const hash = await bcrypt.hash(password, 10);
 console.log(hash);
 ```
@@ -63,7 +63,7 @@ INSERT INTO users (username, email, password, role, status)
 VALUES (
 │   │   ├── authMiddleware.js    # Auth middleware (เพิ่ม)
 │   │   └── upload.js            # Multer image upload
-  'admin@lamduan.mfu.ac.th', 
+  'admindent@lamduan.mfu.ac.th', 
   '$2a$10$YourHashedPasswordHere', -- แทนที่ด้วย hash จริง
   'admin', 
   'Active'
@@ -220,8 +220,8 @@ const response = await fetch('http://localhost:5000/api/implants', {
 **POST** `/api/auth/login`
 ```json
 {
-  "email": "admin@lamduan.mfu.ac.th",
-  "password": "ilovedentalverymuch"
+  "email": "admindent@lamduan.mfu.ac.th",
+  "password": "admindent"
 }
 ```
 
@@ -231,8 +231,8 @@ const response = await fetch('http://localhost:5000/api/implants', {
   "token": "eyJhbGciOiJIUzI1NiIs...",
   "user": {
     "id": 1,
-    "username": "admin",
-    "email": "admin@lamduan.mfu.ac.th",
+    "username": "dent",
+    "email": "admindent@lamduan.mfu.ac.th",
     "role": "admin"
   }
 }

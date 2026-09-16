@@ -5,13 +5,6 @@ import { User, LoginActivity } from '../models/index.js';
 
 const router = express.Router();
 
-const DEMO_ADMIN = {
-  username: 'admin',
-  email: 'admin@demo.com',
-  password: 'admin123',
-  role: 'admin',
-};
-
 const signToken = (user) => {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not configured');
@@ -38,56 +31,9 @@ const safeLogLogin = async (email, status) => {
   }
 };
 
-const ensureDemoAdmin = async () => {
-  let user = await User.findOne({
-    where: {
-      [Op.or]: [
-        { email: DEMO_ADMIN.email },
-        { username: DEMO_ADMIN.username },
-      ],
-    },
-  });
-
-  if (user) {
-    let changed = false;
-
-    if (user.email !== DEMO_ADMIN.email) {
-      user.email = DEMO_ADMIN.email;
-      changed = true;
-    }
-
-    if (user.username !== DEMO_ADMIN.username) {
-      user.username = DEMO_ADMIN.username;
-      changed = true;
-    }
-
-    if (user.role !== 'admin') {
-      user.role = 'admin';
-      changed = true;
-    }
-
-    if (changed) {
-      await user.save();
-    }
-
-    return user;
-  }
-
-  user = await User.create({
-    username: DEMO_ADMIN.username,
-    email: DEMO_ADMIN.email,
-    password: DEMO_ADMIN.password,
-    role: 'admin',
-  });
-
-  return user;
-};
-
 // LOGIN
 router.post('/login', async (req, res) => {
   try {
-    await ensureDemoAdmin();
-
     const { email, username, password } = req.body || {};
     const loginValue = String(email || username || '').trim().toLowerCase();
 
