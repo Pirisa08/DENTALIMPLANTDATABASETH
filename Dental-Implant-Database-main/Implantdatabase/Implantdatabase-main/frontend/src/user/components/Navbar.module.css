@@ -112,6 +112,20 @@
   color: #ffffff !important;
 }
 
+:global(body.night-mode) .mobileBottomNav {
+  background: #0f172a !important;
+  border-color: rgba(147, 197, 253, 0.16) !important;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.44) !important;
+}
+
+:global(body.night-mode) .mobileBottomItem {
+  color: #94a3b8 !important;
+}
+
+:global(body.night-mode) .mobileBottomActive {
+  color: #93c5fd !important;
+}
+
 :global(body.night-mode) .brandIcon {
   background: linear-gradient(145deg, #1f2937 0%, #0f172a 100%) !important;
   border-color: rgba(147, 197, 253, 0.18) !important;
@@ -230,7 +244,8 @@
 }
 
 .menuBtn,
-.mobileMenu {
+.mobileMenu,
+.mobileBottomNav {
   display: none;
 }
 
@@ -443,6 +458,10 @@
 }
 
 @media (max-width: 860px) {
+  :global(body) {
+    padding-bottom: 86px;
+  }
+
   .navbar {
     padding: 10px 14px 12px;
     flex-wrap: nowrap;
@@ -467,7 +486,7 @@
 
   .menuBtn {
     order: 3;
-    display: inline-flex;
+    display: none;
     margin-left: 0;
     width: 40px;
     height: 40px;
@@ -486,12 +505,13 @@
     order: 2;
     width: auto;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 7px;
     align-items: center;
     flex: 0 0 auto;
   }
 
   .mobileMenu {
+    display: none;
     position: absolute;
     top: calc(100% + 8px);
     left: 12px;
@@ -552,16 +572,16 @@
 
   .nightModeBtn,
   .filterBtn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     padding: 0;
-    flex: 0 0 38px;
-    border-radius: 8px;
+    flex: 0 0 36px;
+    border-radius: 999px;
   }
 
   .nightModeBtn {
-    border: 1px solid transparent;
-    background: transparent;
+    border: 1px solid #dbe3ee;
+    background: #ffffff;
   }
 
   .nightModeBtn {
@@ -569,14 +589,21 @@
   }
 
   .filterBtn {
-    display: none;
+    display: inline-flex;
+    justify-content: center;
+    gap: 0;
+    border-color: #dbe3ee;
+    background: #ffffff;
+    color: #475569;
+    box-shadow: none;
   }
 
   .searchBox {
+    display: flex;
     flex: 0 0 38px;
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
     padding: 0;
     border-radius: 999px;
     border-color: #dbe3ee;
@@ -601,16 +628,24 @@
     top: calc(100% + 8px);
     left: 12px;
     right: 12px;
-    z-index: 2;
+    z-index: 1002;
+    display: flex;
     width: auto;
     min-width: 0;
-    height: 42px;
-    padding: 8px 12px;
-    border-radius: 10px;
+    height: 48px;
+    padding: 9px 12px;
+    border-radius: 14px;
+    border-color: rgba(148, 163, 184, 0.28);
+    background: #ffffff;
     justify-content: flex-start;
     gap: 10px;
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.13);
     cursor: text;
+  }
+
+  .searchIconBtn {
+    width: 28px;
+    height: 28px;
   }
 
   .searchOpen .searchInput {
@@ -644,6 +679,76 @@
     box-shadow: none;
     background: #ffffff;
   }
+
+  .mobileBottomNav {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 1001;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+    gap: 2px;
+    width: min(356px, calc(100vw - 28px));
+    min-height: 58px;
+    padding: 7px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 999px;
+    background: #0f172a;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.28);
+    backdrop-filter: blur(16px);
+  }
+
+  .mobileBottomItem {
+    min-width: 0;
+    min-height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.1;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+
+  .mobileBottomItem:hover {
+    color: #93c5fd;
+  }
+
+  .mobileBottomItem:active {
+    transform: translateY(1px);
+  }
+
+  .mobileBottomActive {
+    background: transparent;
+    color: #93c5fd;
+  }
+
+  .mobileBottomIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+  }
+
+  .mobileBottomIcon svg {
+    width: 17px;
+    height: 17px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -656,8 +761,13 @@
   }
 
   .searchBox {
+    width: 36px;
+    padding: 0;
+  }
+
+  .searchOpen {
     width: auto;
-    padding: 8px 12px;
+    padding: 9px 12px;
   }
 
   .brand {
@@ -699,5 +809,16 @@
 
   .searchInput::placeholder {
     color: transparent;
+  }
+
+  .mobileBottomNav {
+    width: min(332px, calc(100vw - 18px));
+    gap: 2px;
+    padding: 7px 8px;
+  }
+
+  .mobileBottomItem {
+    font-size: 8.5px;
+    min-height: 44px;
   }
 }

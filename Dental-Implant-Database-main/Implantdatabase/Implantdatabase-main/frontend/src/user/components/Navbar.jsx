@@ -229,14 +229,14 @@ export default function Navbar() {
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle
-                  cx="11"
-                  cy="11"
-                  r="7"
+                  cx="10.8"
+                  cy="10.8"
+                  r="6.6"
                   stroke="currentColor"
                   strokeWidth="2"
                 />
                 <path
-                  d="M20 20L17 17"
+                  d="M16.2 16.2L20 20"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -279,9 +279,13 @@ export default function Navbar() {
           >
             <span className={styles.filterIcon} aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M4 6H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M7 12H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path
+                  d="M5 7H19L14 12.8V18L10 20V12.8L5 7Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </span>
             <span className={styles.filterText}>Filters</span>
@@ -340,6 +344,101 @@ export default function Navbar() {
           </button>
         </nav>
       </header>
+
+      <nav className={styles.mobileBottomNav} aria-label="Mobile bottom navigation">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            isActive
+              ? `${styles.mobileBottomItem} ${styles.mobileBottomActive}`
+              : styles.mobileBottomItem
+          }
+        >
+          <span className={styles.mobileBottomIcon} aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4.5 11.2L12 5L19.5 11.2V19H15V14.5H9V19H4.5V11.2Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <span>Home</span>
+        </NavLink>
+
+        <NavLink
+          to="/blog"
+          className={({ isActive }) =>
+            isActive
+              ? `${styles.mobileBottomItem} ${styles.mobileBottomActive}`
+              : styles.mobileBottomItem
+          }
+        >
+          <span className={styles.mobileBottomIcon} aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 5H18C19.1 5 20 5.9 20 7V18.5C20 19.3 19.3 20 18.5 20H6.5C5.1 20 4 18.9 4 17.5V7C4 5.9 4.9 5 6 5Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path d="M8 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M8 13H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span>Blog</span>
+        </NavLink>
+
+        <NavLink
+          to="/implants"
+          className={({ isActive }) =>
+            isActive
+              ? `${styles.mobileBottomItem} ${styles.mobileBottomActive}`
+              : styles.mobileBottomItem
+          }
+        >
+          <span className={styles.mobileBottomIcon} aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9.2 4.5H14.8L17 9.4L14.9 19.5H9.1L7 9.4L9.2 4.5Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M8.2 9.5H15.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M12 9.5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span>Implants</span>
+        </NavLink>
+
+        <NavLink
+          to="/contact"
+          className={({ isActive }) =>
+            isActive
+              ? `${styles.mobileBottomItem} ${styles.mobileBottomActive}`
+              : styles.mobileBottomItem
+          }
+        >
+          <span className={styles.mobileBottomIcon} aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 6H19V16H9L5 19V6Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M8.5 10H15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M8.5 13H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span>Contact</span>
+        </NavLink>
+      </nav>
 
       <FilterSidebar
         open={filterOpen}

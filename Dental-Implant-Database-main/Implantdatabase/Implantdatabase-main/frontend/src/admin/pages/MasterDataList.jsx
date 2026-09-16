@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./MasterData.css";
 import {
   getTypeLabel,
@@ -20,6 +20,7 @@ const PaginationArrow = ({ direction }) => (
 export default function MasterDataList() {
   const ITEMS_PER_PAGE = 10;
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
   const { type } = useParams();
   const label = getTypeLabel(type);
 
@@ -1784,7 +1785,7 @@ if (type === "officialDistributor") {
                       className="btn edit"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.location.href = `/admin/master/officialDistributor/${x.id}`;
+                        navigate(`/admin/master/officialDistributor/${x.id}`);
                       }}
                     >
                       Manage
@@ -1815,7 +1816,7 @@ if (type === "officialDistributor") {
                             className="btn edit"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.location.href = `/admin/master/officialDistributor/${x.id}/edit/${d.id}`;
+                              navigate(`/admin/master/officialDistributor/${x.id}/edit/${d.id}`);
                             }}
                           >
                             Edit
@@ -1829,7 +1830,7 @@ if (type === "officialDistributor") {
                         className="addBtnMd"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.location.href = `/admin/master/officialDistributor/${x.id}/new`;
+                          navigate(`/admin/master/officialDistributor/${x.id}/new`);
                         }}
                       >
                         + Add Distributor
