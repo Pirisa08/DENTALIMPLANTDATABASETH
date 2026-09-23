@@ -21,11 +21,13 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchInputRef = useRef(null);
+  const lastScrollYRef = useRef(0);
 
   const [nightMode, setNightModeState] = useState(getInitialNightMode());
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [filters, setFilters] = useState(emptyFilters);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,6 +39,7 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
+    setBottomNavHidden(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -44,6 +47,33 @@ export default function Navbar() {
       searchInputRef.current?.focus();
     }
   }, [searchOpen]);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (Math.abs(scrollDelta) < 8) {
+        return;
+      }
+
+      if (currentScrollY < 80 || scrollDelta < 0) {
+        setBottomNavHidden(false);
+      } else {
+        setBottomNavHidden(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const handleToggleNightMode = () => {
     setNightModeState((prev) => !prev);
@@ -345,7 +375,12 @@ export default function Navbar() {
         </nav>
       </header>
 
-      <nav className={styles.mobileBottomNav} aria-label="Mobile bottom navigation">
+      <nav
+        className={`${styles.mobileBottomNav} ${
+          bottomNavHidden ? styles.mobileBottomHidden : ""
+        }`}
+        aria-label="Mobile bottom navigation"
+      >
         <NavLink
           to="/"
           className={({ isActive }) =>

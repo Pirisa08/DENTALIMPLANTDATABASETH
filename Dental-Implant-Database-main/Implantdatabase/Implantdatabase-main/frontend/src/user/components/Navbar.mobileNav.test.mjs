@@ -35,6 +35,20 @@ test("mobile bottom navigation uses the site navy capsule style", () => {
   assert.match(navbarStyles, /\.mobileBottomActive[\s\S]*color:\s*#93c5fd/);
 });
 
+test("mobile bottom navigation hides while scrolling down and reappears while scrolling up", () => {
+  assert.match(navbarSource, /mobileBottomHidden/);
+  assert.match(navbarSource, /lastScrollYRef/);
+  assert.match(navbarSource, /window\.addEventListener\("scroll"/);
+  assert.match(navbarSource, /setBottomNavHidden\(true\)/);
+  assert.match(navbarSource, /setBottomNavHidden\(false\)/);
+  assert.match(navbarStyles, /\.mobileBottomHidden/);
+  assert.match(navbarStyles, /translate\(-50%,\s*calc\(100% \+ 28px\)\)/);
+});
+
+test("mobile bottom navigation does not add document-end body padding", () => {
+  assert.doesNotMatch(navbarStyles, /:global\(body\)\s*\{[\s\S]*?padding-bottom:\s*86px/);
+});
+
 test("mobile top utility actions render as small circles", () => {
   assert.match(navbarStyles, /\.nightModeBtn,[\s\S]*\.filterBtn[\s\S]*border-radius:\s*999px/);
   assert.match(navbarStyles, /\.searchBox[\s\S]*border-radius:\s*999px/);

@@ -8,23 +8,25 @@ export default function Footer() {
       <div className={styles.footerMain}>
         <div className={styles.footerGrid}>
           <div className={styles.footerColumn}>
-            <div className={styles.brandBlock}>
-              <img
-                src="/logo_mfu.jpg"
-                alt="MFU Logo"
-                className={styles.brandLogo}
-              />
+            <div className={styles.mobileFooterCard}>
+              <div className={styles.brandBlock}>
+                <img
+                  src="/logo_mfu.jpg"
+                  alt="MFU Logo"
+                  className={styles.brandLogo}
+                />
 
-              <div className={styles.brandText}>
-                <h2 className={styles.footerTitle}>MFU Dental</h2>
-                <p className={styles.footerSubTitle}>IMPLANT DATABASE</p>
+                <div className={styles.brandText}>
+                  <h2 className={styles.footerTitle}>MFU Dental</h2>
+                  <p className={styles.footerSubTitle}>IMPLANT DATABASE</p>
+                </div>
               </div>
-            </div>
 
-            <p className={styles.footerDesc}>
-              A reference platform for dental implant information by Mae Fah
-              Luang University.
-            </p>
+              <p className={styles.footerDesc}>
+                A reference platform for dental implant information by Mae Fah
+                Luang University.
+              </p>
+            </div>
           </div>
 
           <div className={styles.footerColumn}>

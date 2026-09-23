@@ -458,10 +458,6 @@
 }
 
 @media (max-width: 860px) {
-  :global(body) {
-    padding-bottom: 86px;
-  }
-
   .navbar {
     padding: 10px 14px 12px;
     flex-wrap: nowrap;
@@ -699,6 +695,15 @@
     background: #0f172a;
     box-shadow: 0 16px 34px rgba(15, 23, 42, 0.28);
     backdrop-filter: blur(16px);
+    transition: transform 0.28s ease, opacity 0.22s ease, visibility 0.22s ease;
+    will-change: transform, opacity;
+  }
+
+  .mobileBottomHidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, calc(100% + 28px));
   }
 
   .mobileBottomItem {
