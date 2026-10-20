@@ -114,11 +114,17 @@
 }
 
 :global(body.night-mode) .companyBrandLink {
-  text-decoration: none !important;
+  background: #182235;
+  border-color: #334155;
+  color: #f1f5f9;
 }
 
-:global(body.night-mode) .companyBrandLink .brandMetaCard {
-  min-height: 120px;
+:global(body.night-mode) .companyBrandCount {
+  color: #cbd5e1;
+}
+
+:global(body.night-mode) .companyBrandLink:hover {
+  background: #1e293b;
 }
 
 /* =========================
@@ -177,6 +183,7 @@
 
 .brandInfo {
   flex: 1;
+  min-width: 0;
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
@@ -189,6 +196,8 @@
   color: #0f172a;
   letter-spacing: 0.015em;
   line-height: 1.1;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .brandTitle sup {
@@ -385,12 +394,57 @@
 }
 
 .companyBrandLink {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  min-height: 88px;
+  padding: 18px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
   text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.companyBrandLink .brandMetaCard {
-  min-height: 120px;
+.companyBrandLink:hover {
+  background: #f8fafc;
+  border-color: #93b4f7;
+}
+
+.companyBrandLink:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.companyBrandInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+}
+
+.companyBrandName {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.companyBrandCount {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.companyBrandArrow {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: #64748b;
 }
 
 @media (max-width: 1200px) {
@@ -460,6 +514,11 @@
 }
 
 @media (max-width: 600px) {
+  .companyBrandLink {
+    min-height: 76px;
+    padding: 14px 16px;
+  }
+
   .page {
     padding-bottom: 44px;
   }
@@ -665,5 +724,65 @@
   .brandWebsiteHost {
     text-align: left;
     max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .brandHeader.companyHeader {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .companyHeader .brandLogoBox {
+    display: none;
+  }
+
+  .companyHeader .brandTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .companyHeader .brandCompany {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .companyHeader .brandMeta {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .companyHeader .brandMetaCard {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .companyHeader .brandMetaLabel {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
+  }
+
+  .companyHeader .brandMetaText {
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .companyHeader .brandMetaCard:first-child {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .companyHeader .brandMetaCard:first-child .brandMetaValue {
+    text-align: right;
   }
 }

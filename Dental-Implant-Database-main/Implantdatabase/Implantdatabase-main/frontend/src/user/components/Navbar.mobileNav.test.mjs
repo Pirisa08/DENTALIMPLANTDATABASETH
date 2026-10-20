@@ -55,7 +55,7 @@ test("mobile top utility actions render as small circles", () => {
 });
 
 test("mobile search and filter stay in the top navigation", () => {
-  assert.match(navbarSource, /aria-label="Open search"/);
+  assert.match(navbarSource, /aria-label=\{isMobile && searchOpen \? "Search" : "Open search"\}/);
   assert.match(navbarSource, /aria-label="Open filters"/);
   assert.match(navbarSource, /setSearchOpen\(true\)/);
   assert.match(navbarSource, /setFilterOpen\(true\)/);

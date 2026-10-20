@@ -9,6 +9,7 @@ import {
 } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { getCompanyBrands } from "./companyBrands.js";
 import { masterDataAPI, brandAPI } from "../../services/api.js";
 import {
   adminAlert,
@@ -180,7 +181,7 @@ export default function MasterDataList() {
 
       try {
         if (type === "company") {
-          await loadCompanies();
+          await Promise.all([loadCompanies(), loadBrands()]);
         } else if (type === "brand") {
           await Promise.all([loadCompanies(), loadBrands()]);
         } else if (type === "country") {
@@ -1392,6 +1393,7 @@ export default function MasterDataList() {
             <div className="mdAccordion">
               {filteredCompanies.map((company) => {
                 const isOpen = !!openCompanies[company.id];
+                const companyBrands = getCompanyBrands(brands, company);
 
                 return (
                   <div key={company.id} className="mdAccItem">
@@ -1438,7 +1440,18 @@ export default function MasterDataList() {
 
                     {isOpen && (
                       <div className="mdAccBody">
-                        <div className="empty">Country Code: {company.countryCode || "-"}</div>
+                        <div className="mdCompanyBrandsTitle">Brands ({companyBrands.length})</div>
+                        {loading ? (
+                          <div className="empty">Loading brands...</div>
+                        ) : companyBrands.length > 0 ? (
+                          <ul className="mdCompanyBrands">
+                            {companyBrands.map((brand) => (
+                              <li key={brand.id}>{brand.name}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="empty">No brands linked to this company.</div>
+                        )}
                       </div>
                     )}
                   </div>

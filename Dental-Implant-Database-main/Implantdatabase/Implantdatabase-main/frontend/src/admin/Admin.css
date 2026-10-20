@@ -20,7 +20,9 @@ input,
 select,
 textarea{ font-family: inherit; }
 
-.adminDialogPopup{
+.swal2-popup.adminDialogPopup{
+  font-family: var(--admin-font);
+  line-height: var(--admin-line-height);
   width: min(440px, calc(100vw - 32px));
   border-radius: 18px;
   padding: 24px;
@@ -28,18 +30,22 @@ textarea{ font-family: inherit; }
   box-shadow: 0 24px 60px rgba(8, 24, 60, 0.22);
 }
 
-.adminDialogTitle{
+.adminDialogPopup .adminDialogTitle{
+  font-family: inherit;
   color: #0f2552;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
   letter-spacing: 0;
   padding: 0;
 }
 
-.adminDialogBody{
+.adminDialogPopup .adminDialogBody{
+  font-family: inherit;
   color: #64748b;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.6;
   margin: 12px 0 0;
 }
 
@@ -66,15 +72,16 @@ textarea{ font-family: inherit; }
   margin-top: 22px;
 }
 
-.adminDialogConfirm,
-.adminDialogCancel{
+.adminDialogPopup .adminDialogConfirm,
+.adminDialogPopup .adminDialogCancel{
+  font-family: inherit;
   min-width: 96px;
   height: 42px;
   border-radius: 12px;
   border: 1.5px solid transparent;
   padding: 0 18px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }

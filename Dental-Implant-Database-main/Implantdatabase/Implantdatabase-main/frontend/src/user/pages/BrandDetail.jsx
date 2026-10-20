@@ -136,7 +136,7 @@ export default function BrandDetail() {
       />
 
       <div className={styles.brandDetailContainer}>
-        <div className={styles.brandHeader}>
+        <div className={`${styles.brandHeader} ${isCompanyMode ? styles.companyHeader : ""}`}>
           <div className={styles.brandLogoBox}>
             <div className={styles.brandLogoPlaceholder}>
               <span>{pageTitle}</span>
@@ -219,20 +219,17 @@ export default function BrandDetail() {
                   <Link
                     key={item.brand}
                     to={`/implants/brand/${encodeURIComponent(item.brand)}`}
-                    className={styles.brandWebsite}
-                    style={{ display: "block", textDecoration: "none" }}
+                    className={styles.companyBrandLink}
                   >
-                    <div
-                      className={styles.brandMetaCard}
-                      style={{ minHeight: 120 }}
-                    >
-                      <span className={styles.brandMetaLabel}>{item.brand}</span>
-                      <div className={styles.brandMetaValue}>
-                        <span className={styles.brandMetaText}>
+                    <div className={styles.companyBrandInfo}>
+                      <span className={styles.companyBrandName}>{item.brand}</span>
+                      <span className={styles.companyBrandCount}>
                           {item.count} model{item.count !== 1 ? "s" : ""}
-                        </span>
-                      </div>
+                      </span>
                     </div>
+                    <svg className={styles.companyBrandArrow} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </Link>
                 ))}
               </div>
