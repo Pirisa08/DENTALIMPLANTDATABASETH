@@ -5,6 +5,7 @@ import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI } from "../../services/api.js";
 import { loadMaster, saveMaster } from "./masterDataStore.js";
+import { adminAlert, adminConfirm } from "../components/adminDialog.js";
 
 export default function DistributorsByCountry() {
   const navigate = useNavigate();
@@ -70,7 +71,13 @@ export default function DistributorsByCountry() {
   }, [q, list]);
 
   const delItem = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"?`)) return;
+    const confirmed = await adminConfirm({
+      title: `Delete "${name}"?`,
+      message: "This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
 
     try {
       await masterDataAPI.deleteDistributor(id);
@@ -78,7 +85,11 @@ export default function DistributorsByCountry() {
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to delete distributor");
+      await adminAlert({
+        title: "Unable to delete distributor",
+        message: err.message || "Failed to delete distributor",
+        icon: "error",
+      });
     }
   };
 
@@ -92,7 +103,11 @@ export default function DistributorsByCountry() {
       window.dispatchEvent(new Event("storage"));
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to update distributor status");
+      await adminAlert({
+        title: "Unable to update status",
+        message: err.message || "Failed to update distributor status",
+        icon: "error",
+      });
     }
   };
 

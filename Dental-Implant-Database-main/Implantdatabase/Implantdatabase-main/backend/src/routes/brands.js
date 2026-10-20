@@ -1,20 +1,30 @@
 import express from 'express';
 import Brand from '../models/brand.js';
 import CompanyMaster from '../models/CompanyMaster.js';
+import Company from '../models/Company.js';
+import { resolveBrandCompany } from './brandCompany.js';
 
 const router = express.Router();
 
 const normalizeStatus = (value) =>
   value === 'Inactive' ? 'Inactive' : 'Active';
 
+const loadCompanyResolver = async () => {
+  const [companies, legacyCompanies] = await Promise.all([
+    Company.findAll(),
+    CompanyMaster.findAll(),
+  ]);
+  return (storedId) => resolveBrandCompany(storedId, companies, legacyCompanies);
+};
+
 const mapBrand = (row, company = null) => ({
   id: row.idbrand,
   idbrand: row.idbrand,
   name: row.brand_name,
   brand_name: row.brand_name,
-  companyId: row.manufacturer_id,
+  companyId: company?.id ?? null,
   manufacturer_id: row.manufacturer_id,
-  companyName: company?.company_name || null,
+  companyName: company?.name || null,
   website: row.website || '',
   status: row.status || 'Active',
   createdAt: row.created_at || null,
@@ -27,23 +37,11 @@ router.get('/', async (req, res) => {
       order: [['brand_name', 'ASC']],
     });
 
-    const companyIds = rows
-      .map((row) => row.manufacturer_id)
-      .filter((id) => id !== null && id !== undefined);
-
-    const companies = companyIds.length
-      ? await CompanyMaster.findAll({
-          where: { id: companyIds },
-        })
-      : [];
-
-    const companyMap = new Map(
-      companies.map((company) => [Number(company.id), company])
-    );
+    const resolveCompany = await loadCompanyResolver();
 
     res.json(
       rows.map((row) =>
-        mapBrand(row, companyMap.get(Number(row.manufacturer_id)) || null)
+        mapBrand(row, resolveCompany(row.manufacturer_id))
       )
     );
   } catch (err) {
@@ -60,9 +58,8 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Brand not found' });
     }
 
-    const company = row.manufacturer_id
-      ? await CompanyMaster.findByPk(row.manufacturer_id)
-      : null;
+    const resolveCompany = await loadCompanyResolver();
+    const company = resolveCompany(row.manufacturer_id);
 
     res.json(mapBrand(row, company));
   } catch (err) {
@@ -93,9 +90,8 @@ router.post('/', async (req, res) => {
     }
 
     const created = await Brand.create(payload);
-    const company = created.manufacturer_id
-      ? await CompanyMaster.findByPk(created.manufacturer_id)
-      : null;
+    const resolveCompany = await loadCompanyResolver();
+    const company = resolveCompany(created.manufacturer_id);
 
     res.status(201).json(mapBrand(created, company));
   } catch (err) {
@@ -139,9 +135,8 @@ router.put('/:id', async (req, res) => {
       updated_at: new Date(),
     });
 
-    const company = row.manufacturer_id
-      ? await CompanyMaster.findByPk(row.manufacturer_id)
-      : null;
+    const resolveCompany = await loadCompanyResolver();
+    const company = resolveCompany(row.manufacturer_id);
 
     res.json(mapBrand(row, company));
   } catch (err) {

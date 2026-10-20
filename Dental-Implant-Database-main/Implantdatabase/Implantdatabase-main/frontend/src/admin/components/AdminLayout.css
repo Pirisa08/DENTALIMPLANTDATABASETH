@@ -323,22 +323,7 @@
   color:#ffcc3a;
 }
 
-.sidebarAddBtn{
-  border:none;
-  background:rgba(255,255,255,0.08);
-  color:#fff;
-  width:28px;
-  height:28px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:900;
-  display:grid;
-  place-items:center;
-}
 
-.sidebarAddBtn:hover{
-  background:rgba(255,255,255,0.15);
-}
 
 .logoutBtn{
   border: none;

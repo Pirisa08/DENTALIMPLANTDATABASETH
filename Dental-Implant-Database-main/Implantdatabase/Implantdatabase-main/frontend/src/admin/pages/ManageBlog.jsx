@@ -4,6 +4,7 @@ import withReactContent from "sweetalert2-react-content";
 import { useNavigate, useLocation } from "react-router-dom";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
+import { adminAlert } from "../components/adminDialog.js";
 import { blogsAPI } from "../../services/api.js";
 import "./ManageBlog.css";
 const MySwal = withReactContent(Swal);
@@ -74,7 +75,11 @@ export default function ManageBlog() {
       setRows(converted);
     } catch (err) {
       console.error("Failed to load blogs:", err);
-      alert(err.message || "Failed to load blogs");
+      await adminAlert({
+        title: "Unable to load blogs",
+        message: err.message || "Failed to load blogs",
+        icon: "error",
+      });
       setRows([]);
     } finally {
       setLoading(false);
@@ -197,7 +202,11 @@ export default function ManageBlog() {
       );
     } catch (err) {
       console.error("Toggle status failed:", err);
-      alert(err.message || "Failed to update status");
+      await adminAlert({
+        title: "Unable to update status",
+        message: err.message || "Failed to update status",
+        icon: "error",
+      });
     } finally {
       setActionId(null);
     }

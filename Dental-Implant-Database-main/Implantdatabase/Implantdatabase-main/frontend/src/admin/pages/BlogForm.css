@@ -579,6 +579,364 @@
   box-shadow: none;
 }
 
+.bfWrap .btnPreview{
+  min-height: 40px;
+  border-radius: 11px;
+  border: 1.5px solid #b8c8e6;
+  background: #eef4ff;
+  color: #173b82;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 22px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  flex: 1;
+}
+
+.bfWrap .btnPreview:hover{
+  background: #e4edff;
+  border-color: #8eb7eb;
+  transform: translateY(-1px);
+}
+
+.bfWrap .btnPreview:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bfPreviewOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(8, 18, 38, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+
+.bfPreviewModal{
+  width: min(1120px, 100%);
+  max-height: min(88vh, 920px);
+  background: #ffffff;
+  border: 1px solid #d7e1f3;
+  border-radius: 18px;
+  box-shadow: 0 28px 70px rgba(8, 24, 60, 0.28);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bfPreviewHeader{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e6e9f0;
+  background: #f8fbff;
+}
+
+.bfPreviewEyebrow{
+  color: #2f5be8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.bfPreviewHeader h3{
+  margin: 6px 0 0;
+  color: #0f2552;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.bfPreviewClose{
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d7e1f3;
+  background: #ffffff;
+  color: #17305d;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bfPreviewTabs{
+  display: flex;
+  gap: 8px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #e6e9f0;
+  background: #ffffff;
+}
+
+.bfPreviewTabs button{
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d7e1f3;
+  background: #ffffff;
+  color: #17305d;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.bfPreviewTabs button.active{
+  background: #173b82;
+  border-color: #173b82;
+  color: #ffffff;
+}
+
+.bfPreviewScroll{
+  overflow: auto;
+  padding: 24px;
+  background: #eef3fb;
+}
+
+.bfPreviewListFrame{
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.bfPreviewHeroCard{
+  display: grid;
+  grid-template-columns: minmax(300px, 48%) 1fr;
+  background: #ffffff;
+  border: 1px solid #e1e8f5;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bfPreviewHeroMedia,
+.bfPreviewArticleMedia{
+  min-height: 310px;
+  background: #dfe7f5;
+}
+
+.bfPreviewHeroMedia img,
+.bfPreviewArticleMedia img,
+.bfPreviewSmallMedia img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bfPreviewImageEmpty{
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #17305d;
+  text-align: center;
+  background: linear-gradient(135deg, #e7efff 0%, #f7fbff 100%);
+}
+
+.bfPreviewImageEmpty span{
+  color: #2f5be8;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bfPreviewImageEmpty strong{
+  max-width: 360px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.bfPreviewHeroCopy{
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bfPreviewCategory{
+  align-self: flex-start;
+  border-radius: 999px;
+  background: #e8f2ff;
+  color: #1d4f91;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.bfPreviewDate,
+.bfPreviewSmallBody span{
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 14px;
+}
+
+.bfPreviewHeroCopy h1,
+.bfPreviewArticleHeader h1{
+  color: #0f172a;
+  font-size: 34px;
+  line-height: 1.15;
+  margin: 14px 0 12px;
+}
+
+.bfPreviewHeroCopy p,
+.bfPreviewArticleHeader p,
+.bfPreviewSmallBody p{
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.bfPreviewReadMore{
+  color: #173b82;
+  font-weight: 800;
+  margin-top: 22px;
+}
+
+.bfPreviewGrid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bfPreviewSmallCard{
+  background: #ffffff;
+  border: 1px solid #e1e8f5;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bfPreviewSmallMedia{
+  height: 150px;
+  background: #e7efff;
+  display: grid;
+  place-items: center;
+  color: #1d4f91;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bfPreviewSmallBody{
+  padding: 16px;
+}
+
+.bfPreviewSmallBody h3{
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1.3;
+  margin: 8px 0;
+}
+
+.bfPreviewArticle{
+  max-width: 900px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e1e8f5;
+  border-radius: 14px;
+  padding: 34px;
+}
+
+.bfPreviewArticleHeader{
+  margin-bottom: 22px;
+}
+
+.bfPreviewMeta{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.bfPreviewMeta span:not(:last-child)::after{
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  vertical-align: middle;
+}
+
+.bfPreviewArticleMedia{
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.bfPreviewResources{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f1f6ff;
+}
+
+.bfPreviewResources span{
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d7e1f3;
+  color: #17305d;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.bfPreviewContent{
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.bfPreviewContent h2,
+.bfPreviewContent h3,
+.bfPreviewContent h4{
+  color: #102a56;
+  line-height: 1.35;
+  margin: 22px 0 12px;
+}
+
+.bfPreviewContent p{
+  margin: 0 0 14px;
+}
+
+@media (max-width: 900px){
+  .bfPreviewOverlay{
+    padding: 14px;
+  }
+
+  .bfPreviewHeroCard{
+    grid-template-columns: 1fr;
+  }
+
+  .bfPreviewGrid{
+    grid-template-columns: 1fr;
+  }
+
+  .bfPreviewHeroCopy,
+  .bfPreviewArticle{
+    padding: 22px;
+  }
+
+  .bfPreviewHeroCopy h1,
+  .bfPreviewArticleHeader h1{
+    font-size: 26px;
+  }
+}
+
 .bfWrap .btnCancel{
   border: 1.5px solid #d7e1f3;
   background: #ffffff;

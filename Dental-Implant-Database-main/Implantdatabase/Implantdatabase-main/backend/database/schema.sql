@@ -140,10 +140,10 @@ CREATE TABLE IF NOT EXISTS `feedback` (
   INDEX `idx_feedback_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default admin user (password: ilovedentalverymuch, hashed with bcrypt)
+-- Insert default admin user (password: admindent, hashed with bcrypt)
 -- You should run this after the tables are created
 -- INSERT INTO `users` (`username`, `email`, `password`, `role`, `status`) 
--- VALUES ('admin', 'admin@lamduan.mfu.ac.th', '$2a$10$...hash...', 'admin', 'Active');
+-- VALUES ('dent', 'admindent@lamduan.mfu.ac.th', '$2a$10$...hash...', 'admin', 'Active');
 
 -- Sample data for Companies
 INSERT INTO `companies` (`name`, `status`) VALUES 

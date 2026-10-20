@@ -11,6 +11,7 @@ import {
   masterDataAPI,
   resolveImageUrl,
 } from "../../services/api.js";
+import { adminAlert } from "../components/adminDialog.js";
 
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
 
@@ -248,7 +249,11 @@ export default function ManageImplants() {
         )
       );
     } catch (err) {
-      alert("Failed to update status: " + (err.message || ""));
+      await adminAlert({
+        title: "Unable to update status",
+        message: "Failed to update status: " + (err.message || ""),
+        icon: "error",
+      });
     }
   };
 

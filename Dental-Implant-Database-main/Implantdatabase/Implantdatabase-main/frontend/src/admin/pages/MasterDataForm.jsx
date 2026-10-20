@@ -5,6 +5,7 @@ import { getTypeLabel } from "./masterDataStore.js";
 import AdminSearchBar from "../components/AdminSearchBar.jsx";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { masterDataAPI, brandAPI } from "../../services/api.js";
+import { adminAlert } from "../components/adminDialog.js";
 
 export default function MasterDataForm({ mode }) {
   const navigate = useNavigate();
@@ -126,7 +127,11 @@ export default function MasterDataForm({ mode }) {
       // ✅ กลับหน้า + refresh
       navigate(returnTo);
     } catch (err) {
-      alert("Save failed: " + err.message);
+      await adminAlert({
+        title: "Save failed",
+        message: "Save failed: " + err.message,
+        icon: "error",
+      });
     } finally {
       setLoading(false);
     }

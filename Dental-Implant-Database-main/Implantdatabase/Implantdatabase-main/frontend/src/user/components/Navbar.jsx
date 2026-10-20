@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getInitialNightMode, setNightMode } from "../nightModeUtils";
 import FilterSidebar from "./FilterSidebar";
+import SiteSearchResults from "./SiteSearchResults";
 import styles from "./Navbar.module.css";
 
 const emptyFilters = {
@@ -21,13 +22,27 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchInputRef = useRef(null);
+  const searchFormRef = useRef(null);
+  const lastScrollYRef = useRef(0);
 
   const [nightMode, setNightModeState] = useState(getInitialNightMode());
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 860px)").matches);
+  const [bottomNavHidden, setBottomNavHidden] = useState(false);
   const [filters, setFilters] = useState(emptyFilters);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 860px)");
+    const updateViewport = (event) => {
+      setIsMobile(event.matches);
+      setSearchOpen(false);
+    };
+    media.addEventListener("change", updateViewport);
+    return () => media.removeEventListener("change", updateViewport);
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle("night-mode", nightMode);
@@ -37,6 +52,7 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
+    setBottomNavHidden(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -44,6 +60,42 @@ export default function Navbar() {
       searchInputRef.current?.focus();
     }
   }, [searchOpen]);
+
+  useEffect(() => {
+    if (!isMobile || !searchOpen) return;
+    const closeOnOutsidePress = (event) => {
+      if (!searchFormRef.current?.contains(event.target)) setSearchOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [isMobile, searchOpen]);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (Math.abs(scrollDelta) < 8) {
+        return;
+      }
+
+      if (currentScrollY < 80 || scrollDelta < 0) {
+        setBottomNavHidden(false);
+      } else {
+        setBottomNavHidden(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const handleToggleNightMode = () => {
     setNightModeState((prev) => !prev);
@@ -74,21 +126,19 @@ export default function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     setMenuOpen(false);
+    if (isMobile) {
+      setSearchOpen(true);
+      return;
+    }
     setSearchOpen(false);
     navigate("/implants", {
       state: { searchQuery: searchQuery.trim() },
     });
   };
 
-  const handleSearchKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch(e);
-    }
-  };
-
   return (
     <>
-      <header className={styles.navbar}>
+      <header className={`${styles.navbar} ${isMobile && searchOpen ? styles.mobileSearchActive : ""}`}>
         <div
           className={styles.brand}
           onClick={() => navigate("/")}
@@ -211,20 +261,25 @@ export default function Navbar() {
           </button>
 
           <form
+            ref={searchFormRef}
+            role="search"
             onSubmit={handleSearch}
             className={`${styles.searchBox} ${searchOpen ? styles.searchOpen : ""}`}
             onClick={() => {
-              setMenuOpen(false);
-              setSearchOpen(true);
+              if (!isMobile) {
+                setMenuOpen(false);
+                setSearchOpen(true);
+              }
             }}
           >
             <button
-              type="button"
+              type={isMobile && searchOpen ? "submit" : "button"}
               className={styles.searchIconBtn}
-              aria-label="Open search"
+              aria-label={isMobile && searchOpen ? "Search" : "Open search"}
               onClick={() => {
                 setMenuOpen(false);
                 setSearchOpen(true);
+                setTimeout(() => searchInputRef.current?.focus(), 0);
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -248,10 +303,22 @@ export default function Navbar() {
               className={styles.searchInput}
               ref={searchInputRef}
               type="text"
-              placeholder="Search implants, brands..."
+              aria-label={isMobile ? "Search companies, brands, blog posts, and implants" : "Search implants and brands"}
+              aria-controls={isMobile && searchOpen ? "site-search-results" : undefined}
+              enterKeyHint="search"
+              placeholder={isMobile ? "Search companies, brands, blog..." : "Search implants, brands..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyPress}
+              onFocus={() => {
+                if (isMobile) setSearchOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setSearchOpen(false);
+                  searchInputRef.current?.blur();
+                }
+              }}
+              autoComplete="off"
             />
 
             {(searchOpen || searchQuery) && (
@@ -265,8 +332,12 @@ export default function Navbar() {
                 }}
                 aria-label="Close search"
               >
-                ×
+                <span className={styles.clearSearchIcon} aria-hidden="true">×</span>
+                <span className={styles.clearSearchText}>Cancel</span>
               </button>
+            )}
+            {isMobile && searchOpen && (
+              <SiteSearchResults query={searchQuery} onSelect={() => setSearchOpen(false)} />
             )}
           </form>
 
@@ -345,7 +416,12 @@ export default function Navbar() {
         </nav>
       </header>
 
-      <nav className={styles.mobileBottomNav} aria-label="Mobile bottom navigation">
+      <nav
+        className={`${styles.mobileBottomNav} ${
+          bottomNavHidden ? styles.mobileBottomHidden : ""
+        }`}
+        aria-label="Mobile bottom navigation"
+      >
         <NavLink
           to="/"
           className={({ isActive }) =>

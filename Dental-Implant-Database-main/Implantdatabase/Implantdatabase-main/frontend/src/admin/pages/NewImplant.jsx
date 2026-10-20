@@ -10,6 +10,7 @@ import {
   resolveImageUrl,
 } from "../../services/api.js";
 import { loadMaster, saveMaster } from "./masterDataStore.js";
+import { adminAlert, adminForm, adminPrompt } from "../components/adminDialog.js";
 
 const IMPLANTS_KEY = "admin_implants_v1";
 const IMPLANTS_UPDATED_EVENT = "implants:updated";
@@ -578,12 +579,16 @@ export default function NewImplant() {
       countries: masterDataAPI.createCountry,
     };
 
-    const value = window.prompt(`Enter new ${labelMap[type]} name:`);
-    if (!value || !value.trim()) return;
+    const value = await adminPrompt({
+      title: `Add ${labelMap[type]}`,
+      label: `${labelMap[type]} name`,
+      confirmText: "Add",
+    });
+    if (!value) return;
 
     try {
       const created = await apiMap[type]({
-        name: value.trim(),
+        name: value,
         status: "Active",
       });
 
@@ -615,38 +620,51 @@ export default function NewImplant() {
 
       setField(fieldMap[type], Number(created.id));
     } catch (err) {
-      alert(formatAddOptionError(err, labelMap[type]));
+      await adminAlert({
+        title: `Unable to add ${labelMap[type]}`,
+        message: formatAddOptionError(err, labelMap[type]),
+        icon: "error",
+      });
     }
   };
 
   const addBrand = async () => {
     if (!form.companyId) {
-      alert("Please select Company first");
+      await adminAlert({
+        title: "Select company first",
+        message: "Please select a company before adding a brand.",
+        icon: "warning",
+      });
       return;
     }
 
-    const brandName = window.prompt("Enter new Brand name:");
-    if (!brandName || !brandName.trim()) return;
-
-    const website = window.prompt("Enter website (optional):", "") || "";
+    const values = await adminForm({
+      title: "Add Brand",
+      confirmText: "Add",
+      fields: [
+        { name: "brandName", label: "Brand name", required: true },
+        { name: "website", label: "Website", placeholder: "https://" },
+      ],
+    });
+    if (!values) return;
 
     try {
       const created = await brandAPI.create({
-        name: brandName.trim(),
+        name: values.brandName,
         companyId: Number(form.companyId),
-        website,
+        website: values.website,
         status: "Active",
       });
 
       const brandItem = {
         id: created?.id ?? created?.idbrand,
-        name: created?.name ?? created?.brand_name ?? brandName.trim(),
+        name: created?.name ?? created?.brand_name ?? values.brandName,
         companyId:
           created?.companyId ??
           created?.manufacturer_id ??
           Number(form.companyId),
         companyName: created?.companyName || "",
-        website: created?.website || website,
+        website: created?.website || values.website,
         status: created?.status || "Active",
       };
 
@@ -663,7 +681,11 @@ export default function NewImplant() {
       setField("brand", brandItem.name);
       setCurrentLabels((prev) => ({ ...prev, brandName: brandItem.name }));
     } catch (err) {
-      alert(formatAddOptionError(err, "Brand"));
+      await adminAlert({
+        title: "Unable to add Brand",
+        message: formatAddOptionError(err, "Brand"),
+        icon: "error",
+      });
     }
   };
 
@@ -689,12 +711,16 @@ export default function NewImplant() {
     textFieldName,
     createApi,
   }) => {
-    const value = window.prompt(`Enter new ${label} name:`);
-    if (!value || !value.trim()) return;
+    const value = await adminPrompt({
+      title: `Add ${label}`,
+      label: `${label} name`,
+      confirmText: "Add",
+    });
+    if (!value) return;
 
     try {
       const created = await createApi({
-        name: value.trim(),
+        name: value,
         status: "Active",
       });
 
@@ -720,7 +746,11 @@ export default function NewImplant() {
       setField(idFieldName, item.id);
       setField(textFieldName, item.name);
     } catch (err) {
-      alert(formatAddOptionError(err, label));
+      await adminAlert({
+        title: `Unable to add ${label}`,
+        message: formatAddOptionError(err, label),
+        icon: "error",
+      });
     }
   };
 

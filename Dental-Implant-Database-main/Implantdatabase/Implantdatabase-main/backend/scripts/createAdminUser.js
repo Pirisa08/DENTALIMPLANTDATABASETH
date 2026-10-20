@@ -1,56 +1,72 @@
 import bcrypt from 'bcryptjs';
+import { Op } from 'sequelize';
 import sequelize from '../src/config/database.js';
 import { User } from '../src/models/index.js';
 
+const ADMIN_USER = {
+  username: 'dent',
+  email: 'admindent@lamduan.mfu.ac.th',
+  password: 'admindent',
+  role: 'admin',
+};
+
+const DEMO_ADMIN_EMAIL = 'admin@demo.com';
+
 const createAdminUser = async () => {
   try {
-    console.log('🔌 Connecting to database...');
+    console.log('Connecting to database...');
     await sequelize.authenticate();
-    console.log('✅ Database connected');
+    console.log('Database connected');
 
-    // Sync User model
     await User.sync({ alter: true });
-    console.log('✅ User table synced');
+    console.log('User table synced');
 
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ 
-      where: { email: 'admin@lamduan.mfu.ac.th' } 
+    const hashedPassword = await bcrypt.hash(ADMIN_USER.password, 10);
+
+    const existingAdmin = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: ADMIN_USER.email },
+          { username: ADMIN_USER.username },
+        ],
+      },
     });
 
     if (existingAdmin) {
-      console.log('⚠️  Admin user already exists!');
-      console.log('   Email:', existingAdmin.email);
-      console.log('   Username:', existingAdmin.username);
-      
-      // Ask if want to update password
-      console.log('\n💡 To update password, delete the user first or run UPDATE query');
+      existingAdmin.username = ADMIN_USER.username;
+      existingAdmin.email = ADMIN_USER.email;
+      existingAdmin.password = hashedPassword;
+      existingAdmin.role = ADMIN_USER.role;
+      await existingAdmin.save();
+
+      await User.destroy({ where: { email: DEMO_ADMIN_EMAIL } });
+
+      console.log('\nAdmin user updated successfully!');
+      console.log('Email:', existingAdmin.email);
+      console.log('Username:', existingAdmin.username);
+      console.log('Password: stored as bcrypt hash');
       process.exit(0);
     }
 
-    // Create admin user
-    const password = 'ilovedentalverymuch';
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const admin = await User.create({
-      username: 'admin',
-      email: 'admin@lamduan.mfu.ac.th',
+      username: ADMIN_USER.username,
+      email: ADMIN_USER.email,
       password: hashedPassword,
-      role: 'admin',
-      status: 'Active'
+      role: ADMIN_USER.role,
     });
 
-    console.log('\n✅ Admin user created successfully!');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📧 Email:', admin.email);
-    console.log('👤 Username:', admin.username);
-    console.log('🔑 Password:', password);
-    console.log('👑 Role:', admin.role);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('\n🔐 You can now login at: http://localhost:3000/admin/login');
+    console.log('\nAdmin user created successfully!');
+    console.log('Email:', admin.email);
+    console.log('Username:', admin.username);
+    console.log('Password: stored as bcrypt hash');
+    console.log('Role:', admin.role);
+    console.log('\nYou can now login at: http://localhost:3000/admin/login');
+
+    await User.destroy({ where: { email: DEMO_ADMIN_EMAIL } });
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
     process.exit(1);
   }
 };
