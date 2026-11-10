@@ -212,6 +212,14 @@ export default function AdminLayout() {
           📊 Dashboard
         </NavLink>
 
+        <NavLink
+          to="/admin/manual"
+          className={({ isActive }) => (isActive ? "navItem active" : "navItem")}
+          onClick={closeSidebar}
+        >
+          📖 Administrator Manual
+        </NavLink>
+
         <div className="menuTitle">Management</div>
 
         <nav className="nav">

@@ -8,6 +8,7 @@ import ImplantDetail from "./pages/ImplantDetail";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
 import Contact from "./pages/Contact";
+import UserManual from "./pages/UserManual";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="blog/:slug" element={<BlogDetail />} />
 
         <Route path="contact" element={<Contact />} />
+        <Route path="manual" element={<UserManual />} />
       </Route>
     </Routes>
   );

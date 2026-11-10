@@ -31,6 +31,22 @@
   transition: color 0.2s ease;
 }
 
+.manualBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #475569;
+  text-decoration: none;
+}
+.manualBtn:hover { background: #eff6ff; }
+.manualBtn:focus-visible { outline: 3px solid #60a5fa; outline-offset: 2px; }
+:global(body.night-mode) .manualBtn { color: #bfdbfe; }
+:global(body.night-mode) .manualBtn:hover { background: #334155; }
+
 :global(body.night-mode) {
   background: #181c23 !important;
   color: #e6e6e6 !important;
@@ -854,6 +870,7 @@
 
 @media (max-width: 860px) {
   .mobileSearchActive .brand,
+  .mobileSearchActive .manualBtn,
   .mobileSearchActive .nightModeBtn,
   .mobileSearchActive .filterBtn {
     display: none;
@@ -916,4 +933,11 @@
   .clearSearchText {
     display: inline;
   }
+}
+
+/* Keep all four utility icons visible on narrow screens. */
+@media (max-width: 860px) {
+  .right { max-width: none; }
+  .brandTextGroup { min-width: 0; }
+  .logoText, .logoSubText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }

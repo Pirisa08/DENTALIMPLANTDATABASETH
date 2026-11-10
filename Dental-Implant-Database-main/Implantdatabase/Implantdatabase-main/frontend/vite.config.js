@@ -24,6 +24,7 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': [
         "default-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "frame-src 'self' blob:",
         "connect-src 'self' http://localhost:8900 http://127.0.0.1:8900 ws://localhost:3000 ws://127.0.0.1:3000 https://fonts.googleapis.com https://images.unsplash.com",
         "img-src 'self' data: blob: https: http://localhost:8900 http://127.0.0.1:8900",
         "font-src 'self' https://fonts.gstatic.com data:",

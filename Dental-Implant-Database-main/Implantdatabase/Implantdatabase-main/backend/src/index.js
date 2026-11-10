@@ -16,6 +16,8 @@ import feedbackRoutes from './routes/feedback.js';
 import feedbackAdminRoutes from './routes/feedbackRoutes.js';
 import brandsRoutes from './routes/brands.js';
 import profileRoutes from './routes/profile.js';
+import { createManualRouter } from './routes/manuals.js';
+import { verifyToken } from './middleware/authMiddleware.js';
 
 import { Blog } from './models/index.js';
 
@@ -282,6 +284,7 @@ app.get('/api/uploads-check', (req, res) => {
 // Routes
 // =========================
 app.use('/api/auth', authRoutes);
+app.use('/api/manuals', createManualRouter(verifyToken));
 
 app.post('/api/seed-blogs', async (req, res) => {
   try {

@@ -76,6 +76,22 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+export async function fetchAdminManual(signal) {
+  const response = await fetch(`${API_URL}/manuals/admin`, {
+    headers: getAuthHeaders(),
+    signal,
+    cache: "no-store",
+  });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("Please sign in again with an administrator account.");
+  }
+  if (!response.ok) throw new Error("Unable to load the manual. Please try again.");
+  if (!response.headers.get("content-type")?.includes("application/pdf")) {
+    throw new Error("The manual is not a PDF file. Please contact the administrator.");
+  }
+  return response.blob();
+}
+
 export const resolveImageUrl = (value) => {
   if (!value) return "";
   if (typeof value !== "string") return "";

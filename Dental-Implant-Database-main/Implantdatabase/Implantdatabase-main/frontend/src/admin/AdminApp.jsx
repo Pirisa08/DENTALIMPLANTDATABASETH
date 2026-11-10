@@ -17,6 +17,7 @@ import ContactFeedback from "./pages/ContactFeedback";
 
 import AdminLayout from "./components/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminManual from "./pages/AdminManual";
 
 import "./Admin.css";
 
@@ -37,6 +38,7 @@ export default function AdminApp() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="manual" element={<AdminManual />} />
 
         <Route path="implants" element={<ManageImplants />} />
         <Route path="implants/new" element={<NewImplant />} />

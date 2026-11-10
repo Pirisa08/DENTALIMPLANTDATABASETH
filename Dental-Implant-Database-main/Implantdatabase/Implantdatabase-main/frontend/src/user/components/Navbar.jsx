@@ -230,6 +230,16 @@ export default function Navbar() {
         </button>
 
         <div className={styles.right}>
+          <NavLink
+            to="/manual"
+            className={styles.manualBtn}
+            aria-label="User Manual"
+            title="User Manual"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 5.5C9 3.5 5.5 3.5 2.5 5v15c3-1.5 6.5-1.5 9.5.5 3-2 6.5-2 9.5-.5V5c-3-1.5-6.5-1.5-9.5.5Zm0 0v15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </NavLink>
           <button
             className={styles.nightModeBtn}
             type="button"
